@@ -540,3 +540,37 @@ struct HandshakeIllustration: View {
         }
     }
 }
+
+// ───────────────────────────────────────────────────────────────────────────
+// MARK: - Message Bubble  (AI panel chat rows)
+//
+// Recovered from the deleted ChatSheetView.swift — that screen was dead, but
+// ContractWorkspaceView's AI panel still renders its message rows with this.
+// ───────────────────────────────────────────────────────────────────────────
+
+struct MessageBubble: View {
+    let message: ChatMessage
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 0) {
+            if message.isUser { Spacer(minLength: 60) }
+
+            Group {
+                if let attr = try? AttributedString(markdown: message.content) {
+                    Text(attr)
+                } else {
+                    Text(message.content)
+                }
+            }
+            .font(.system(size: 17))
+            .lineSpacing(3)
+            .foregroundStyle(message.isUser ? .white : Color(.label))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(message.isUser ? Color(.label) : Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: 18))
+
+            if !message.isUser { Spacer(minLength: 60) }
+        }
+    }
+}

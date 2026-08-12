@@ -11,7 +11,7 @@ Feature 1 from §7 was implemented in a cloud Cowork session without Xcode. It h
 
 **New files (project uses synchronized folders — they're picked up automatically):**
 
-- `ContractStore.swift` — `@Observable` singleton, single source of truth. Persists all contracts to JSON at `Application Support/Handshake/contracts.json` (atomic write on every mutation, ISO-8601 dates). Queries: `drafts` / `pending` / `completed`. Mutations: `upsert`, `delete(id:)`, `markSent(id:recipients:)`, `markSigned(id:)`.
+- `ContractStore.swift` — `@Observable` singleton, single source of truth. Persists all contracts to JSON at `Application Support/Handshake/contracts.json` (atomic write on every mutation, ISO-8601 dates). Queries: `drafts` / `pending` / `completed`. Mutations: `upsert`, `delete(id:)`, `markSent(id:recipients:)`, `markSigned(id:signedBy:signatureHash:bodyRTFD:)`.
 - `HistoryView.swift` — history sheet with sections **Pending Signature · Signed · Drafts**, `StatusBadge` (purple #4C00FF for pending, green signed, red declined, gray draft), swipe-to-delete on drafts, tap draft → reopens `ContractWorkspaceView`, tap sent/signed → `ReadOnlyContractView`. Also holds the `GeneratedContract.displayBody()` extension (RTFD wins over markdown).
 
 **Changed files:**
@@ -20,7 +20,7 @@ Feature 1 from §7 was implemented in a cloud Cowork session without Xcode. It h
 - `ContractWorkspaceView.swift` — new optional `existing: GeneratedContract?` param: when set, loads the saved draft instead of generating (AI panel starts hidden). New `persist()` serializes the editor body to RTFD and upserts to the store; called after initial generation, after every AI update, when leaving edit mode, and `onDisappear`. **Two bug fixes:** AI follow-ups now keep the same contract `id` (previously every update minted a new UUID → would have duplicated drafts), and `persist()` re-reads status metadata from the store so closing the workspace can't regress a just-sent contract back to draft.
 - `SendFlowView.swift` — tracks compose results; only when SMS/Mail actually reports sent does `finalize()` call `ContractStore.markSent` (recipients + timestamp), then dismisses. The `UIActivityViewController` fallback does *not* mark sent.
 - `HomeView.swift` — hamburger button now opens `HistoryView` as a sheet.
-- `ContractEditorView.swift` — `RichTextEditorImpl` gained `allowsEditing: Bool = true`; `false` is used only by the read-only viewer. Editable contexts must keep `true` (see the §6 gotcha — do not toggle `isEditable` for keyboard control).
+- `RichTextEditor.swift` (then in `ContractEditorView.swift`) — `RichTextEditorImpl` gained `allowsEditing: Bool = true`; `false` is used only by the read-only viewer. Editable contexts must keep `true` (see the §6 gotcha — do not toggle `isEditable` for keyboard control).
 
 **Verification checklist:**
 
@@ -60,34 +60,46 @@ A native iOS app that turns a plain-English prompt into a legally formatted cont
 |---|---|
 | **Platform** | Native iOS 26, SwiftUI |
 | **AI** | Anthropic Messages API, `claude-haiku-4-5-20251001` |
-| **Persistence** | None yet (all in-memory) |
+| **Persistence** | JSON file in Application Support (`ContractStore`) |
 | **Backend** | None |
 | **Min target** | iOS 26 (uses liquid-glass toolbar behavior) |
 
 ### Running it
 
 1. Open `Handshake.xcodeproj` in Xcode
-2. Put an Anthropic API key in `Config.swift` (`anthropicAPIKey`)
+2. `cp Handshake/Secrets.example.swift Handshake/Secrets.swift` and paste your Anthropic API key in
 3. Build to simulator or device
 
-> ⚠️ **Security:** A live API key is currently hardcoded in `Config.swift` and committed to git. **Rotate that key and remove it from history before sharing this repo.** For production, the key must move server-side — an API key shipped in an iOS binary is extractable by anyone who downloads the app.
+> ⚠️ **Security:** `Secrets.swift` is gitignored, so the key stays out of git — but it is still compiled into the app binary and is extractable by anyone who downloads the app. For production the key must move server-side.
 
 ---
 
 ## 3. File Map
 
-| File | Lines | Status | Purpose |
-|---|---|---|---|
-| `HandshakeApp.swift` | 13 | ✅ Live | App entry, wraps `HomeView` in `NavigationStack` |
-| `HomeView.swift` | 151 | ✅ Live | Landing screen — illustration, template cards, chat bar |
-| `ContractWorkspaceView.swift` | 603 | ✅ Live | **The main screen.** Contract + AI panel + editor |
-| `Components.swift` | 538 | ✅ Live | Shared UI: ChatBar, toolbars, buttons, illustration |
-| `ContractEditorView.swift` | 489 | ⚠️ Mixed | `RichTextEditorImpl` + pickers + markdown parser are **live**; the `ContractEditorView` struct itself is **dead** |
-| `SendFlowView.swift` | 334 | ✅ Live | Recipient entry + SMS/Mail compose |
-| `AIService.swift` | 139 | ✅ Live | Anthropic API client, contract parsing |
-| `Models.swift` | 27 | ✅ Live | `GeneratedContract`, `ChatMessage`, `Recipient` |
-| `Config.swift` | 9 | ✅ Live | API key |
-| `ChatSheetView.swift` | 194 | ❌ Dead | Superseded by `ContractWorkspaceView`. Safe to delete |
+| File | Purpose |
+|---|---|
+| `HandshakeApp.swift` | App entry + `RootView` — owns `onOpenURL` deep-link routing (§4f) |
+| `HomeView.swift` | Landing screen — illustration, template cards, chat bar |
+| `ContractWorkspaceView.swift` | **The main screen.** Contract + AI panel + editor |
+| `Components.swift` | Shared UI: ChatBar, toolbars, buttons, illustration, `MessageBubble` |
+| `RichTextEditor.swift` | `RichTextEditorImpl` — the `UITextView` ↔ SwiftUI bridge |
+| `MarkdownParser.swift` | `NSMutableAttributedString.fromHandshakeMarkdown` |
+| `MediaPickers.swift` | `PhotoPickerView`, `DocumentPickerView` |
+| `SendFlowView.swift` | Recipient entry + SMS/Mail compose |
+| `SigningView.swift` | Recipient's signing screen + confirmation screen |
+| `SignatureService.swift` | Face ID auth + CryptoKit SHA256 stamp |
+| `SignatureBlockView.swift` | The signature block + stamping it into the document |
+| `ContractStore.swift` | `@Observable` store, JSON persistence |
+| `HistoryView.swift` | Contract history + `ReadOnlyContractView` |
+| `AIService.swift` | Anthropic API client, contract parsing |
+| `Models.swift` | `GeneratedContract`, `ChatMessage`, `Recipient`, `ContractStatus` |
+| `Config.swift` | Forwards to `Secrets.swift` |
+| `Secrets.swift` | **Gitignored.** The API key. Copy from `Secrets.example.swift` |
+| `Info.plist` | *(repo root)* URL scheme + Face ID usage string |
+
+`ChatSheetView.swift` and the `ContractEditorView` struct were deleted — both were dead. `MessageBubble` moved out of `ChatSheetView` into `Components.swift`, since the workspace's AI panel still uses it.
+
+`BlackPillButton` in `Components.swift` is now unused — `ContractEditorView`'s Save button was its only caller. Left in place as part of the button set rather than deleted.
 
 ---
 
@@ -305,8 +317,8 @@ Three options were considered:
 ## 9. Known Issues / Cleanup
 
 - [x] **API key out of git** — moved to a gitignored `Secrets.swift` before the repo's first real commit, so it never entered history. Still ships inside the app binary; move server-side for production. Rotate it if it was ever shared.
-- [ ] `ChatSheetView.swift` is fully dead — delete the file
-- [ ] The `ContractEditorView` struct is dead, but **don't delete the file** — it still holds `RichTextEditorImpl`, `PhotoPickerView`, `DocumentPickerView`, and the markdown parser. Extract those into their own files, then delete the struct
+- [x] `ChatSheetView.swift` deleted (`MessageBubble` moved to `Components.swift` first)
+- [x] `ContractEditorView` struct deleted; `RichTextEditorImpl`, the pickers and the markdown parser extracted into `RichTextEditor.swift`, `MediaPickers.swift` and `MarkdownParser.swift`
 - [ ] Purple circle send button still shows a white ring from the iOS 26 glass container — currently reverted to a plain purple icon
 - [x] `handshake://` URL scheme registered — see §4f
 - [ ] Numbered lists renumber from 1 on each application — no continuation logic
