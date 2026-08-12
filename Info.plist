@@ -15,6 +15,10 @@
 	  CFBundleURLTypes registers handshake:// so signing links open the app:
 	      handshake://sign/<contract-uuid>
 	-->
+	<!-- Shown in the system Face ID prompt when a recipient signs. -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>Handshake uses Face ID to confirm it's you before you sign a contract.</string>
+
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

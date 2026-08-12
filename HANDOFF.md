@@ -1,7 +1,7 @@
 # Handshake — Project Handoff
 
 **Last updated:** August 12, 2026
-**Status:** Contract generation + editing complete. Send flow built. **Persistence + history built and compile-verified — see §0.** Signing not started.
+**Status:** Contract generation + editing complete. Send flow built. Persistence + history verified on the simulator (§0). `handshake://` deep links and Face ID signing complete. Remaining: the §9 cleanup list.
 
 ---
 
@@ -259,18 +259,28 @@ Toolbar pill      h-48, px-10, shadow 0 8px 40px rgba(0,0,0,0.12)
 
 Verified on the simulator with `xcrun simctl openurl`: a valid link opens the signing screen; an unknown UUID shows the "not on this device" alert and dismisses an already-open signing screen first.
 
-### Feature 3 — Face ID signing
+### Feature 3 — Face ID signing ✅ Done
 
 **How this actually works:** iOS never exposes biometric data. `LocalAuthentication` returns only pass/fail. So a "face signature" is really:
 
-> Face ID authentication success **+** a cryptographic stamp: `SHA256(recipientName + contractID + timestamp + deviceID)`
+> Face ID authentication success **+** a cryptographic stamp: `SHA256(signerName + contractID + timestamp + deviceID)`
 
-**Screens:**
+**Screens / files:**
 
-1. **Signing screen** — read-only contract, "Sign with Face ID" purple pill at the bottom
-2. **Auth** — `LAContext.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics)`
-3. **On success** — generate the hash via `CryptoKit`, replace the `[Signature]` placeholder with a `SignatureBlockView`: recipient name in a script-style face, "✓ Verified with Face ID" badge, ISO timestamp, and a short fingerprint of the hash
-4. **Confirmation** — full-screen checkmark, `status = .signed`
+1. ✅ **Signing screen** (`SigningView`) — read-only contract, a "Signing as" name field, "Sign with Face ID" purple pill
+2. ✅ **Auth** (`SignatureService.authenticate`) — `LAContext.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics)`. User-cancel is distinguished from failure and shows no error.
+3. ✅ **Stamp** (`SignatureService.stamp` + `SignatureBlockView`) — CryptoKit SHA256, then the `[Signature]` placeholder is replaced with a rendered `SignatureBlockView`: name in Snell Roundhand, "Verified with Face ID" badge, ISO timestamp, 12-hex-char fingerprint.
+4. ✅ **Confirmation** (`SigningConfirmationView`) — full-screen purple checkmark, then `ContractStore.markSigned`
+
+**Notes worth keeping:**
+
+- **The signer's name is a field, not `recipients.first`.** It's pre-filled from the first recipient but editable — the person holding the device is the one signing and may not be in the list at all.
+- **`GeneratedContract` gained `signedBy` and `signatureHash`,** so the record is real rather than cosmetic — the fingerprint on screen is verifiably the first 12 chars of the stored hash.
+- **Hash components are joined with `U+001F`,** not concatenated. Without a separator, `("ab","c")` and `("a","bc")` hash identically.
+- **The signature block must be rendered at `ImageRenderer.scale = 1`.** The signed body is persisted as RTFD and re-read in the history viewer, and RTFD's importer sizes an attachment by its **pixel** dimensions. Rendering at `UIScreen.main.scale` draws the block 3× oversized after the round-trip, spilling out of the text column. Neither `attachment.bounds` nor a corrected `UIImage` scale survives the import. Cost: the block is slightly soft on a Retina screen.
+- Signing an already-signed contract is not possible — the sign bar is hidden when `status == .signed`.
+
+Verified end to end on the simulator with enrolled biometrics: deep link → Face ID prompt → matched face → stamped document → confirmation → Signed in history, with `status`, `signedAt`, `signedBy` and `signatureHash` all persisted.
 
 ---
 
@@ -301,6 +311,8 @@ Three options were considered:
 - [x] `handshake://` URL scheme registered — see §4f
 - [ ] Numbered lists renumber from 1 on each application — no continuation logic
 - [ ] Photo attachments live only in the `NSAttributedString`; they aren't persisted anywhere
+- [ ] The stamped signature block is slightly soft on Retina — it has to render 1:1 to survive the RTFD round-trip at the right size (see Feature 3 notes)
+- [ ] `PurplePillButton` in the nav bar sometimes renders clamped ("S e" wrapped over two lines) during the edit-mode transition — same iOS 26 glass-container squash as the send button above
 - [ ] No error state if the AI returns malformed output (missing `TITLE:` / `---`)
 - [ ] Xcode isn't available in the environment this was built in — **nothing here has been compile-verified.** Build before trusting it
 

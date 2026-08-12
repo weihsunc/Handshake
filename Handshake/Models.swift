@@ -38,6 +38,13 @@ struct GeneratedContract: Identifiable, Codable {
     var createdAt: Date             = .now
     var sentAt: Date?               = nil
     var signedAt: Date?             = nil
+
+    // ── Signature record (set by SignatureService on a successful Face ID sign)
+    /// Name the signer signed under.
+    var signedBy: String?           = nil
+    /// SHA256 of name + contract id + timestamp + device id. Tamper-evidence
+    /// only — there's no independent chain of custody. See HANDOFF §8.
+    var signatureHash: String?      = nil
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
