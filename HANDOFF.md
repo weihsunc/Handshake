@@ -144,7 +144,16 @@ All formatting operates directly on `UITextView.textStorage` so the cursor never
 - Falls back to `UIActivityViewController` on simulator (compose sheets are unavailable there)
 - Message body includes a deep link stub: `handshake://sign/<contract-uuid>`
 
-> The URL scheme is **not yet registered in Info.plist** — the link won't open the app until it is.
+The `handshake://` scheme is registered (see §4f), so that link opens the app.
+
+### 4f. Deep links (`RootView` in `HandshakeApp.swift`)
+
+`handshake://sign/<contract-uuid>` opens the app straight to the signing screen.
+
+- The scheme is registered in `Info.plist` at the **repo root**, not in `Handshake/`. That folder is a synchronized group, so a plist inside it also gets copied in as a bundle resource and collides with the generated one (`Multiple commands produce .../Handshake.app/Info.plist`). `GENERATE_INFOPLIST_FILE` stays `YES` and Xcode merges the generated keys into this file, so only `CFBundleURLTypes` lives there.
+- `RootView.onOpenURL` resolves the URL to a route and presents `SigningView`.
+- Failure cases show an alert rather than failing silently: wrong host, malformed UUID, and — the one that will actually happen — **a contract that isn't on this device**. Contracts are local-only until there's a backend, so a link only opens on the device that created it.
+- A link arriving while a signing screen is already up dismisses it first. A live `fullScreenCover` swallows `.alert`, and SwiftUI ignores a second `item:` change while the first is still presented.
 
 ### 4e. AI service (`AIService`)
 
@@ -242,13 +251,13 @@ Toolbar pill      h-48, px-10, shadow 0 8px 40px rgba(0,0,0,0.12)
    - Tap a draft → opens workspace in edit mode; tap a sent/signed one → read-only
 6. Wire it to the hamburger menu button in `HomeView` (currently does nothing)
 
-### Feature 2 — Wire up the send flow properly
+### Feature 2 — Wire up the send flow properly ✅ Done
 
-Mostly built. Remaining:
+1. ✅ `handshake://` registered in `Info.plist` (repo root — see §4f)
+2. ✅ `onOpenURL` routes `handshake://sign/<uuid>` to `SigningView`, with alerts on the failure paths
+3. ✅ On send, `status = .sent` and persist — done in Feature 1 via `SendFlowView.finalize()` → `ContractStore.markSent`
 
-1. Register the `handshake://` URL scheme in Info.plist
-2. Handle the incoming deep link (`onOpenURL`) → route to the signing screen
-3. On send, set `status = .sent` and persist
+Verified on the simulator with `xcrun simctl openurl`: a valid link opens the signing screen; an unknown UUID shows the "not on this device" alert and dismisses an already-open signing screen first.
 
 ### Feature 3 — Face ID signing
 
@@ -285,11 +294,11 @@ Three options were considered:
 
 ## 9. Known Issues / Cleanup
 
-- [ ] **Live API key committed to git** in `Config.swift` — rotate it, purge from history, move server-side
+- [x] **API key out of git** — moved to a gitignored `Secrets.swift` before the repo's first real commit, so it never entered history. Still ships inside the app binary; move server-side for production. Rotate it if it was ever shared.
 - [ ] `ChatSheetView.swift` is fully dead — delete the file
 - [ ] The `ContractEditorView` struct is dead, but **don't delete the file** — it still holds `RichTextEditorImpl`, `PhotoPickerView`, `DocumentPickerView`, and the markdown parser. Extract those into their own files, then delete the struct
 - [ ] Purple circle send button still shows a white ring from the iOS 26 glass container — currently reverted to a plain purple icon
-- [ ] `handshake://` URL scheme not registered in Info.plist
+- [x] `handshake://` URL scheme registered — see §4f
 - [ ] Numbered lists renumber from 1 on each application — no continuation logic
 - [ ] Photo attachments live only in the `NSAttributedString`; they aren't persisted anywhere
 - [ ] No error state if the AI returns malformed output (missing `TITLE:` / `---`)

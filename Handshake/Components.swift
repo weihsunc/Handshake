@@ -255,6 +255,9 @@ struct GlassIconButton: View {
 
 struct PurplePillButton: View {
     let title: String
+    /// Stretches the pill to fill its container — used for the primary action on
+    /// the signing screen. Toolbar usages keep the default hug-to-content width.
+    var fullWidth: Bool = false
     var action: () -> Void
 
     var body: some View {
@@ -266,7 +269,8 @@ struct PurplePillButton: View {
                 .blendMode(.plusLighter)
                 .foregroundStyle(.white)
                 .padding(.horizontal, 14)
-                .frame(height: 44)          // matches glass button height exactly
+                .frame(maxWidth: fullWidth ? .infinity : nil)
+                .frame(height: fullWidth ? 52 : 44)   // 44 matches glass button height exactly
                 .background(
                     LinearGradient(
                         colors: [Color(red: 76/255, green: 0/255,  blue: 255/255),   // #4C00FF

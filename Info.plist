@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  Partial Info.plist. GENERATE_INFOPLIST_FILE stays YES, so Xcode merges the
+	  keys it generates from build settings into this file — only keys that
+	  can't be expressed as INFOPLIST_KEY_* build settings belong here.
+
+	  This lives at the repo root, NOT in Handshake/. That folder is a
+	  synchronized group, so anything non-source inside it is also copied in as a
+	  bundle resource — which collides with the generated Info.plist
+	  ("Multiple commands produce .../Handshake.app/Info.plist").
+
+	  CFBundleURLTypes registers handshake:// so signing links open the app:
+	      handshake://sign/<contract-uuid>
+	-->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.weihsun.Handshake.signing</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>handshake</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
