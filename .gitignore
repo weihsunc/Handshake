@@ -1,0 +1,22 @@
+# ── Secrets ──────────────────────────────────────────────────────────────────
+# Real API keys live here. Never commit. See Handshake/Secrets.example.swift.
+Handshake/Secrets.swift
+
+# ── Xcode ────────────────────────────────────────────────────────────────────
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# ── macOS ────────────────────────────────────────────────────────────────────
+.DS_Store
+
+# ── Claude Code session data ────────────────────────────────────────────────
+.claude/
