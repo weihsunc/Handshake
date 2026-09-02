@@ -116,13 +116,26 @@ A native iOS app that turns a plain-English prompt into a legally formatted cont
 
 ## 4. What's Built
 
-### 4a. Home screen (`HomeView`)
+### 4a. Home screen (`HomeView`) — Figma 2160:6597 / 2160:6694
 
-- Handshake illustration + welcome copy as the empty state
-- Tapping the chat bar swaps the illustration for a horizontal row of 5 template cards (Consulting, NDA, Rental, Employment, Partnership)
-- Each template card fills the prompt and launches the workspace
-- Chat bar is always pinned to the bottom
-- Launches `ContractWorkspaceView` via `.fullScreenCover`
+One screen, three states, driven by the chat bar's focus and text:
+
+| State | What shows | Tap on a card |
+|---|---|---|
+| **idle** | Illustration + welcome copy, then the example templates as a **vertical** list of full-width cards scrolling under the chat bar | Launches the workspace with that prompt |
+| **focused** (empty) | Hero collapses; the cards pin to the top; the chat bar rides the keyboard | Launches the workspace |
+| **typing** | Cards become **autocomplete suggestions** — templates ranked by prefix match on the prompt, then keyword overlap with what's typed. No match → the examples stay | **Fills the prompt** so it can be edited, doesn't launch |
+
+Implementation notes:
+
+- The chat bar is a `.safeAreaInset(edge: .bottom)`, not a `ZStack` overlay — that's what makes the list scroll under it and makes it follow the keyboard for free.
+- Collapsing the hero removes ~400pt above the cards but `ScrollView` keeps its offset, so the first card would slide up behind the toolbar. A `ScrollViewReader` scrolls to the cards whenever focus changes.
+- `TemplateCard` is the Figma "Snackbar": stone/100 `#F5F5F4`, radius 24, 16pt padding, title with the emoji inline (`"📄 Consulting Agreement"` as one string), gray body. It fills its container's width; the list owns the horizontal inset.
+- The chat bar placeholder is the brand gradient ("Start with HandShake"). A `TextField` can't style its placeholder, so a gradient `Text` is overlaid while the field is empty.
+- Hero type follows the Figma frame (30pt semibold / 20pt regular, system font) rather than the older 28/17 tokens in §6.
+- The "suggestions" state isn't drawn in Figma (frame 18 shows typed text with the example cards still visible) — the ranking + fill-on-tap behaviour is an interpretation of "auto completed suggestions". Adjust if the intent differs.
+
+Launches `ContractWorkspaceView` via `.fullScreenCover`.
 
 ### 4b. Contract workspace (`ContractWorkspaceView`) — the core screen
 

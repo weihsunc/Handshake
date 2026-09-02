@@ -4,7 +4,7 @@ import SwiftUI
 // MARK: - Template data
 // ─────────────────────────────────────────────────────────────────────────────
 
-private struct ContractTemplate: Identifiable {
+struct ContractTemplate: Identifiable {
     let id = UUID()
     let emoji: String
     let title: String
@@ -36,87 +36,89 @@ private let templates: [ContractTemplate] = [
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MARK: - HomeView
+//
+// Three states, one screen (Figma 2160:6597 → 2160:6694):
+//
+//   idle      illustration + welcome, then the example cards as a vertical
+//             list scrolling under the chat bar
+//   focused   hero collapses; the cards pin to the top, chat bar rides the
+//             keyboard. Tapping a card launches generation.
+//   typing    the cards become autocomplete suggestions — templates ranked
+//             by how well they match what's been typed. Tapping one fills
+//             the prompt instead of launching, so it can be edited first.
 // ─────────────────────────────────────────────────────────────────────────────
 
 struct HomeView: View {
-    @State private var prompt            = ""
-    @State private var showSheet         = false
-    @State private var showHistory       = false
-    @State private var isKeyboardVisible = false
+    @State private var prompt      = ""
+    @State private var showSheet   = false
+    @State private var showHistory = false
+    @State private var isFocused   = false
     private var router = DeepLinkRouter.shared
 
+    private var trimmed: String { prompt.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var isTyping: Bool   { isFocused && !trimmed.isEmpty }
+
+    /// Templates that plausibly complete what's been typed. Prefix matches on
+    /// the prompt rank first, then keyword overlap. Empty → fall back to the
+    /// examples so the list never blanks out mid-keystroke.
+    private var suggestions: [ContractTemplate] {
+        let q     = trimmed.lowercased()
+        let words = Set(q.split(whereSeparator: { !$0.isLetter }).map(String.init).filter { $0.count >= 3 })
+
+        let scored: [(ContractTemplate, Int)] = templates.compactMap { t in
+            let hay = (t.title + " " + t.prompt).lowercased()
+            var score = 0
+            if t.prompt.lowercased().hasPrefix(q) { score += 100 }
+            score += words.filter { hay.contains($0) }.count
+            return score > 0 ? (t, score) : nil
+        }
+        let ranked = scored.sorted { $0.1 > $1.1 }.map(\.0)
+        return ranked.isEmpty ? templates : ranked
+    }
+
     var body: some View {
-        ZStack(alignment: .bottom) {
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
 
-            // ── Background ──────────────────────────────────────────────
-            Color(red: 0.98, green: 0.98, blue: 0.98)
-                .ignoresSafeArea()
-
-            // ── Centre content: illustration or templates ────────────────
-            if isKeyboardVisible {
-                // Template cards slide in from top when keyboard shows
-                VStack(alignment: .leading, spacing: 0) {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(alignment: .top, spacing: 16) {
-                            ForEach(templates) { t in
-                                TemplateCard(
-                                    emoji: t.emoji,
-                                    title: t.title,
-                                    description: t.prompt
-                                ) {
-                                    prompt = t.prompt
-                                    showSheet = true
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
-                    }
-                    Spacer()
-                }
-                .transition(.opacity.combined(with: .move(edge: .top)))
-
-            } else {
-                // Default illustration + welcome text
-                VStack(spacing: 0) {
-                    Spacer()
-
-                    HandshakeIllustration()
-                        .padding(.bottom, 28)
-
-                    VStack(spacing: 10) {
-                        Text("Welcome to Handshake!")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundStyle(Color(.label))
-
-                        Text("We automate contract and deal\nmaking process.")
-                            .font(.system(size: 17))
-                            .foregroundStyle(Color(.secondaryLabel))
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(4)
+                    if !isFocused {
+                        hero
+                            .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
-                    Spacer()
-                    Spacer()
+                    cards
+                        .id("cards")
                 }
                 .padding(.horizontal, 16)
-                .transition(.opacity)
+                .padding(.top, isFocused ? 8 : 16)
+                .padding(.bottom, 16)
             }
-
-            // ── Chat bar (always visible) ───────────────────────────────
+            .scrollDismissesKeyboard(.interactively)
+            // Collapsing the hero removes ~400pt above the cards, but the scroll
+            // view keeps its offset — so the first card would slide up behind
+            // the toolbar. Pin the list to the top whenever focus changes.
+            .onChange(of: isFocused) { _, _ in
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                    proxy.scrollTo("cards", anchor: .top)
+                }
+            }
+        }
+        .background(Color(red: 0.98, green: 0.98, blue: 0.976).ignoresSafeArea())   // stone/50 #FAFAF9
+        // The chat bar is a bottom safe-area inset, so the list scrolls under
+        // it and it rides the keyboard automatically when focused.
+        .safeAreaInset(edge: .bottom) {
             ChatBar(prompt: $prompt, onSend: {
-                guard !prompt.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+                guard !trimmed.isEmpty else { return }
                 showSheet = true
             }, onFocusChange: { focused in
-                // FocusState fires immediately on tap — works with hardware keyboard too
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                    isKeyboardVisible = focused
-                }
+                isFocused = focused
             })
             .padding(.horizontal, 16)
-            .padding(.bottom, 24)
+            .padding(.top, 8)
+            .padding(.bottom, 8)
         }
-        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: isKeyboardVisible)
+        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: isFocused)
+        .animation(.spring(response: 0.3,  dampingFraction: 0.85), value: isTyping)
         .navigationTitle("Home")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -128,17 +130,6 @@ struct HomeView: View {
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 GlassIconButton(systemName: "person")
-            }
-        }
-        // ── Keyboard notifications (software keyboard fallback) ───────────
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                isKeyboardVisible = true
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                isKeyboardVisible = false
             }
         }
         // ── Contract workspace (full-screen, AI panel always on top) ─────
@@ -166,6 +157,59 @@ struct HomeView: View {
             }
         }
         #endif
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Hero  (illustration + welcome)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private var hero: some View {
+        VStack(spacing: 24) {
+            HandshakeIllustration()
+                .frame(height: 240)
+
+            VStack(spacing: 16) {
+                Text("Welcome to Handshake!")
+                    .font(.system(size: 30, weight: .semibold))
+                    .tracking(-0.75)
+                    .foregroundStyle(Color(.label))
+
+                Text("We automate contract and deal\nmaking process.")
+                    .font(.system(size: 20))
+                    .foregroundStyle(Color(.label))
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(2)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 8)
+        .padding(.bottom, 8)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Cards  (examples, or suggestions while typing)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @ViewBuilder
+    private var cards: some View {
+        LazyVStack(spacing: 16) {
+            if isTyping {
+                ForEach(suggestions) { t in
+                    TemplateCard(emoji: t.emoji, title: t.title, description: t.prompt) {
+                        prompt = t.prompt          // autocomplete — fill, don't launch
+                    }
+                    .transition(.opacity)
+                }
+            } else {
+                ForEach(templates) { t in
+                    TemplateCard(emoji: t.emoji, title: t.title, description: t.prompt) {
+                        prompt    = t.prompt
+                        showSheet = true
+                    }
+                    .transition(.opacity)
+                }
+            }
+        }
     }
 }
 

@@ -8,7 +8,7 @@ import UIKit
 
 struct ChatBar: View {
     @Binding var prompt: String
-    var placeholder: String = "Chat with HandShake"
+    var placeholder: String = "Start with HandShake"
     var onSend: () -> Void
     /// Reflects whether the text field is focused — drives template visibility in HomeView
     var onFocusChange: ((Bool) -> Void)? = nil
@@ -42,11 +42,27 @@ struct ChatBar: View {
                 .foregroundStyle(Color(.label))
                 .frame(width: 36, height: 36)
 
-            TextField(placeholder, text: $prompt)
-                .font(.system(size: 17))
-                .foregroundStyle(Color(.label))
-                .tint(Color(.label))
-                .focused($isFocused)
+            // Placeholder is the brand gradient (Figma 2160:6641). A TextField
+            // can't style its own placeholder, so overlay one while empty.
+            ZStack(alignment: .leading) {
+                if prompt.isEmpty {
+                    Text(placeholder)
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [Color(red: 76/255, green: 0,      blue: 255/255),
+                                         Color(red: 38/255, green: 6/255,  blue:  93/255)],
+                                startPoint: .leading, endPoint: .trailing
+                            )
+                        )
+                        .allowsHitTesting(false)
+                }
+                TextField("", text: $prompt)
+                    .font(.system(size: 17))
+                    .foregroundStyle(Color(.label))
+                    .tint(Color(.label))
+                    .focused($isFocused)
+            }
 
             Spacer(minLength: 0)
 
@@ -128,7 +144,11 @@ struct ChatBar: View {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MARK: - Template Card
-// Tappable suggestion cards shown above the chat bar when keyboard appears.
+// Example / suggestion cards on Home. Figma "Snackbar" (2160:6680):
+//   stone/100 #F5F5F4 · radius 24 · padding 16 · 16 between title and body
+//   Title  SF Pro Semibold 17/22, tracking -0.43, #1E1E1E — emoji inline
+//   Body   SF Pro Regular  17/22, tracking -0.43, #757575
+// Fills the width of its container; the list decides the horizontal inset.
 // ─────────────────────────────────────────────────────────────────────────────
 
 struct TemplateCard: View {
@@ -137,46 +157,28 @@ struct TemplateCard: View {
     let description: String
     var onTap: () -> Void
 
-    // Figma tokens:
-    //   Title  — SF Pro Semibold 17/22, tracking -0.43, #1e1e1e
-    //   Body   — SF Pro Regular  17/22, tracking -0.43, #757575
-    //   Card   — #F4F4F5 bg, 24 pt corner radius, 16 pt padding, 280 pt wide
-
     var body: some View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 16) {
+                Text(verbatim: "\(emoji) \(title)")
+                    .font(.system(size: 17, weight: .semibold))
+                    .tracking(-0.43)
+                    .foregroundStyle(Color(red: 30/255, green: 30/255, blue: 30/255))
+                    .lineLimit(2)
 
-                // ── Header: emoji + title ──────────────────────────────────
-                HStack(alignment: .center, spacing: 6) {
-                    // Plain Text, not the old EmojiView UILabel bridge — that
-                    // pinned the font to "AppleColorEmoji", which stopped
-                    // resolving on iOS 26 and rendered every card's icon as a
-                    // [?] tofu box. Text picks up the system emoji fallback.
-                    Text(verbatim: emoji)
-                        .font(.system(size: 20))
-
-                    Text(title)
-                        .font(.system(size: 17, weight: .semibold))
-                        .tracking(-0.43)
-                        .foregroundStyle(Color(red: 30/255, green: 30/255, blue: 30/255))
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                // ── Body ───────────────────────────────────────────────────
                 Text(description)
-                    .font(.system(size: 17, weight: .regular))
+                    .font(.system(size: 17))
                     .tracking(-0.43)
                     .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
                     .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
             }
-            // Fixed card width — no maxWidth: .infinity inside a horizontal ScrollView
-            // (that causes children to escape the card boundary).
-            .frame(width: 248, alignment: .leading) // 280 − 2×16 padding
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(16)
-            .background(Color(red: 0.957, green: 0.957, blue: 0.961)) // #F4F4F5
-            .clipShape(RoundedRectangle(cornerRadius: 24))
+            .background(
+                Color(red: 245/255, green: 245/255, blue: 244/255),   // stone/100
+                in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         }
         .buttonStyle(.plain)
     }
