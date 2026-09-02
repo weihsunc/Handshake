@@ -92,7 +92,7 @@ A native iOS app that turns a plain-English prompt into a legally formatted cont
 | `HandshakeApp.swift` | App entry + `RootView` (deep-link routing, §4f) + `DeepLinkRouter` |
 | `HomeView.swift` | Landing screen — illustration, template cards, chat bar |
 | `ContractWorkspaceView.swift` | **The main screen.** Contract + AI panel + editor |
-| `Components.swift` | Shared UI: ChatBar, toolbars, buttons, illustration, `MessageBubble` |
+| `Components.swift` | Shared UI: ChatBar, toolbars, `GlassIconButton` / `ToolbarPillButton` (system glass) / `PurplePillButton` (custom, full-width only), illustration, `MessageBubble` |
 | `RichTextEditor.swift` | `RichTextEditorImpl` — the `UITextView` ↔ SwiftUI bridge |
 | `MarkdownParser.swift` | `NSMutableAttributedString.fromHandshakeMarkdown` |
 | `MediaPickers.swift` | `PhotoPickerView`, `DocumentPickerView` |
@@ -232,11 +232,15 @@ Originally used `.sheet` with `PresentationDetent`. The problem: anything inside
 
 Fix: keep `isEditable = true` always. Control the keyboard purely through `becomeFirstResponder` / `resignFirstResponder`. Never call `becomeFirstResponder` programmatically on tap — let UIKit handle it naturally.
 
-### iOS 26 toolbar items get wrapped in a glass pill
+### iOS 26 toolbar items get wrapped in a glass pill — so don't paint your own
 
-Any `ToolbarItem` is wrapped in a 44pt liquid-glass container. A custom-styled view inside it gets clamped unless it *exactly* fills that 44pt container — otherwise the container's glass shows at the corners as a white ring.
+Any `ToolbarItem` is wrapped in a 44pt Liquid Glass capsule by the system. Painting a *second* capsule inside it (a `.regularMaterial` background, a purple gradient) gives you two stacked pills with slightly different geometry, and the system one peeks out as a seam or a pale ring. Several rounds were spent trying to make the custom pill exactly match the container. **That was the wrong fight.**
 
-We fought this for several rounds trying to make a purple circle send button. **Current state: reverted to a plain native button with a purple `arrow.up.right` icon.** Marked as "fix later." If you retry: mirror `GlassIconButton`'s exact geometry (36pt icon, 44pt height, 4pt horizontal padding, `Capsule` background) rather than using `Circle()` with a smaller frame.
+**Resolution:** toolbar buttons draw no background at all and let the system capsule be the pill.
+
+- Icon buttons (`GlassIconButton`) are a bare `Button { Image }` — iOS renders a solid glass circle.
+- The purple Send action in a toolbar is `ToolbarPillButton`: `.buttonStyle(.glassProminent)` + `.tint(#4C00FF)`. The system capsule *is* the filled pill, so there is nothing to ring. Cost: it's a flat tint rather than the §6 gradient, which only the system can draw there.
+- `PurplePillButton` (custom gradient) is now only for full-width actions **outside** toolbars — the signing screen and confirmation — where there's no system container to fight.
 
 ### `ShareLink` doesn't work as a toolbar label
 
@@ -330,13 +334,13 @@ Three options were considered:
 - [x] **API key out of git** — moved to a gitignored `Secrets.swift` before the repo's first real commit, so it never entered history. Still ships inside the app binary; move server-side for production. Rotate it if it was ever shared.
 - [x] `ChatSheetView.swift` deleted (`MessageBubble` moved to `Components.swift` first)
 - [x] `ContractEditorView` struct deleted; `RichTextEditorImpl`, the pickers and the markdown parser extracted into `RichTextEditor.swift`, `MediaPickers.swift` and `MarkdownParser.swift`
-- [ ] Purple circle send button still shows a white ring from the iOS 26 glass container — currently reverted to a plain purple icon
+- [x] Toolbar pills showed a seam / white ring from the iOS 26 glass container — resolved by not painting a custom background inside toolbar items (see §6)
 - [x] `handshake://` URL scheme registered — see §4f
 - [ ] Numbered lists renumber from 1 on each application — no continuation logic
 - [ ] Photo attachments live only in the `NSAttributedString`; they aren't persisted anywhere
 - [ ] The iOS 26.3 simulator runtime renders no colour emoji (template icons show as `[?]`). Test on 26.5+
 - [ ] The stamped signature block is slightly soft on Retina — it has to render 1:1 to survive the RTFD round-trip at the right size (see Feature 3 notes)
-- [x] `PurplePillButton` in the nav bar rendered clamped ("S e" wrapped over two lines) — fixed with `lineLimit(1)` + `fixedSize`; see §0 end-to-end pass
+- [x] `PurplePillButton` in the nav bar rendered clamped ("S e" wrapped over two lines) — first patched with `lineLimit(1)` + `fixedSize`, then superseded by `ToolbarPillButton` (system glass); see §6
 - [ ] No error state if the AI returns malformed output (missing `TITLE:` / `---`)
 - [ ] Xcode isn't available in the environment this was built in — **nothing here has been compile-verified.** Build before trusting it
 

@@ -184,7 +184,12 @@ struct TemplateCard: View {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MARK: - Glass Icon Button
-// The frosted-glass pill buttons in navigation bars.
+// Icon buttons for navigation bars.
+//
+// Deliberately NO background of its own. On iOS 26 every ToolbarItem is already
+// wrapped in the system's Liquid Glass capsule; painting a second capsule
+// inside it produced two stacked pills with mismatched geometry — the seam and
+// pale ring §6 of HANDOFF describes. The system capsule is the pill now.
 // ─────────────────────────────────────────────────────────────────────────────
 
 struct GlassIconButton: View {
@@ -196,13 +201,33 @@ struct GlassIconButton: View {
             Image(systemName: systemName)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(Color(.label))
-                .frame(width: 36, height: 36)
         }
-        .frame(height: 44)
-        .padding(.horizontal, 4)
-        .background(.regularMaterial, in: Capsule())
-        .shadow(color: .black.opacity(0.10), radius: 16, x: 0, y: 6)
-        .buttonStyle(.plain)
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARK: - Toolbar Pill Button  (Send)
+// The purple primary action when it lives in a navigation bar.
+//
+// Uses the iOS 26 prominent glass style with the brand purple as tint, so the
+// system's own toolbar capsule IS the filled pill — nothing custom to ring.
+// PurplePillButton (custom gradient) is for full-width actions outside
+// toolbars, where there's no system container to fight.
+// ─────────────────────────────────────────────────────────────────────────────
+
+struct ToolbarPillButton: View {
+    let title: String
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 17, weight: .medium))
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+        }
+        .buttonStyle(.glassProminent)
+        .tint(Color(red: 76/255, green: 0, blue: 255/255))   // #4C00FF
     }
 }
 

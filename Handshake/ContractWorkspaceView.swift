@@ -140,7 +140,7 @@ struct ContractWorkspaceView: View {
                     Button("Done") { isEditing = false }
                         .font(.system(size: 17, weight: .semibold))
                 } else if contract != nil && liveStatus != .signed {
-                    PurplePillButton(title: "Send") { showSendFlow = true }
+                    ToolbarPillButton(title: "Send") { showSendFlow = true }
                 } else if contract != nil {
                     StatusBadge(status: .signed)
                 } else {

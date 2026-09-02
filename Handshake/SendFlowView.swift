@@ -85,9 +85,8 @@ struct SendFlowView: View {
                         .foregroundStyle(Color(.label))
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    PurplePillButton(title: "Send") { startSend() }
-                        .opacity(canSend ? 1 : 0.4)
-                        .allowsHitTesting(canSend)
+                    ToolbarPillButton(title: "Send") { startSend() }
+                        .disabled(!canSend)
                 }
             }
         }
