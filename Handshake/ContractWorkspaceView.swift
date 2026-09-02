@@ -62,9 +62,17 @@ struct ContractWorkspaceView: View {
     /// Medium: roughly 46% of the content area.
     private var mediumPanelH: CGFloat { max(200, contentH * 0.46) }
 
-    private var sheetTitle: String {
-        let words = initialPrompt.split(separator: " ").prefix(5).joined(separator: " ")
-        return words.isEmpty ? "New Agreement" : words
+    /// Title shown before the contract exists. The prompt's first few words read
+    /// as a sentence fragment in the nav bar ("Create a contract for a"), so use
+    /// a neutral placeholder until the AI returns a real title.
+    private var sheetTitle: String { "New Agreement" }
+
+    /// Status as the store sees it. SendFlowView marks the contract sent while
+    /// this workspace is still open, and the local `contract` copy doesn't
+    /// learn about it until the next persist() — so read the store directly.
+    private var liveStatus: ContractStatus {
+        guard let id = contract?.id else { return .draft }
+        return ContractStore.shared.contract(id: id)?.status ?? .draft
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -131,8 +139,10 @@ struct ContractWorkspaceView: View {
                 if isEditing {
                     Button("Done") { isEditing = false }
                         .font(.system(size: 17, weight: .semibold))
-                } else if contract != nil {
+                } else if contract != nil && liveStatus != .signed {
                     PurplePillButton(title: "Send") { showSendFlow = true }
+                } else if contract != nil {
+                    StatusBadge(status: .signed)
                 } else {
                     Button("Cancel") { dismiss() }
                 }
@@ -168,11 +178,18 @@ struct ContractWorkspaceView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
 
-                Text(c.title)
-                    .font(.system(size: 28, weight: .bold))
-                    .foregroundStyle(Color(.label))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .fixedSize(horizontal: false, vertical: true)
+                HStack(alignment: .top) {
+                    Text(c.title)
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundStyle(Color(.label))
+                        .fixedSize(horizontal: false, vertical: true)
+                    if liveStatus != .draft {
+                        Spacer(minLength: 8)
+                        StatusBadge(status: liveStatus)
+                            .padding(.top, 6)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 GeometryReader { geo in
                     RichTextEditorImpl(

@@ -13,6 +13,7 @@ struct SendFlowView: View {
     @State private var recipients: [Recipient] = [Recipient()]
     @State private var activeSheet: ActiveSheet? = nil
     @State private var didSend: Bool = false
+    @State private var askedAboutShare: Bool = false
 
     private enum ActiveSheet: Identifiable {
         case sms, mail, activity
@@ -115,10 +116,29 @@ struct SendFlowView: View {
                     finalize()
                 }
             case .activity:
-                // Fallback for simulator / devices where compose sheets are unavailable
-                ActivityView(activityItems: [mailSubject, mailBody])
-                    .presentationDetents([.medium, .large])
+                // Fallback for simulator / devices where compose sheets are
+                // unavailable. One combined string, not [subject, body] — two
+                // items makes the share sheet describe them as "2 Images" and
+                // hand targets two separate payloads.
+                ActivityView(activityItems: [shareText]) { completed in
+                    activeSheet = nil
+                    if completed {
+                        // A share completed, but iOS won't say whether it was
+                        // actually delivered (it could have been "Copy"), so
+                        // confirm rather than assume.
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                            askedAboutShare = true
+                        }
+                    }
+                }
+                .presentationDetents([.medium, .large])
             }
+        }
+        .alert("Did you send it?", isPresented: $askedAboutShare) {
+            Button("Yes, mark as sent") { didSend = true; finalize() }
+            Button("Not yet", role: .cancel) { }
+        } message: {
+            Text("Handshake can't confirm delivery through the share sheet. Marking it sent moves it to Pending Signature.")
         }
     }
 
@@ -156,6 +176,10 @@ struct SendFlowView: View {
     }
 
     private var mailSubject: String { "Please sign: \(contract.title)" }
+
+    /// Single payload for the share-sheet fallback — subject and body together,
+    /// so the sheet has one item to describe and hand on.
+    private var shareText: String { "\(mailSubject)\n\n\(mailBody)" }
 
     private var mailBody: String {
         """

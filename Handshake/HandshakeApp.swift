@@ -48,20 +48,19 @@ struct RootView: View {
     private func open(_ url: URL) {
         guard let route = Self.route(for: url) else { return }   // not our scheme
 
-        // Anything already presented has to come down first: a live
-        // fullScreenCover swallows the alert, and SwiftUI ignores a second
-        // `item:` binding change while the first is still on screen.
-        guard signingTarget == nil, linkError == nil else {
-            signingTarget = nil
-            linkError     = nil
-            Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(350))   // dismiss animation
-                apply(route)
-            }
-            return
-        }
+        // Everything presented anywhere has to come down before we can
+        // present: RootView's own cover/alert, but also HomeView's workspace
+        // cover and history sheet — SwiftUI only lets one presentation per
+        // view be active, and a cover already up under HomeView blocks ours
+        // entirely, so the link would be silently dropped.
+        signingTarget = nil
+        linkError     = nil
+        DeepLinkRouter.shared.dismissAll()
 
-        apply(route)
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(400))   // dismiss animations
+            apply(route)
+        }
     }
 
     private func apply(_ route: Route) {
@@ -97,6 +96,23 @@ struct RootView: View {
         case sign(GeneratedContract)
         case failed(String)
     }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARK: - DeepLinkRouter
+//
+// The one thing a deep link needs from the rest of the app: "close whatever
+// you have open." Views that present sheets or covers observe `dismissTick`
+// and drop their presentation state when it changes.
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Observable
+final class DeepLinkRouter {
+    static let shared = DeepLinkRouter()
+    private(set) var dismissTick = 0
+    private init() {}
+
+    func dismissAll() { dismissTick += 1 }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

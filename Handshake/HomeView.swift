@@ -43,6 +43,7 @@ struct HomeView: View {
     @State private var showSheet         = false
     @State private var showHistory       = false
     @State private var isKeyboardVisible = false
+    private var router = DeepLinkRouter.shared
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -149,6 +150,12 @@ struct HomeView: View {
         // ── Contract history (hamburger menu) ────────────────────────────
         .sheet(isPresented: $showHistory) {
             HistoryView()
+        }
+        // ── Deep link arriving: close our presentations so RootView can
+        //    present the signing screen (see DeepLinkRouter).
+        .onChange(of: router.dismissTick) { _, _ in
+            showSheet   = false
+            showHistory = false
         }
         #if DEBUG
         // Lets a headless verification run open History without a tap:

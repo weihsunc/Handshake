@@ -2,52 +2,6 @@ import SwiftUI
 import UIKit
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MARK: - Emoji View
-// UILabel wrapped in a UIViewRepresentable.
-// UILabel is the only layer that reliably renders colour emoji on both
-// Simulator and device regardless of iOS beta quirks — it uses UIKit's full
-// text-rendering stack which always falls back to Apple Color Emoji.
-// sizeThatFits(_:uiView:context:) (iOS 16+) gives SwiftUI a fixed size so the
-// label can never escape its parent container (the bug in the earlier attempt).
-// ─────────────────────────────────────────────────────────────────────────────
-
-private struct EmojiView: UIViewRepresentable {
-    let emoji: String
-    var pointSize: CGFloat = 20
-
-    func makeUIView(context: Context) -> UILabel {
-        let label = UILabel()
-        label.text            = emoji
-        label.font            = UIFont(name: "AppleColorEmoji", size: pointSize)
-                                    ?? UIFont.systemFont(ofSize: pointSize)
-        label.backgroundColor = .clear
-        label.textAlignment   = .center
-        // Low priorities let SwiftUI's own frame take precedence over
-        // UILabel's intrinsic size — prevents the view from expanding.
-        label.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        label.setContentHuggingPriority(.defaultLow, for: .vertical)
-        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        label.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
-        return label
-    }
-
-    func updateUIView(_ uiView: UILabel, context: Context) {
-        uiView.text = emoji
-        uiView.font = UIFont(name: "AppleColorEmoji", size: pointSize)
-                          ?? UIFont.systemFont(ofSize: pointSize)
-    }
-
-    // Tell SwiftUI exactly how much space to allocate — prevents layout overflow.
-    func sizeThatFits(
-        _ proposal: ProposedViewSize,
-        uiView: UILabel,
-        context: Context
-    ) -> CGSize? {
-        CGSize(width: pointSize * 1.35, height: pointSize * 1.35)
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // MARK: - Chat Bar
 // Compact pill by default; expands to a rounded-rect card when text wraps.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -194,9 +148,12 @@ struct TemplateCard: View {
 
                 // ── Header: emoji + title ──────────────────────────────────
                 HStack(alignment: .center, spacing: 6) {
-                    // EmojiCanvas draws directly via CoreText — immune to
-                    // SwiftUI's button-label font override that causes [?].
-                    EmojiView(emoji: emoji, pointSize: 20)
+                    // Plain Text, not the old EmojiView UILabel bridge — that
+                    // pinned the font to "AppleColorEmoji", which stopped
+                    // resolving on iOS 26 and rendered every card's icon as a
+                    // [?] tofu box. Text picks up the system emoji fallback.
+                    Text(verbatim: emoji)
+                        .font(.system(size: 20))
 
                     Text(title)
                         .font(.system(size: 17, weight: .semibold))
@@ -268,6 +225,11 @@ struct PurplePillButton: View {
                 // against the dark gradient background
                 .blendMode(.plusLighter)
                 .foregroundStyle(.white)
+                // An iOS 26 toolbar clamps its item to a 44pt glass container and
+                // will wrap the label to fit it — "Send" came out as "S/e" on two
+                // lines. fixedSize makes the text refuse to be compressed.
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
                 .padding(.horizontal, 14)
                 .frame(maxWidth: fullWidth ? .infinity : nil)
                 .frame(height: fullWidth ? 52 : 44)   // 44 matches glass button height exactly
@@ -367,12 +329,20 @@ struct PurpleCircleButton: View {
 struct ActivityView: UIViewControllerRepresentable {
     let activityItems: [Any]
     var applicationActivities: [UIActivity]? = nil
+    /// Reports whether the user actually completed a share. Needed because the
+    /// share sheet is a dead end otherwise — the caller can't tell a real send
+    /// from a dismissal.
+    var onFinish: ((Bool) -> Void)? = nil
 
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(
+        let vc = UIActivityViewController(
             activityItems: activityItems,
             applicationActivities: applicationActivities
         )
+        vc.completionWithItemsHandler = { _, completed, _, _ in
+            onFinish?(completed)
+        }
+        return vc
     }
 
     func updateUIViewController(_ uiViewController: UIActivityViewController,

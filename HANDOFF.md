@@ -1,7 +1,7 @@
 # Handshake — Project Handoff
 
-**Last updated:** August 12, 2026
-**Status:** Contract generation + editing complete. Send flow built. Persistence + history verified on the simulator (§0). `handshake://` deep links and Face ID signing complete. Remaining: the §9 cleanup list.
+**Last updated:** September 1, 2026
+**Status:** Full loop works end to end on the simulator — generate → edit → send → sign → history (§0). Remaining: the §9 list.
 
 ---
 
@@ -32,6 +32,17 @@ Feature 1 from §7 was implemented in a cloud Cowork session without Xcode. It h
 6. ✅ **Swipe-delete a draft** — swiped a draft, tapped Delete, force-quit, relaunched: gone from both the list and `contracts.json`.
 
 Also confirmed: a seeded `contracts.json` decodes correctly (ISO-8601 dates) and renders all three sections with the right badges, recipient names, relative dates, and sort order.
+
+**End-to-end pass (September 1, 2026):** the whole loop was walked on the simulator as one experience — home → template → generate → send → sign → history — and these breaks were found and fixed:
+
+- **Template card icons rendered as `[?]` tofu.** Not app code: the **iOS 26.3 simulator runtime** fails to render colour emoji at all (the same build renders them fine on 26.5). The old `EmojiView` UILabel bridge that pinned `AppleColorEmoji` didn't help and was removed; the cards use plain `Text` now. **Verify on the 26.5 runtime or newer**, and expect tofu on 26.3.
+- **Nav title showed the raw prompt cut mid-sentence** ("Create a contract for a") while generating. Now "New Agreement" until the AI returns a title.
+- **The Send pill in the workspace toolbar rendered as "S / e" on two lines.** The iOS 26 glass container squeezes the item and wraps the label. `PurplePillButton` now has `lineLimit(1)` + `fixedSize(horizontal: true)`, which stops the wrap without changing the geometry §6 warns about.
+- **The share-sheet fallback was a dead end.** It passed `[subject, body]` as two items, which iOS described as "2 Images", and on dismissal dropped the user back on the send form with no feedback and no status change. It now shares one combined string and, when a share *completes*, asks "Did you send it?" — marking sent only on an explicit yes, since the share sheet can't distinguish Mail from Copy. The §0 rule that the fallback never marks sent silently still holds.
+- **A signing link arriving while the workspace was open was silently dropped.** The workspace is a `fullScreenCover` from `HomeView`; SwiftUI won't present `RootView`'s cover on top of it, so tapping "Open in Handshake" did nothing. `DeepLinkRouter.dismissAll()` now tells `HomeView` to close its cover and history sheet before `RootView` presents, ~400 ms later.
+- **The workspace didn't reflect a contract being sent from inside it.** It now reads status live from the store: a Pending/Signed badge appears beside the title, and Send is replaced by the Signed badge once signed (editing a signed document would invalidate the stamp).
+
+The full loop — draft → sent → signed, with signer, timestamp and hash persisted — now completes on the simulator with no device and no Mail account.
 
 **Verification tooling notes (environment, not app bugs):**
 
@@ -78,7 +89,7 @@ A native iOS app that turns a plain-English prompt into a legally formatted cont
 
 | File | Purpose |
 |---|---|
-| `HandshakeApp.swift` | App entry + `RootView` — owns `onOpenURL` deep-link routing (§4f) |
+| `HandshakeApp.swift` | App entry + `RootView` (deep-link routing, §4f) + `DeepLinkRouter` |
 | `HomeView.swift` | Landing screen — illustration, template cards, chat bar |
 | `ContractWorkspaceView.swift` | **The main screen.** Contract + AI panel + editor |
 | `Components.swift` | Shared UI: ChatBar, toolbars, buttons, illustration, `MessageBubble` |
@@ -165,7 +176,7 @@ The `handshake://` scheme is registered (see §4f), so that link opens the app.
 - The scheme is registered in `Info.plist` at the **repo root**, not in `Handshake/`. That folder is a synchronized group, so a plist inside it also gets copied in as a bundle resource and collides with the generated one (`Multiple commands produce .../Handshake.app/Info.plist`). `GENERATE_INFOPLIST_FILE` stays `YES` and Xcode merges the generated keys into this file, so only `CFBundleURLTypes` lives there.
 - `RootView.onOpenURL` resolves the URL to a route and presents `SigningView`.
 - Failure cases show an alert rather than failing silently: wrong host, malformed UUID, and — the one that will actually happen — **a contract that isn't on this device**. Contracts are local-only until there's a backend, so a link only opens on the device that created it.
-- A link arriving while a signing screen is already up dismisses it first. A live `fullScreenCover` swallows `.alert`, and SwiftUI ignores a second `item:` change while the first is still presented.
+- A link arriving while *anything* is presented dismisses it first via `DeepLinkRouter.dismissAll()`. A live `fullScreenCover` swallows `.alert`, SwiftUI ignores a second `item:` change while the first is up, and — the case that actually bit — a cover presented from `HomeView` (the workspace) blocks `RootView` from presenting at all, so the link was silently dropped. `HomeView` observes `dismissTick` and drops its cover and history sheet; `RootView` presents ~400 ms later.
 
 ### 4e. AI service (`AIService`)
 
@@ -323,8 +334,9 @@ Three options were considered:
 - [x] `handshake://` URL scheme registered — see §4f
 - [ ] Numbered lists renumber from 1 on each application — no continuation logic
 - [ ] Photo attachments live only in the `NSAttributedString`; they aren't persisted anywhere
+- [ ] The iOS 26.3 simulator runtime renders no colour emoji (template icons show as `[?]`). Test on 26.5+
 - [ ] The stamped signature block is slightly soft on Retina — it has to render 1:1 to survive the RTFD round-trip at the right size (see Feature 3 notes)
-- [ ] `PurplePillButton` in the nav bar sometimes renders clamped ("S e" wrapped over two lines) during the edit-mode transition — same iOS 26 glass-container squash as the send button above
+- [x] `PurplePillButton` in the nav bar rendered clamped ("S e" wrapped over two lines) — fixed with `lineLimit(1)` + `fixedSize`; see §0 end-to-end pass
 - [ ] No error state if the AI returns malformed output (missing `TITLE:` / `---`)
 - [ ] Xcode isn't available in the environment this was built in — **nothing here has been compile-verified.** Build before trusting it
 
