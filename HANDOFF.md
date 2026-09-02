@@ -255,6 +255,12 @@ Any `ToolbarItem` is wrapped in a 44pt Liquid Glass capsule by the system. Paint
 - The purple Send action in a toolbar is `ToolbarPillButton`: `.buttonStyle(.glassProminent)` + `.tint(#4C00FF)`. The system capsule *is* the filled pill, so there is nothing to ring. Cost: it's a flat tint rather than the §6 gradient, which only the system can draw there.
 - `PurplePillButton` (custom gradient) is now only for full-width actions **outside** toolbars — the signing screen and confirmation — where there's no system container to fight.
 
+### Don't branch a tappable list on text-field focus
+
+**This was a real bug.** Home's cards were `if isTyping { suggestions } else { examples }` with `isTyping = isFocused && hasText`. Tapping a suggestion *launched* the workspace instead of filling the prompt. Touching the card resigns the text field on **touch-down**, focus drops, the condition flips, SwiftUI swaps the *examples* list in under the finger — and it's the examples action (launch) that fires on **touch-up**.
+
+Rule: anything that decides which list shows or what a tap does must depend on state that can't change during the tap. `hasText` (is the prompt non-empty) is stable across a tap; focus is not. The hero uses `!isFocused && !hasText` so it stays collapsed after a suggestion fills the prompt.
+
 ### `ShareLink` doesn't work as a toolbar label
 
 `UINavigationBar` clamps its intrinsic size to a small square. Use a plain `Button` + a state flag + `UIActivityViewController` (see `ActivityView` in `Components.swift`).

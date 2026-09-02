@@ -56,7 +56,14 @@ struct HomeView: View {
     private var router = DeepLinkRouter.shared
 
     private var trimmed: String { prompt.trimmingCharacters(in: .whitespacesAndNewlines) }
-    private var isTyping: Bool   { isFocused && !trimmed.isEmpty }
+    /// Drives which cards show and what a tap does. Deliberately NOT tied to
+    /// focus: touching a card resigns the text field on touch-down, and if the
+    /// branch depended on focus the examples list would swap in under the
+    /// finger and *its* action (launch) would fire on touch-up.
+    private var hasText: Bool    { !trimmed.isEmpty }
+    /// Hero shows only when idle — collapsed while focused, and stays
+    /// collapsed after a suggestion fills the prompt and drops focus.
+    private var showHero: Bool   { !isFocused && !hasText }
 
     /// Templates that plausibly complete what's been typed. Prefix matches on
     /// the prompt rank first, then keyword overlap. Empty → fall back to the
@@ -81,7 +88,7 @@ struct HomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
 
-                    if !isFocused {
+                    if showHero {
                         hero
                             .transition(.opacity.combined(with: .move(edge: .top)))
                     }
@@ -90,14 +97,14 @@ struct HomeView: View {
                         .id("cards")
                 }
                 .padding(.horizontal, 16)
-                .padding(.top, isFocused ? 8 : 16)
+                .padding(.top, showHero ? 16 : 8)
                 .padding(.bottom, 16)
             }
             .scrollDismissesKeyboard(.interactively)
             // Collapsing the hero removes ~400pt above the cards, but the scroll
             // view keeps its offset — so the first card would slide up behind
             // the toolbar. Pin the list to the top whenever focus changes.
-            .onChange(of: isFocused) { _, _ in
+            .onChange(of: showHero) { _, _ in
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                     proxy.scrollTo("cards", anchor: .top)
                 }
@@ -117,8 +124,8 @@ struct HomeView: View {
             .padding(.top, 8)
             .padding(.bottom, 8)
         }
-        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: isFocused)
-        .animation(.spring(response: 0.3,  dampingFraction: 0.85), value: isTyping)
+        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: showHero)
+        .animation(.spring(response: 0.3,  dampingFraction: 0.85), value: hasText)
         .navigationTitle("Home")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -190,24 +197,17 @@ struct HomeView: View {
     // MARK: - Cards  (examples, or suggestions while typing)
     // ─────────────────────────────────────────────────────────────────────────
 
-    @ViewBuilder
     private var cards: some View {
+        // One ForEach, one source of truth. Which list and what a tap does are
+        // both decided by hasText at the moment of the tap — see the note on
+        // hasText for why this must not depend on focus.
         LazyVStack(spacing: 16) {
-            if isTyping {
-                ForEach(suggestions) { t in
-                    TemplateCard(emoji: t.emoji, title: t.title, description: t.prompt) {
-                        prompt = t.prompt          // autocomplete — fill, don't launch
-                    }
-                    .transition(.opacity)
+            ForEach(hasText ? suggestions : templates) { t in
+                TemplateCard(emoji: t.emoji, title: t.title, description: t.prompt) {
+                    prompt = t.prompt
+                    if !hasText { showSheet = true }   // example → launch; suggestion → fill
                 }
-            } else {
-                ForEach(templates) { t in
-                    TemplateCard(emoji: t.emoji, title: t.title, description: t.prompt) {
-                        prompt    = t.prompt
-                        showSheet = true
-                    }
-                    .transition(.opacity)
-                }
+                .transition(.opacity)
             }
         }
     }
