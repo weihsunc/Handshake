@@ -55,6 +55,13 @@ struct HomeView: View {
     @State private var isFocused   = false
     private var router = DeepLinkRouter.shared
 
+    // ── AI autocomplete ──────────────────────────────────────────────────────
+    @State private var aiSuggestions: [PromptSuggestion] = []
+    @State private var aiQuery:       String = ""          // query aiSuggestions answer
+    @State private var aiCache:       [String: [PromptSuggestion]] = [:]
+    @State private var aiTask:        Task<Void, Never>? = nil
+    @State private var lastPicked:    String = ""          // don't re-suggest what was just tapped
+
     private var trimmed: String { prompt.trimmingCharacters(in: .whitespacesAndNewlines) }
     /// Drives which cards show and what a tap does. Deliberately NOT tied to
     /// focus: touching a card resigns the text field on touch-down, and if the
@@ -65,10 +72,11 @@ struct HomeView: View {
     /// collapsed after a suggestion fills the prompt and drops focus.
     private var showHero: Bool   { !isFocused && !hasText }
 
-    /// Templates that plausibly complete what's been typed. Prefix matches on
-    /// the prompt rank first, then keyword overlap. Empty → fall back to the
-    /// examples so the list never blanks out mid-keystroke.
-    private var suggestions: [ContractTemplate] {
+    /// Instant, local first paint while the model is thinking: templates that
+    /// plausibly complete what's been typed. Prefix matches on the prompt rank
+    /// first, then keyword overlap. Empty → the examples, so the list never
+    /// blanks out mid-keystroke.
+    private var localSuggestions: [ContractTemplate] {
         let q     = trimmed.lowercased()
         let words = Set(q.split(whereSeparator: { !$0.isLetter }).map(String.init).filter { $0.count >= 3 })
 
@@ -126,6 +134,8 @@ struct HomeView: View {
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.85), value: showHero)
         .animation(.spring(response: 0.3,  dampingFraction: 0.85), value: hasText)
+        .animation(.easeInOut(duration: 0.2), value: aiSuggestions)
+        .onChange(of: trimmed) { _, text in fetchSuggestions(for: text) }
         .navigationTitle("Home")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -202,13 +212,57 @@ struct HomeView: View {
         // both decided by hasText at the moment of the tap — see the note on
         // hasText for why this must not depend on focus.
         LazyVStack(spacing: 16) {
-            ForEach(hasText ? suggestions : templates) { t in
-                TemplateCard(emoji: t.emoji, title: t.title, description: t.prompt) {
-                    prompt = t.prompt
-                    if !hasText { showSheet = true }   // example → launch; suggestion → fill
+            if hasText && !aiSuggestions.isEmpty && aiQuery == trimmed.lowercased() {
+                // Model's completions for exactly what's typed now
+                ForEach(aiSuggestions) { sug in
+                    TemplateCard(emoji: sug.emoji, title: sug.title, description: sug.prompt) {
+                        lastPicked = sug.prompt
+                        prompt     = sug.prompt          // fill, don't launch
+                    }
+                    .transition(.opacity)
                 }
-                .transition(.opacity)
+            } else {
+                ForEach(hasText ? localSuggestions : templates) { t in
+                    TemplateCard(emoji: t.emoji, title: t.title, description: t.prompt) {
+                        lastPicked = t.prompt
+                        prompt     = t.prompt
+                        if !hasText { showSheet = true }   // example → launch; suggestion → fill
+                    }
+                    .transition(.opacity)
+                }
             }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - AI autocomplete
+    //
+    // Debounced ~450 ms after the last keystroke, cancelled by the next one,
+    // cached per query. On failure the local suggestions simply stay up.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private func fetchSuggestions(for text: String) {
+        aiTask?.cancel()
+
+        let q = text.lowercased()
+        guard q.count >= 3, text != lastPicked else { return }
+
+        if let hit = aiCache[q] {
+            aiSuggestions = hit
+            aiQuery       = q
+            return
+        }
+
+        aiTask = Task {
+            try? await Task.sleep(for: .milliseconds(450))
+            guard !Task.isCancelled else { return }
+
+            guard let result = try? await AIService.suggestPrompts(for: text),
+                  !Task.isCancelled, !result.isEmpty else { return }
+
+            aiCache[q]    = result
+            aiSuggestions = result
+            aiQuery       = q
         }
     }
 }

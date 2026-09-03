@@ -124,7 +124,7 @@ One screen, three states, driven by the chat bar's focus and text:
 |---|---|---|
 | **idle** | Illustration + welcome copy, then the example templates as a **vertical** list of full-width cards scrolling under the chat bar | Launches the workspace with that prompt |
 | **focused** (empty) | Hero collapses; the cards pin to the top; the chat bar rides the keyboard | Launches the workspace |
-| **typing** | Cards become **autocomplete suggestions** — templates ranked by prefix match on the prompt, then keyword overlap with what's typed. No match → the examples stay | **Fills the prompt** so it can be edited, doesn't launch |
+| **typing** | Cards become **autocomplete suggestions**: 3 concrete contracts the model thinks you mean ("NDA" → *NDA for a new employee*, *Mutual NDA between two companies*, …), each with an emoji, a ≤6-word title and a ready-to-send prompt. Until the model answers, templates ranked by prefix/keyword match paint instantly | **Fills the prompt** so it can be edited, doesn't launch |
 
 Implementation notes:
 
@@ -133,7 +133,7 @@ Implementation notes:
 - `TemplateCard` is the Figma "Snackbar": stone/100 `#F5F5F4`, radius 24, 16pt padding, title with the emoji inline (`"📄 Consulting Agreement"` as one string), gray body. It fills its container's width; the list owns the horizontal inset.
 - The chat bar placeholder is the brand gradient ("Start with HandShake"). A `TextField` can't style its placeholder, so a gradient `Text` is overlaid while the field is empty.
 - Hero type follows the Figma frame (30pt semibold / 20pt regular, system font) rather than the older 28/17 tokens in §6.
-- The "suggestions" state isn't drawn in Figma (frame 18 shows typed text with the example cards still visible) — the ranking + fill-on-tap behaviour is an interpretation of "auto completed suggestions". Adjust if the intent differs.
+- **AI suggestions** (`AIService.suggestPrompts`, haiku, `max_tokens` 300): fired ~450 ms after the last keystroke on ≥3 characters, cancelled by the next keystroke, cached per lowercased query, and skipped when the text is exactly a suggestion that was just tapped. The model returns `EMOJI | TITLE | PROMPT` lines; anything unparseable is dropped. On any failure the local ranking simply stays up — there's no error state, by design. The suggestions state isn't drawn in Figma (frame 18 shows typed text with the example cards); the 3-card layout reuses `TemplateCard`.
 
 Launches `ContractWorkspaceView` via `.fullScreenCover`.
 

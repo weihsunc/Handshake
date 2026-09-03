@@ -14,6 +14,15 @@ enum AIError: Error, LocalizedError {
     }
 }
 
+/// One autocomplete card on Home: what the user is probably trying to say,
+/// as a short label plus a prompt that's ready to send as-is.
+struct PromptSuggestion: Identifiable, Hashable {
+    let emoji: String
+    let title: String
+    let prompt: String
+    var id: String { title + prompt }
+}
+
 enum AIService {
 
     private static let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
@@ -49,6 +58,41 @@ enum AIService {
             """,
             message: "I want to create: \(prompt)"
         )
+    }
+
+    /// Autocomplete for the Home chat bar: turn a few typed words ("NDA",
+    /// "lease for my", …) into 3 concrete contract ideas the user can tap.
+    /// Cheap on purpose — called on a debounce while typing.
+    static func suggestPrompts(for text: String) async throws -> [PromptSuggestion] {
+        let raw = try await call(
+            system: """
+            You power autocomplete in Handshake, an app that drafts contracts from a short description.
+            The user has typed the beginning of a request. Suggest exactly 3 specific, different \
+            contracts they might mean. Stay on the topic of what they typed.
+
+            Output exactly 3 lines, nothing else, each formatted as:
+            EMOJI | TITLE | PROMPT
+
+            - EMOJI: one emoji that fits the contract
+            - TITLE: at most 6 words, sentence case, no trailing period (e.g. "NDA for a new employee")
+            - PROMPT: one sentence, 15-30 words, written as an instruction that could be sent as-is \
+              (e.g. "Create a non-disclosure agreement between an employer and a new employee covering \
+              confidential information, duration, and exclusions.")
+            """,
+            message: text,
+            maxTokens: 300
+        )
+
+        return raw
+            .components(separatedBy: "\n")
+            .compactMap { line -> PromptSuggestion? in
+                let parts = line.components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespaces) }
+                guard parts.count >= 3, !parts[1].isEmpty, !parts[2].isEmpty else { return nil }
+                let emoji = parts[0].isEmpty ? "✨" : String(parts[0].prefix(2))
+                return PromptSuggestion(emoji: emoji, title: parts[1], prompt: parts[2])
+            }
+            .prefix(3)
+            .map { $0 }
     }
 
     /// Generate a full contract from a (possibly multi-turn) prompt.
@@ -103,7 +147,7 @@ enum AIService {
     // MARK: - Private
     // ─────────────────────────────────────────────────────────────
 
-    private static func call(system: String, message: String) async throws -> String {
+    private static func call(system: String, message: String, maxTokens: Int = 2048) async throws -> String {
         guard Config.anthropicAPIKey != "YOUR_API_KEY_HERE" else {
             throw AIError.missingAPIKey
         }
@@ -116,7 +160,7 @@ enum AIService {
 
         let body: [String: Any] = [
             "model":      "claude-haiku-4-5-20251001",
-            "max_tokens": 2048,
+            "max_tokens": maxTokens,
             "system":     system,
             "messages":   [["role": "user", "content": message]]
         ]
