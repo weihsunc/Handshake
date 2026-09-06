@@ -72,7 +72,7 @@ A native iOS app that turns a plain-English prompt into a legally formatted cont
 | **Platform** | Native iOS 26, SwiftUI |
 | **AI** | Anthropic Messages API, `claude-haiku-4-5-20251001` |
 | **Persistence** | JSON file in Application Support (`ContractStore`) |
-| **Backend** | None |
+| **Backend** | Optional — one Supabase Edge Function in `backend/` that holds the API keys (Anthropic, DocuSeal, SignWell). Off until `Secrets.backendURL` is set |
 | **Min target** | iOS 26 (uses liquid-glass toolbar behavior) |
 
 ### Running it
@@ -330,6 +330,48 @@ Verified end to end on the simulator with enrolled biometrics: deep link → Fac
 
 ---
 
+### Feature 4 — Provider-backed signing (decision in progress)
+
+Research on handing the legal weight to an e-sign provider: see the vendor study
+(claude.ai/code/artifact/479670c7-8572-41a7-8151-38e1e238e4b6). The finding that
+matters: **only DocuSeal lets a signature be applied via the API** (`PUT
+/submitters/{id}`, `completed: true`) after our own Face ID step. Every other
+provider — DocuSign and Dropbox Sign included — requires the recipient to sign in
+*their* UI, so Face ID becomes an unlock in front of a provider screen.
+
+Answers from the product owner (6 Sep 2026):
+- **Face ID as the signature vs the unlock:** undecided — prototype both paths.
+- **Geography:** global / undecided. eIDAS Advanced/Qualified would narrow to
+  DocuSign or Dropbox Sign at enterprise pricing; start US-grade.
+- **Backend:** solo designer, no server experience. Whatever is chosen must be
+  deployable by pasting keys — the API keys cannot ship in the app (§9).
+
+**What's built (scaffolded, compiles, waiting on accounts):**
+
+- `backend/supabase/functions/handshake/index.ts` — one Supabase Edge Function,
+  five routes: an Anthropic proxy (moves the AI key off the phone too) plus
+  `docuseal/start`, `docuseal/complete`, `signwell/start`, `signwell/status`.
+  Type-checks under `tsc` with a Deno stub. Both providers wired to their TEST
+  modes. Setup is in `backend/README.md` — three free signups and two CLI
+  commands.
+- `SigningProviders.swift` — `SigningBackend` (`.onDevice` / `.docuseal` /
+  `.signwell`), `BackendClient`, `SigningProviders.start` (called from the send
+  flow; creates the provider document from a PDF), `completeDocuSeal` (Path A,
+  after Face ID, with our evidence), `ContractPDF` (US Letter, 1" margins,
+  Core Text pagination). `GeneratedContract.providerRef` persists the ids.
+- `ProviderSigningWebView.swift` — Path B: SignWell's embedded page in a
+  `WKWebView`, finishes on the completion redirect or a posted message.
+- `SigningView.sign()` branches on the contract's provider after Face ID. The
+  consent line under the button ("By signing you agree to this contract and to
+  doing business electronically") is the Path A intent/consent capture and is
+  sent to DocuSeal as evidence.
+- `Secrets.swift` gained `backendURL` and `signingBackend`. Both default to
+  off, so the app behaves exactly as before until they're set.
+
+**Not yet verified end to end** — needs DocuSeal + SignWell + Supabase
+accounts, which only the owner can create. `-HandshakeDumpPDF` writes the
+provider-bound PDF to Application Support for eyeballing without an account.
+
 ## 8. The eSignature Decision
 
 Three options were considered:
@@ -350,7 +392,7 @@ Three options were considered:
 
 ## 9. Known Issues / Cleanup
 
-- [x] **API key out of git** — moved to a gitignored `Secrets.swift` before the repo's first real commit, so it never entered history. Still ships inside the app binary; move server-side for production. Rotate it if it was ever shared.
+- [x] **API key out of git** — moved to a gitignored `Secrets.swift` before the repo's first real commit, so it never entered history. Still ships inside the app binary until `backendURL` is set — then `AIService` routes through the edge function and the key stays on the server. Rotate it if it was ever shared.
 - [x] `ChatSheetView.swift` deleted (`MessageBubble` moved to `Components.swift` first)
 - [x] `ContractEditorView` struct deleted; `RichTextEditorImpl`, the pickers and the markdown parser extracted into `RichTextEditor.swift`, `MediaPickers.swift` and `MarkdownParser.swift`
 - [x] Toolbar pills showed a seam / white ring from the iOS 26 glass container — resolved by not painting a custom background inside toolbar items (see §6)

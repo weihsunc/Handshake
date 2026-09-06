@@ -74,11 +74,12 @@ final class ContractStore {
         save()
     }
 
-    func markSent(id: UUID, recipients: [Recipient]) {
+    func markSent(id: UUID, recipients: [Recipient], providerRef: ProviderRef? = nil) {
         guard let i = contracts.firstIndex(where: { $0.id == id }) else { return }
-        contracts[i].recipients = recipients
-        contracts[i].status     = .sent
-        contracts[i].sentAt     = .now
+        contracts[i].recipients  = recipients
+        contracts[i].status      = .sent
+        contracts[i].sentAt      = .now
+        if let providerRef { contracts[i].providerRef = providerRef }
         save()
     }
 

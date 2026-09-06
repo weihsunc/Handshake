@@ -26,6 +26,9 @@ struct SigningView: View {
     @State private var isSigning:   Bool = false
     @State private var signError:   String? = nil
     @State private var confirmed:   SignatureStamp? = nil
+    /// Path B: SignWell's embedded page, shown after Face ID.
+    @State private var providerSigningURL: URL? = nil
+    @State private var pendingStamp: SignatureStamp? = nil
     /// Local mirror of status so the view updates after signing without
     /// re-reading the store.
     @State private var status: ContractStatus
@@ -87,6 +90,13 @@ struct SigningView: View {
             SigningConfirmationView(contractTitle: contract.title, stamp: stamp) {
                 confirmed = nil
                 dismiss()
+            }
+        }
+        .fullScreenCover(item: $providerSigningURL) { url in
+            ProviderSigningWebView(url: url) {
+                // Provider captured the signature. Record locally, then confirm.
+                providerSigningURL = nil
+                if let stamp = pendingStamp { finishLocally(stamp, name: signerName) }
             }
         }
     }
@@ -172,9 +182,10 @@ struct SigningView: View {
                 .opacity(canSign ? 1 : 0.4)
                 .allowsHitTesting(canSign)
 
-                Text("Your identity is confirmed on this device.")
+                Text(Self.consentText)
                     .font(.system(size: 13))
                     .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
+                    .multilineTextAlignment(.center)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 34)
@@ -207,6 +218,41 @@ struct SigningView: View {
         // Authenticated — stamp the document.
         let stamp = SignatureService.stamp(signerName: name, contractID: contract.id)
 
+        switch contract.providerRef?.backend ?? .onDevice {
+
+        case .docuseal:
+            // Path A: Face ID was the signature. Tell the provider, with our evidence.
+            guard let ref = contract.providerRef else { finishLocally(stamp, name: name); return }
+            do {
+                try await SigningProviders.completeDocuSeal(
+                    ref: ref, signerName: name, stamp: stamp, consentText: Self.consentText
+                )
+            } catch {
+                signError = error.localizedDescription
+                return
+            }
+            finishLocally(stamp, name: name)
+
+        case .signwell:
+            // Path B: Face ID was the unlock. The provider's page does the signing.
+            guard let s = contract.providerRef?.signingURLs.first, let url = URL(string: s) else {
+                signError = "No signing link from the provider."
+                return
+            }
+            pendingStamp       = stamp
+            providerSigningURL = url
+
+        case .onDevice:
+            finishLocally(stamp, name: name)
+        }
+    }
+
+    /// Copy shown above the button. Under Path A this is what establishes
+    /// intent + consent, so it's also sent to the provider as evidence.
+    static let consentText = "By signing you agree to this contract and to doing business electronically."
+
+    /// Stamp the document, persist, confirm — shared by all three paths.
+    private func finishLocally(_ stamp: SignatureStamp, name: String) {
         let stamped = NSMutableAttributedString(attributedString: attributedBody)
         stamped.stampSignature(stamp, width: bodyWidth)
         attributedBody = stamped                     // new instance so the view syncs

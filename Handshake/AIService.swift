@@ -148,15 +148,22 @@ enum AIService {
     // ─────────────────────────────────────────────────────────────
 
     private static func call(system: String, message: String, maxTokens: Int = 2048) async throws -> String {
-        guard Config.anthropicAPIKey != "YOUR_API_KEY_HERE" else {
-            throw AIError.missingAPIKey
+        // With a backend configured the key stays on the server (HANDOFF §9):
+        // same request body, different door.
+        let viaBackend = BackendClient.baseURL?.appendingPathComponent("ai/messages")
+        if viaBackend == nil {
+            guard Config.anthropicAPIKey != "YOUR_API_KEY_HERE" else {
+                throw AIError.missingAPIKey
+            }
         }
 
-        var req = URLRequest(url: endpoint)
+        var req = URLRequest(url: viaBackend ?? endpoint)
         req.httpMethod = "POST"
         req.setValue("application/json",         forHTTPHeaderField: "Content-Type")
-        req.setValue(Config.anthropicAPIKey,     forHTTPHeaderField: "x-api-key")
-        req.setValue("2023-06-01",               forHTTPHeaderField: "anthropic-version")
+        if viaBackend == nil {
+            req.setValue(Config.anthropicAPIKey, forHTTPHeaderField: "x-api-key")
+            req.setValue("2023-06-01",           forHTTPHeaderField: "anthropic-version")
+        }
 
         let body: [String: Any] = [
             "model":      "claude-haiku-4-5-20251001",

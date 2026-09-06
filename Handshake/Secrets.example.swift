@@ -17,4 +17,11 @@ import Foundation
 
 // enum Secrets {
 //     static let anthropicAPIKey = "YOUR_API_KEY_HERE"
+//
+//     /// Your deployed edge function, e.g. "https://<ref>.supabase.co/functions/v1/handshake".
+//     /// Leave nil to talk to Anthropic directly and sign on-device (no provider).
+//     static let backendURL: String? = nil
+//
+//     /// Which signing path to prototype. .onDevice needs no backend.
+//     static let signingBackend: SigningBackend = .onDevice
 // }

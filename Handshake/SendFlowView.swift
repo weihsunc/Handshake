@@ -14,6 +14,7 @@ struct SendFlowView: View {
     @State private var activeSheet: ActiveSheet? = nil
     @State private var didSend: Bool = false
     @State private var askedAboutShare: Bool = false
+    @State private var providerError: String? = nil
 
     private enum ActiveSheet: Identifiable {
         case sms, mail, activity
@@ -133,6 +134,10 @@ struct SendFlowView: View {
                 .presentationDetents([.medium, .large])
             }
         }
+        .alert("Couldn't register with the signing provider",
+               isPresented: Binding(get: { providerError != nil }, set: { if !$0 { providerError = nil } })) {
+            Button("OK", role: .cancel) { providerError = nil }
+        } message: { Text(providerError ?? "") }
         .alert("Did you send it?", isPresented: $askedAboutShare) {
             Button("Yes, mark as sent") { didSend = true; finalize() }
             Button("Not yet", role: .cancel) { }
@@ -156,11 +161,29 @@ struct SendFlowView: View {
 
     /// Called once the compose flow finishes. If anything actually went out,
     /// mark the contract as sent (status + recipients + timestamp) and persist.
+    /// With a signing provider configured, the provider-side document is
+    /// created first so the signing screen has something to complete.
     private func finalize() {
-        if didSend {
+        guard didSend else { dismiss(); return }
+
+        let backend = Secrets.signingBackend
+        guard backend != .onDevice, BackendClient.isConfigured else {
             ContractStore.shared.markSent(id: contract.id, recipients: validRecipients)
+            dismiss()
+            return
         }
-        dismiss()
+
+        Task {
+            do {
+                let ref = try await SigningProviders.start(contract: contract,
+                                                           recipients: validRecipients,
+                                                           backend: backend)
+                ContractStore.shared.markSent(id: contract.id, recipients: validRecipients, providerRef: ref)
+                dismiss()
+            } catch {
+                providerError = error.localizedDescription
+            }
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────

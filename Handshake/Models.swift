@@ -45,6 +45,10 @@ struct GeneratedContract: Identifiable, Codable {
     /// SHA256 of name + contract id + timestamp + device id. Tamper-evidence
     /// only — there's no independent chain of custody. See HANDOFF §8.
     var signatureHash: String?      = nil
+
+    /// Set when the contract was sent through a provider (DocuSeal / SignWell).
+    /// nil means on-device signing only.
+    var providerRef: ProviderRef?   = nil
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

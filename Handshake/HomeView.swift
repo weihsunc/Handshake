@@ -169,8 +169,19 @@ struct HomeView: View {
         // Lets a headless verification run open History without a tap:
         //   xcrun simctl launch <udid> com.weihsun.Handshake -HandshakeOpenHistory
         .onAppear {
-            if ProcessInfo.processInfo.arguments.contains("-HandshakeOpenHistory") {
+            let args = ProcessInfo.processInfo.arguments
+            if args.contains("-HandshakeOpenHistory") {
                 showHistory = true
+            }
+            // Renders the newest contract to Application Support/Handshake/preview.pdf
+            // so the provider-bound PDF can be eyeballed without an account:
+            //   xcrun simctl launch <udid> com.weihsun.Handshake -HandshakeDumpPDF
+            if args.contains("-HandshakeDumpPDF"),
+               let c = ContractStore.shared.contracts.max(by: { $0.createdAt < $1.createdAt }) {
+                let dir = FileManager.default
+                    .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+                    .appendingPathComponent("Handshake", isDirectory: true)
+                try? ContractPDF.render(c).write(to: dir.appendingPathComponent("preview.pdf"))
             }
         }
         #endif
