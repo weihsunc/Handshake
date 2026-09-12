@@ -1,7 +1,7 @@
 # Handshake — Project Handoff
 
-**Last updated:** September 1, 2026
-**Status:** Full loop works end to end on the simulator — generate → edit → send → sign → history (§0). Remaining: the §9 list.
+**Last updated:** September 12, 2026
+**Status:** Full loop works end to end **across two devices** with no server — send → recipient opens on their own phone → signs with Face ID → signed copy returns to the sender (§0). Provider-backed signing scaffolded, awaiting accounts (§7 Feature 4). Remaining: the §9 list.
 
 ---
 
@@ -44,14 +44,26 @@ Also confirmed: a seeded `contracts.json` decodes correctly (ISO-8601 dates) and
 
 The full loop — draft → sent → signed, with signer, timestamp and hash persisted — now completes on the simulator with no device and no Mail account.
 
+**Two-device pass (September 12, 2026):** sender on an iPhone 17 Pro, recipient on a **separate, empty** iPhone 17 (its store wiped first). Before the change, the recipient hit the "not on this device" alert — the link was just a UUID. After:
+
+1. Sender's link (built by `SendFlowView` from the store, recipients included) opens on the empty recipient → contract stored locally, `SigningView` shows it with Pending badge, "Signing as" pre-filled from the payload.
+2. Recipient signs with Face ID (real `LAContext`, simulated matching face) → `signed`, `signedBy`, `signedAt`, `signatureHash`, stamped RTFD all recorded on the recipient.
+3. Recipient's History lists it under Signed.
+4. The "Send signed copy back" link opens on the sender → sender's record moves to `signed` with the **same hash** the recipient produced; still exactly one entry; read-only viewer presented.
+
+One detour worth knowing: restarting SpringBoard on a simulator (`launchctl kickstart -k system/com.apple.SpringBoard`) **wipes its Face ID enrollment**. The first sign attempt failed with "Biometry is not enrolled" — which the app surfaced as a clean alert, so that error path is verified too. Re-enroll with `notifyutil -s com.apple.BiometricKit.enrollmentChanged 1` + `-p`.
+
 **Verification tooling notes (environment, not app bugs):**
 
 - The Claude simulator MCP *build* server can't read `Handshake/Assets.xcassets` (`actool` permission error, though the same command works from a normal shell). Build with `xcodebuild` directly. Its `control`/`attach` action works once Xcode is properly selected.
-- `HomeView` carries a `#if DEBUG` launch-argument hook so History can be opened headlessly for screenshots, with no tap:
+- `#if DEBUG` launch-argument hooks let a headless run drive flows the simulator panel can't tap (a second device it hasn't been granted, the system "Open in Handshake?" prompt):
   ```
-  xcrun simctl launch <udid> com.weihsun.Handshake -HandshakeOpenHistory
+  -HandshakeOpenHistory          open History on launch
+  -HandshakeDumpPDF              write the newest contract's PDF to Application Support/Handshake/preview.pdf
+  -HandshakeOpenURL '<url>'      feed a handshake:// URL to the router, bypassing the system prompt
+  -HandshakeAutoSign             tap "Sign with Face ID" ~1 s after the signing screen appears
   ```
-  Debug-only; safe to delete.
+  The biometric prompt is still real; answer it with `notifyutil -p com.apple.BiometricKit_Sim.pearl.match`. Debug-only; safe to delete.
 
 ---
 
@@ -188,7 +200,9 @@ The `handshake://` scheme is registered (see §4f), so that link opens the app.
 
 - The scheme is registered in `Info.plist` at the **repo root**, not in `Handshake/`. That folder is a synchronized group, so a plist inside it also gets copied in as a bundle resource and collides with the generated one (`Multiple commands produce .../Handshake.app/Info.plist`). `GENERATE_INFOPLIST_FILE` stays `YES` and Xcode merges the generated keys into this file, so only `CFBundleURLTypes` lives there.
 - `RootView.onOpenURL` resolves the URL to a route and presents `SigningView`.
-- Failure cases show an alert rather than failing silently: wrong host, malformed UUID, and — the one that will actually happen — **a contract that isn't on this device**. Contracts are local-only until there's a backend, so a link only opens on the device that created it.
+- **The link carries the contract** (`ContractTransfer`): `handshake://sign/<uuid>?d=<base64url(zlib(JSON))>`. The payload is title, markdown body, recipients, status and timestamps — the RTFD is left out (≈10× the size; the recipient never edits), so a recipient sees the markdown rendering. An 8.8 KB contract becomes a ~4.9K-char link, which survives SMS, Mail and the share sheet. Opening it on a phone that has no copy stores one and presents `SigningView`; on the sender's own phone the local copy wins.
+- **The signed copy comes back the same way**: `handshake://signed/<uuid>?d=…`. The confirmation screen offers "Send signed copy back", which shares a message with that link. Opening it on the sender's phone calls `markSigned` on their record (their RTFD edits are kept, only signer/hash/timestamp are taken) and shows the read-only viewer. No server anywhere — two phones and any messaging channel.
+- Failure cases show an alert rather than failing silently: wrong host, malformed UUID, a `sign` link with no payload (an old-format link), a `signed` link whose payload isn't actually signed.
 - A link arriving while *anything* is presented dismisses it first via `DeepLinkRouter.dismissAll()`. A live `fullScreenCover` swallows `.alert`, SwiftUI ignores a second `item:` change while the first is up, and — the case that actually bit — a cover presented from `HomeView` (the workspace) blocks `RootView` from presenting at all, so the link was silently dropped. `HomeView` observes `dismissTick` and drops its cover and history sheet; `RootView` presents ~400 ms later.
 
 ### 4e. AI service (`AIService`)
@@ -400,6 +414,7 @@ Three options were considered:
 - [ ] Numbered lists renumber from 1 on each application — no continuation logic
 - [ ] Photo attachments live only in the `NSAttributedString`; they aren't persisted anywhere
 - [ ] The iOS 26.3 simulator runtime renders no colour emoji (template icons show as `[?]`). Test on 26.5+
+- [ ] A recipient sees the markdown rendering, not the sender's rich-text edits — the RTFD is deliberately excluded from the link payload for size. If that matters, the fix is a real transport (backend or `.fileImporter` with an `.rtfd` attachment), not a bigger link.
 - [ ] The stamped signature block is slightly soft on Retina — it has to render 1:1 to survive the RTFD round-trip at the right size (see Feature 3 notes)
 - [x] `PurplePillButton` in the nav bar rendered clamped ("S e" wrapped over two lines) — first patched with `lineLimit(1)` + `fixedSize`, then superseded by `ToolbarPillButton` (system glass); see §6
 - [ ] No error state if the AI returns malformed output (missing `TITLE:` / `---`)

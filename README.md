@@ -59,7 +59,7 @@ Nothing in the app's UI claims otherwise, and it shouldn't be changed to.
 
 ## Known limitations
 
-Tracked in [`HANDOFF.md`](HANDOFF.md) §9. The notable ones: inline photos aren't persisted outside the attributed string, numbered lists restart at 1 on each application, contracts are local-only so a signing link only opens on the device that created it, and there's no error state for malformed AI output.
+Tracked in [`HANDOFF.md`](HANDOFF.md) §9. The notable ones: inline photos aren't persisted outside the attributed string, numbered lists restart at 1 on each application, and there's no error state for malformed AI output. Signing links carry the contract itself, so they work between phones with no server — but a recipient sees the markdown rendering, not the sender's rich-text edits.
 
 ## License
 

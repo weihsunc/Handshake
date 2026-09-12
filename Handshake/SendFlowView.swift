@@ -190,8 +190,16 @@ struct SendFlowView: View {
     // MARK: - Message bodies
     // ─────────────────────────────────────────────────────────────────────────
 
-    // handshake://sign/<id> — requires the URL scheme registered in Info.plist
-    private var signingLink: String { "handshake://sign/\(contract.id.uuidString)" }
+    // handshake://sign/<id>?d=… — the link carries the contract itself, so a
+    // recipient on another phone can open it with no server (ContractTransfer).
+    // Built from the store, not `contract`, so the RECIPIENTS the user just
+    // typed are inside the payload.
+    private var signingLink: String {
+        var c = ContractStore.shared.contract(id: contract.id) ?? contract
+        c.recipients = validRecipients
+        c.status     = .sent
+        return ContractTransfer.signingLink(for: c)
+    }
 
     private var smsBody: String {
         "You've been invited to sign \"\(contract.title)\". Open in Handshake to review and sign with Face ID:\n\(signingLink)"

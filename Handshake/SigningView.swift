@@ -48,6 +48,14 @@ struct SigningView: View {
 
     private var isSigned: Bool { status == .signed }
 
+    #if DEBUG
+    /// Headless verification: taps "Sign with Face ID" ~1 s after appearing.
+    /// The biometric prompt is still real — the test answers it with a
+    /// simulated matching face. Launch with:
+    ///   -HandshakeOpenURL '<link>' -HandshakeAutoSign
+    private var autoSign: Bool { ProcessInfo.processInfo.arguments.contains("-HandshakeAutoSign") }
+    #endif
+
     private var canSign: Bool {
         !signerName.trimmingCharacters(in: .whitespaces).isEmpty && !isSigning
     }
@@ -65,6 +73,13 @@ struct SigningView: View {
                     signBar
                 }
             }
+            #if DEBUG
+            .task {
+                guard autoSign, !isSigned else { return }
+                try? await Task.sleep(for: .seconds(1))
+                await sign()
+            }
+            #endif
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
@@ -87,7 +102,11 @@ struct SigningView: View {
             }
         }
         .fullScreenCover(item: $confirmed) { stamp in
-            SigningConfirmationView(contractTitle: contract.title, stamp: stamp) {
+            SigningConfirmationView(
+                contractTitle:  contract.title,
+                stamp:          stamp,
+                signedContract: ContractStore.shared.contract(id: contract.id)
+            ) {
                 confirmed = nil
                 dismiss()
             }
@@ -282,9 +301,13 @@ struct SigningConfirmationView: View {
 
     let contractTitle: String
     let stamp: SignatureStamp
+    /// The signed contract, for sending a copy back to whoever sent it.
+    var signedContract: GeneratedContract? = nil
     var onDone: () -> Void
 
-    @State private var appeared = false
+    @State private var appeared  = false
+    @State private var showShare = false
+    @State private var sentBack  = false
 
     private static let purple = Color(red: 76/255, green: 0, blue: 255/255)
 
@@ -335,14 +358,50 @@ struct SigningConfirmationView: View {
 
                 Spacer()
 
-                PurplePillButton(title: "Done", fullWidth: true) { onDone() }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 34)
+                VStack(spacing: 10) {
+                    if signedContract != nil {
+                        // The other party has no way to know this was signed
+                        // until the copy reaches them — this is that step.
+                        PurplePillButton(title: sentBack ? "Copy sent ✓" : "Send signed copy back",
+                                         fullWidth: true) { showShare = true }
+                            .opacity(sentBack ? 0.6 : 1)
+
+                        Button(sentBack ? "Done" : "Not now") { onDone() }
+                            .font(.system(size: 17, weight: .medium))
+                            .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
+                            .padding(.vertical, 6)
+                    } else {
+                        PurplePillButton(title: "Done", fullWidth: true) { onDone() }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 34)
             }
         }
         .onAppear {
             withAnimation(.spring(response: 0.45, dampingFraction: 0.6)) { appeared = true }
         }
+        .sheet(isPresented: $showShare) {
+            if let c = signedContract {
+                ActivityView(activityItems: [Self.returnMessage(for: c)]) { completed in
+                    showShare = false
+                    if completed { sentBack = true }
+                }
+                .presentationDetents([.medium, .large])
+            }
+        }
+    }
+
+    /// What goes back to the sender: a line of context plus a link that
+    /// carries the signed document (ContractTransfer). Opening it on the
+    /// sender's phone moves their copy to Signed.
+    static func returnMessage(for c: GeneratedContract) -> String {
+        """
+        \(c.signedBy ?? "The recipient") signed "\(c.title)" with Face ID.
+
+        Open in Handshake to record the signature:
+        \(ContractTransfer.signedCopyLink(for: c))
+        """
     }
 }
 
