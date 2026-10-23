@@ -376,12 +376,23 @@ struct ContractWorkspaceView: View {
             await MainActor.run {
                 contract       = saved
                 attributedBody = saved.displayBody()
-                messages.append(ChatMessage(
-                    content: "Welcome back! Keep editing directly on the contract, or ask me to update it for you.",
-                    isUser: false
-                ))
-                // Document front and center; chat bar re-opens the panel on demand
-                showAIPanel = false
+                // Pick the conversation up where it left off. The greeting is
+                // only for drafts that never had one (older records).
+                messages = saved.messages
+                if messages.isEmpty {
+                    messages.append(ChatMessage(
+                        content: "Welcome back! Keep editing directly on the contract, or ask me to update it for you.",
+                        isUser: false
+                    ))
+                    // Nothing to catch up on: document front and center, the
+                    // chat bar re-opens the panel on demand.
+                    showAIPanel = false
+                } else {
+                    // There's a real conversation — show it, at medium, so
+                    // the document is still visible behind it.
+                    panelHeight = mediumPanelH
+                    showAIPanel = true
+                }
             }
             return
         }
@@ -439,6 +450,7 @@ struct ContractWorkspaceView: View {
             c.sentAt     = stored.sentAt
             c.signedAt   = stored.signedAt
         }
+        c.messages = messages
         contract = c
         ContractStore.shared.upsert(c)
     }
@@ -453,16 +465,38 @@ struct ContractWorkspaceView: View {
         aiChatPrompt = ""
 
         messages.append(ChatMessage(content: text, isUser: true))
+        persist()                      // keep the question even if the reply fails
         isAILoading = true
         errorText   = nil
 
-        let history = messages
+        // The model has to SEE the contract to revise it. Before this, only the
+        // chat transcript was sent, so "add a clause" came back as a snippet —
+        // which the TITLE/--- guard now rejects, and which previously replaced
+        // the whole body. The document text (not `contract.content`) is used so
+        // the user's manual edits are what gets revised.
+        let transcript = messages
             .map { $0.isUser ? "User: \($0.content)" : "Assistant: \($0.content)" }
             .joined(separator: "\n\n")
+        let currentTitle = contract?.title ?? "Agreement"
+        let currentBody  = attributedBody.string
+        let request = """
+            CURRENT CONTRACT — revise this, do not start over:
+            TITLE: \(currentTitle)
+            ---
+            \(currentBody)
+
+            CONVERSATION:
+            \(transcript)
+
+            Apply the user's latest request to the current contract. Return the COMPLETE \
+            updated contract in the required format — a TITLE: line, then ---, then the \
+            entire body with the change incorporated. Never return only the changed \
+            section, a diff, or a summary.
+            """
 
         Task {
             do {
-                let result = try await AIService.generateContract(for: history)
+                let result = try await AIService.generateContract(for: request)
                 await MainActor.run {
                     isAILoading    = false
                     // Keep the same contract identity (and metadata) across AI
@@ -476,11 +510,11 @@ struct ContractWorkspaceView: View {
                         contract = result
                     }
                     attributedBody = .fromHandshakeMarkdown(result.content)
-                    persist()
                     messages.append(ChatMessage(
                         content: "Updated! Feel free to keep editing or ask me for more changes.",
                         isUser: false
                     ))
+                    persist()          // after the append, so the reply is saved too
                 }
             } catch {
                 await MainActor.run {

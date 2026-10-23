@@ -113,14 +113,16 @@ enum AIService {
             Then write the full contract body.
 
             Formatting rules:
-            - Use **Section Header:** on its own line for section titles
+            - Put each section title on its own line in bold, like **1. PROJECT SCOPE** \
+              (the words "Section Header" must never appear in the output)
             - Use numbered lists for clauses (1. 2. 3. …)
             - Use [brackets] for any field the user must fill in
             - Include all standard sections for this agreement type
 
             Be thorough, professional, and complete.
             """,
-            message: prompt
+            message: prompt,
+            maxTokens: 8192        // a revised full contract exceeds the 2048 default
         )
 
         // Parse TITLE / body. Both markers are required: without "---" the
@@ -144,12 +146,22 @@ enum AIService {
             }
         }
 
-        guard let title, let bodyStart else { throw AIError.malformedContract }
+        guard let title, let bodyStart else {
+            #if DEBUG
+            print("[Handshake AI] rejected reply (no TITLE/---). First 400 chars:\n\(raw.prefix(400))")
+            #endif
+            throw AIError.malformedContract
+        }
 
         let body = lines[bodyStart...]
             .joined(separator: "\n")
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard body.count >= 40 else { throw AIError.malformedContract }   // a contract, not a one-liner
+        guard body.count >= 40 else {
+            #if DEBUG
+            print("[Handshake AI] rejected reply (body \(body.count) chars):\n\(raw.prefix(400))")
+            #endif
+            throw AIError.malformedContract
+        }
 
         return GeneratedContract(id: UUID(), title: title, content: body)
     }

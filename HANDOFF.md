@@ -16,7 +16,7 @@ Feature 1 from §7 was implemented in a cloud Cowork session without Xcode. It h
 
 **Changed files:**
 
-- `Models.swift` — `GeneratedContract` and `Recipient` are now `Codable`. New fields on `GeneratedContract`: `bodyRTFD: Data?` (rich-text edits incl. inline images; takes precedence over `content` for display), `recipients`, `status: ContractStatus` (`draft/sent/signed/declined`), `createdAt`, `sentAt`, `signedAt`. All new fields have defaults, so existing `(id:title:content:)` call sites still compile.
+- `Models.swift` — `GeneratedContract` and `Recipient` are now `Codable`. **`GeneratedContract` uses a hand-written tolerant decoder** (an extension so the memberwise init survives): every field after `content` is `decodeIfPresent` with a default. The store loads with `try? decode … ?? []`, so a strict synthesized decoder would fail the whole file on one missing key, show empty history, and the next save would overwrite it with nothing. Add new fields with a default and a `decodeIfPresent` line. New fields on `GeneratedContract`: `bodyRTFD: Data?` (rich-text edits incl. inline images; takes precedence over `content` for display), `recipients`, `status: ContractStatus` (`draft/sent/signed/declined`), `createdAt`, `sentAt`, `signedAt`. All new fields have defaults, so existing `(id:title:content:)` call sites still compile.
 - `ContractWorkspaceView.swift` — new optional `existing: GeneratedContract?` param: when set, loads the saved draft instead of generating (AI panel starts hidden). New `persist()` serializes the editor body to RTFD and upserts to the store; called after initial generation, after every AI update, when leaving edit mode, and `onDisappear`. **Two bug fixes:** AI follow-ups now keep the same contract `id` (previously every update minted a new UUID → would have duplicated drafts), and `persist()` re-reads status metadata from the store so closing the workspace can't regress a just-sent contract back to draft.
 - `SendFlowView.swift` — tracks compose results; only when SMS/Mail actually reports sent does `finalize()` call `ContractStore.markSent` (recipients + timestamp), then dismisses. The `UIActivityViewController` fallback does *not* mark sent.
 - `HomeView.swift` — hamburger button now opens `HistoryView` as a sheet.
@@ -43,6 +43,13 @@ Also confirmed: a seeded `contracts.json` decodes correctly (ISO-8601 dates) and
 - **The workspace didn't reflect a contract being sent from inside it.** It now reads status live from the store: a Pending/Signed badge appears beside the title, and Send is replaced by the Signed badge once signed (editing a signed document would invalidate the stamp).
 
 The full loop — draft → sent → signed, with signer, timestamp and hash persisted — now completes on the simulator with no device and no Mail account.
+
+**Conversation persistence (October 23, 2026):** the AI chat is saved on the contract (`GeneratedContract.messages`) and restored on reopen, with the panel already open at medium when there's history. Three things fell out of making that work, all verified on the simulator:
+
+- **Follow-ups sent only the transcript.** The model never saw the document, so "add a clause" came back as a snippet — which the new `malformedContract` guard correctly rejected (and which, before that guard, used to *replace the whole body* with the snippet). `sendToAI` now sends the current document text plus the transcript and asks for the complete revised contract. The document text (`attributedBody.string`), not `contract.content`, so the user's manual edits are what gets revised.
+- **`max_tokens` was 2048** — about 7.5K characters, the size of the contracts being revised. Raised to 8192 for generation.
+- **The "Updated!" reply was appended after `persist()`**, so it never reached disk. Order fixed.
+- The prompt's `**Section Header:**` example was being echoed literally as "Section Header: 1. PROJECT SCOPE". Reworded.
 
 **Two-device pass (September 12, 2026):** sender on an iPhone 17 Pro, recipient on a **separate, empty** iPhone 17 (its store wiped first). Before the change, the recipient hit the "not on this device" alert — the link was just a UUID. After:
 
