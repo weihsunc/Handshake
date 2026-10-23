@@ -107,6 +107,7 @@ A native iOS app that turns a plain-English prompt into a legally formatted cont
 | `Components.swift` | Shared UI: ChatBar, toolbars, `GlassIconButton` / `ToolbarPillButton` (system glass) / `PurplePillButton` (custom, full-width only), illustration, `MessageBubble` |
 | `RichTextEditor.swift` | `RichTextEditorImpl` — the `UITextView` ↔ SwiftUI bridge |
 | `MarkdownParser.swift` | `NSMutableAttributedString.fromHandshakeMarkdown` |
+| `ListNumbering.swift` | Pure Foundation: what number the next list item gets. Testable outside the app |
 | `MediaPickers.swift` | `PhotoPickerView`, `DocumentPickerView` |
 | `SendFlowView.swift` | Recipient entry + SMS/Mail compose |
 | `SigningView.swift` | Recipient's signing screen + confirmation screen |
@@ -411,7 +412,7 @@ Three options were considered:
 - [x] `ContractEditorView` struct deleted; `RichTextEditorImpl`, the pickers and the markdown parser extracted into `RichTextEditor.swift`, `MediaPickers.swift` and `MarkdownParser.swift`
 - [x] Toolbar pills showed a seam / white ring from the iOS 26 glass container — resolved by not painting a custom background inside toolbar items (see §6)
 - [x] `handshake://` URL scheme registered — see §4f
-- [x] Numbered lists continue from the paragraph above ("3." → next is "4.") instead of restarting at 1
+- [x] Numbered lists continue from the nearest non-empty paragraph above ("3." → next is "4.") instead of restarting at 1. Logic lives in `ListNumbering` and is unit-tested (8 cases) — the simulator keyboard shifts the toolbar unpredictably, so UI-driving the editor headlessly isn't a reliable test
 - [ ] Photo attachments live only in the `NSAttributedString`; they aren't persisted anywhere
 - [ ] The iOS 26.3 simulator runtime renders no colour emoji (template icons show as `[?]`). Test on 26.5+
 - [ ] A recipient sees the markdown rendering, not the sender's rich-text edits — the RTFD is deliberately excluded from the link payload for size. If that matters, the fix is a real transport (backend or `.fileImporter` with an `.rtfd` attachment), not a bigger link.
