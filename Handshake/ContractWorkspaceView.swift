@@ -580,9 +580,14 @@ struct ContractWorkspaceView: View {
         }
         if ranges.isEmpty { ranges.append(nsText.paragraphRange(for: sel)) }
 
+        // Continue an existing list ("3." above → this one is "4.").
+        let start = numbered
+            ? ListNumbering.nextNumber(in: nsText, forParagraphAt: ranges.first?.location ?? 0)
+            : 1
+
         tv.textStorage.beginEditing()
         for (i, r) in ranges.enumerated().reversed() {
-            let prefix = numbered ? "\(ranges.count - i). " : "• "
+            let prefix = numbered ? "\(start + i). " : "• "
             tv.textStorage.insert(NSAttributedString(string: prefix, attributes: baseAttrs()), at: r.location)
         }
         tv.textStorage.endEditing()

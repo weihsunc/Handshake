@@ -411,14 +411,14 @@ Three options were considered:
 - [x] `ContractEditorView` struct deleted; `RichTextEditorImpl`, the pickers and the markdown parser extracted into `RichTextEditor.swift`, `MediaPickers.swift` and `MarkdownParser.swift`
 - [x] Toolbar pills showed a seam / white ring from the iOS 26 glass container — resolved by not painting a custom background inside toolbar items (see §6)
 - [x] `handshake://` URL scheme registered — see §4f
-- [ ] Numbered lists renumber from 1 on each application — no continuation logic
+- [x] Numbered lists continue from the paragraph above ("3." → next is "4.") instead of restarting at 1
 - [ ] Photo attachments live only in the `NSAttributedString`; they aren't persisted anywhere
 - [ ] The iOS 26.3 simulator runtime renders no colour emoji (template icons show as `[?]`). Test on 26.5+
 - [ ] A recipient sees the markdown rendering, not the sender's rich-text edits — the RTFD is deliberately excluded from the link payload for size. If that matters, the fix is a real transport (backend or `.fileImporter` with an `.rtfd` attachment), not a bigger link.
 - [ ] The stamped signature block is slightly soft on Retina — it has to render 1:1 to survive the RTFD round-trip at the right size (see Feature 3 notes)
 - [x] `PurplePillButton` in the nav bar rendered clamped ("S e" wrapped over two lines) — first patched with `lineLimit(1)` + `fixedSize`, then superseded by `ToolbarPillButton` (system glass); see §6
-- [ ] No error state if the AI returns malformed output (missing `TITLE:` / `---`)
-- [ ] Xcode isn't available in the environment this was built in — **nothing here has been compile-verified.** Build before trusting it
+- [x] Malformed AI output (missing `TITLE:` / `---`, or a body under 40 chars) now throws `AIError.malformedContract` with a "try rephrasing" message instead of filing an empty "Agreement"
+- [x] ~~Nothing compile-verified~~ — stale since August; everything since has been built and run on the simulator (§0)
 
 ---
 

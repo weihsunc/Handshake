@@ -4,12 +4,17 @@ enum AIError: Error, LocalizedError {
     case invalidResponse
     case apiError(Int)
     case missingAPIKey
+    /// The model answered, but not in the TITLE / --- / body shape we asked
+    /// for. Distinct from invalidResponse (which is transport-level) so the
+    /// user sees "try again" rather than "check your key".
+    case malformedContract
 
     var errorDescription: String? {
         switch self {
-        case .invalidResponse:   return "Unexpected response from AI."
-        case .apiError(let c):   return "API error (status \(c)). Check your key in Secrets.swift."
-        case .missingAPIKey:     return "Add your Anthropic API key to Secrets.swift."
+        case .invalidResponse:    return "Unexpected response from AI."
+        case .apiError(let c):    return "API error (status \(c)). Check your key in Secrets.swift."
+        case .missingAPIKey:      return "Add your Anthropic API key to Secrets.swift."
+        case .malformedContract:  return "The AI didn't return a usable contract. Try rephrasing your request or sending it again."
         }
     }
 }
@@ -118,17 +123,20 @@ enum AIService {
             message: prompt
         )
 
-        // Parse TITLE / body
+        // Parse TITLE / body. Both markers are required: without "---" the
+        // whole reply (TITLE line included) would become the body; without a
+        // TITLE the contract would be filed as a generic "Agreement".
         let lines = raw.components(separatedBy: "\n")
-        var title = "Agreement"
-        var bodyStart = 0
+        var title: String? = nil
+        var bodyStart: Int? = nil
 
         for (i, line) in lines.enumerated() {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if trimmed.hasPrefix("TITLE:") {
-                title = trimmed
+                let t = trimmed
                     .replacingOccurrences(of: "TITLE:", with: "")
                     .trimmingCharacters(in: .whitespaces)
+                if !t.isEmpty { title = t }
             }
             if trimmed == "---" {
                 bodyStart = i + 1
@@ -136,9 +144,12 @@ enum AIService {
             }
         }
 
+        guard let title, let bodyStart else { throw AIError.malformedContract }
+
         let body = lines[bodyStart...]
             .joined(separator: "\n")
             .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard body.count >= 40 else { throw AIError.malformedContract }   // a contract, not a one-liner
 
         return GeneratedContract(id: UUID(), title: title, content: body)
     }

@@ -20,3 +20,6 @@ xcuserdata/
 
 # ── Claude Code session data ────────────────────────────────────────────────
 .claude/
+
+# ── Stray Cowork import folder (not part of the project) ──────────────────────
+HandShake (1)/
