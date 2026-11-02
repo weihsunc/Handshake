@@ -198,7 +198,15 @@ struct ContractWorkspaceView: View {
                         isEditing:       isEditing,
                         availableWidth:  geo.size.width,
                         onReady:         { tv in textViewRef = tv },
-                        onEditingBegan:  { isEditing = true }
+                        onEditingBegan:  {
+                            isEditing = true
+                            // The panel covered half the document and pushed the
+                            // formatting toolbar under it. Editing is about the
+                            // document; the chat bar brings the panel back on send.
+                            withAnimation(.spring(response: 0.38, dampingFraction: 0.8)) {
+                                showAIPanel = false
+                            }
+                        }
                     )
                 }
                 .frame(height: editorHeight)
@@ -407,12 +415,11 @@ struct ContractWorkspaceView: View {
                 isLoading      = false
                 contract       = result
                 attributedBody = .fromHandshakeMarkdown(result.content)
-                persist()   // save immediately — a generated contract is a draft
-
                 messages.append(ChatMessage(
                     content: "Created! Feel free to edit directly on the contract or ask me to update it for you!",
                     isUser: false
                 ))
+                persist()   // save immediately — a generated contract is a draft (and its reply)
 
                 // Drop panel to medium so the contract is visible behind it
                 withAnimation(.spring(response: 0.55, dampingFraction: 0.82)) {
@@ -544,6 +551,7 @@ struct ContractWorkspaceView: View {
         case .insertImage:      showImagePicker = true
         case .insertAttachment: showDocumentPicker = true
         case .insertSignature:  insertSignaturePlaceholder()
+        case .insertDate:       insertDatePlaceholder()
         }
     }
 
@@ -686,17 +694,58 @@ struct ContractWorkspaceView: View {
         attributedBody = NSMutableAttributedString(attributedString: tv.textStorage)
     }
 
+    // ── Signature / date fields ───────────────────────────────────────────────
+    //
+    // These insert the SAME tokens the signing step looks for — "[Signature]"
+    // and "[Date]" — so a box the user places is where the stamp lands. The
+    // old insert drew a decorative "Signature   Date" rule that the signer
+    // could never find, so the stamp fell to the end of the document.
+    //
+    // They insert at the END of the current paragraph, never mid-word: the
+    // cursor is wherever the user last tapped, and inserting there split text
+    // like "[TENANT'S CURRENT" / "ADDRESS]".
+
     private func insertSignaturePlaceholder() {
+        insertFieldBlock("Signature: [Signature]\nDate: [Date]")
+    }
+
+    private func insertDatePlaceholder() {
+        insertFieldBlock("Date: [Date]")
+    }
+
+    private func insertFieldBlock(_ text: String) {
         guard let tv = textViewRef else { return }
-        let block = "\n\n────────────────────────\nSignature          Date\n\n"
+        let nsText = tv.text as NSString
+        let para   = nsText.paragraphRange(for: tv.selectedRange)
+        var at     = para.location + para.length
+        at = min(at, nsText.length)
+
+        // Start on a fresh line (paragraphRange includes its trailing "\n";
+        // only the final paragraph of a document lacks one).
+        let needsLeadingNewline = at > 0 && nsText.character(at: at - 1) != 10
+        let block = (needsLeadingNewline ? "\n" : "") + "\n" + text + "\n"
+
         let attrs: [NSAttributedString.Key: Any] = [
-            .font:            UIFont.systemFont(ofSize: 14),
-            .foregroundColor: UIColor.secondaryLabel
+            .font:            UIFont.systemFont(ofSize: 17),
+            .foregroundColor: UIColor.label,
+            .paragraphStyle:  { let p = NSMutableParagraphStyle(); p.lineSpacing = 3; return p }()
         ]
-        let attrStr = NSAttributedString(string: block, attributes: attrs)
+        let attr = NSMutableAttributedString(string: block, attributes: attrs)
+        // The bracketed tokens read as fill-in fields, like the AI's [brackets].
+        for token in ["[Signature]", "[Date]"] {
+            var search = NSRange(location: 0, length: attr.length)
+            while true {
+                let r = (attr.string as NSString).range(of: token, options: [], range: search)
+                if r.location == NSNotFound { break }
+                attr.addAttribute(.foregroundColor, value: UIColor.secondaryLabel, range: r)
+                search = NSRange(location: r.location + r.length, length: attr.length - (r.location + r.length))
+            }
+        }
+
         tv.textStorage.beginEditing()
-        tv.textStorage.insert(attrStr, at: tv.selectedRange.location)
+        tv.textStorage.insert(attr, at: at)
         tv.textStorage.endEditing()
+        tv.selectedRange = NSRange(location: at + block.count, length: 0)
         attributedBody = NSMutableAttributedString(attributedString: tv.textStorage)
     }
 

@@ -308,7 +308,7 @@ enum FormatAction {
     case heading1, heading2
     case bulletList, numberedList
     case alignLeft, alignCenter, alignRight
-    case insertImage, insertAttachment, insertSignature
+    case insertImage, insertAttachment, insertSignature, insertDate
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -395,6 +395,7 @@ struct FormattingToolbar: View {
 
                     // ── eSignature — first per design ─────────────────────────
                     toolBtn("signature")        { onAction(.insertSignature) }
+                    toolBtn("calendar")         { onAction(.insertDate) }
 
                     sep
 

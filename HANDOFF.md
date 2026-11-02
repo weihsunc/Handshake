@@ -1,6 +1,6 @@
 # Handshake — Project Handoff
 
-**Last updated:** September 12, 2026
+**Last updated:** November 1, 2026
 **Status:** Full loop works end to end **across two devices** with no server — send → recipient opens on their own phone → signs with Face ID → signed copy returns to the sender (§0). Provider-backed signing scaffolded, awaiting accounts (§7 Feature 4). Remaining: the §9 list.
 
 ---
@@ -43,6 +43,23 @@ Also confirmed: a seeded `contracts.json` decodes correctly (ISO-8601 dates) and
 - **The workspace didn't reflect a contract being sent from inside it.** It now reads status live from the store: a Pending/Signed badge appears beside the title, and Send is replaced by the Signed badge once signed (editing a signed document would invalidate the stamp).
 
 The full loop — draft → sent → signed, with signer, timestamp and hash persisted — now completes on the simulator with no device and no Mail account.
+
+**First-time-user walkthrough (November 1, 2026):** wiped the store and walked home → prompt → generate → edit → signature + date boxes → send → sign on a second phone, judging each screen as someone who'd never seen the app. Fixed on the spot, all verified on the simulator:
+
+- **The toolbar's signature box could never be signed.** It inserted a decorative "Signature   Date" rule, but the stamp searches for the literal `[Signature]`. Mismatch → the stamp fell to the *end of the document*. Now inserts `Signature: [Signature]` / `Date: [Date]` — the same tokens the AI emits and the signer looks for.
+- **There was no date box.** New calendar toolbar button inserts `Date: [Date]`; signing fills the `[Date]` after the chosen signature with the signing date.
+- **Inserts tore words in half.** They went in at the raw cursor; mid-sentence that produced "[TENANT'S CURRENT" / "ADDRESS]". Both inserts now land at the end of the current paragraph (`insertFieldBlock`).
+- **Generated contracts had no signature block** (the prompt never asked) **and ended with the model's own legal-advice paragraph** baked into the body. The prompt now requires a `**SIGNATURES**` block with `[Signature]`/`[Date]` per party and forbids commentary. Verified: 2 + 2 tokens on first generation, no trailing advice.
+- **The stamp always replaced the first `[Signature]`** — so a tenant's signature landed in the landlord's slot once every contract had a per-party block. `SignatureSlots` finds each token and its role from the nearest `ROLE:` line above; with >1 slot the signing screen shows a segmented "Sign as" picker, defaulting to the last party (the sender lists themselves first). Unit-tested (7 cases, incl. a user-placed box with no role line → "Party 1", and roles not bleeding across slots). Verified: tenant's stamp under TENANT, landlord's tokens untouched.
+- **"Created!" wasn't persisted** — same append-after-`persist()` ordering as the follow-up bug fixed in October, in the initial-generation path.
+- **Entering edit mode left the AI panel covering half the document** with the formatting toolbar squeezed under it. Editing now collapses the panel; the chat bar brings it back on send.
+
+**Still open from the walkthrough — design calls, not changed:**
+
+- The chat bar's **+ and mic icons do nothing** (plain images). A new user taps the mic first. Either wire voice input or drop them from the design.
+- `needsClarification` / `getClarification` in `AIService` are **defined but never called**. §4e describes a clarifying-questions step that doesn't exist; vague prompts go straight to generation. (The AI suggestions on Home soften this — "rent my spare room" became three good options.)
+- **Generation shows a blank page for ~20 s** with only "Working on it…" in the panel. A document skeleton would help.
+- The signing screen's "Signing as" name is pre-filled from the first recipient, but with a **multi-party contract the sender never fills in party names** (`[FULL NAME]` stays), so the recipient can't tell which role is theirs from the document alone — the picker labels (Landlord / Tenant) carry that.
 
 **Conversation persistence (October 23, 2026):** the AI chat is saved on the contract (`GeneratedContract.messages`) and restored on reopen, with the panel already open at medium when there's history. Three things fell out of making that work, all verified on the simulator:
 
@@ -115,6 +132,7 @@ A native iOS app that turns a plain-English prompt into a legally formatted cont
 | `RichTextEditor.swift` | `RichTextEditorImpl` — the `UITextView` ↔ SwiftUI bridge |
 | `MarkdownParser.swift` | `NSMutableAttributedString.fromHandshakeMarkdown` |
 | `ListNumbering.swift` | Pure Foundation: what number the next list item gets. Testable outside the app |
+| `SignatureSlots.swift` | Pure Foundation: every `[Signature]` in a document and whose it is (from the `ROLE:` line above). Drives the "Sign as" picker |
 | `MediaPickers.swift` | `PhotoPickerView`, `DocumentPickerView` |
 | `SendFlowView.swift` | Recipient entry + SMS/Mail compose |
 | `SigningView.swift` | Recipient's signing screen + confirmation screen |
@@ -183,7 +201,8 @@ Formatting toolbar — one floating glass pill that scrolls horizontally, matchi
 
 | Group | Actions |
 |---|---|
-| Signature | Insert e-signature placeholder block (**first**, per design) |
+| Signature | Inserts `Signature: [Signature]` + `Date: [Date]` at the end of the current paragraph (**first**, per design) |
+| Date | Inserts `Date: [Date]` — filled with the signing date when the signature above it is stamped |
 | Text style | Bold, Italic, Underline |
 | Headings | H1 (26pt bold), H2 (20pt bold) |
 | Lists | Bullet (•), Numbered (1. 2. 3.) |
@@ -347,6 +366,7 @@ Verified on the simulator with `xcrun simctl openurl`: a valid link opens the si
 - **Hash components are joined with `U+001F`,** not concatenated. Without a separator, `("ab","c")` and `("a","bc")` hash identically.
 - **The signature block must be rendered at `ImageRenderer.scale = 1`.** The signed body is persisted as RTFD and re-read in the history viewer, and RTFD's importer sizes an attachment by its **pixel** dimensions. Rendering at `UIScreen.main.scale` draws the block 3× oversized after the round-trip, spilling out of the text column. Neither `attachment.bounds` nor a corrected `UIImage` scale survives the import. Cost: the block is slightly soft on a Retina screen.
 - Signing an already-signed contract is not possible — the sign bar is hidden when `status == .signed`.
+- **Which slot gets the stamp:** `SignatureSlots.find` lists them; the picker's choice is passed as `stampSignature(…, slot:)`. One slot (or a user-placed box with no role) → no picker, first token. The `[Date]` immediately after the stamped slot is filled; a standalone `Date: [Date]` elsewhere is left alone.
 
 Verified end to end on the simulator with enrolled biometrics: deep link → Face ID prompt → matched face → stamped document → confirmation → Signed in history, with `status`, `signedAt`, `signedBy` and `signatureHash` all persisted.
 

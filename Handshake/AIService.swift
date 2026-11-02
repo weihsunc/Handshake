@@ -118,6 +118,14 @@ enum AIService {
             - Use numbered lists for clauses (1. 2. 3. …)
             - Use [brackets] for any field the user must fill in
             - Include all standard sections for this agreement type
+            - END with a signature block, one entry per party, exactly in this form \
+              (keep the bracketed tokens verbatim — the app fills them in when someone signs):
+              **SIGNATURES**
+              [PARTY ROLE, e.g. LANDLORD]: [FULL NAME]
+              Signature: [Signature]
+              Date: [Date]
+            - The contract body is the ENTIRE output. Do not add notes, disclaimers, \
+              advice, or commentary before or after it.
 
             Be thorough, professional, and complete.
             """,

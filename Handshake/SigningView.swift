@@ -23,6 +23,10 @@ struct SigningView: View {
     @State private var bodyWidth:      CGFloat = 320
 
     @State private var signerName:  String
+    /// Every "[Signature]" in the document and whose it is. When there's more
+    /// than one, the signer picks their party; the stamp goes in that slot.
+    private let slots: [SignatureSlots.Slot]
+    @State private var selectedSlot: Int
     @State private var isSigning:   Bool = false
     @State private var signError:   String? = nil
     @State private var confirmed:   SignatureStamp? = nil
@@ -44,6 +48,11 @@ struct SigningView: View {
         _signerName     = State(initialValue: contract.signedBy
                                 ?? contract.recipients.first?.name
                                 ?? "")
+        let found = SignatureSlots.find(in: contract.displayBody().string)
+        slots = found
+        // Default to the LAST party: the sender lists themselves first and the
+        // person they sent it to second, far more often than not.
+        _selectedSlot = State(initialValue: max(0, found.count - 1))
     }
 
     private var isSigned: Bool { status == .signed }
@@ -177,6 +186,17 @@ struct SigningView: View {
 
             VStack(spacing: 12) {
 
+                // Sign as (which party) — only when the document has more than
+                // one signature slot ───────────────────────────────────────────
+                if slots.count > 1 {
+                    Picker("Sign as", selection: $selectedSlot) {
+                        ForEach(Array(slots.enumerated()), id: \.offset) { i, slot in
+                            Text(slot.role).tag(i)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+
                 // Signing as ─────────────────────────────────────────────────
                 HStack(spacing: 10) {
                     Text("Signing as")
@@ -273,7 +293,8 @@ struct SigningView: View {
     /// Stamp the document, persist, confirm — shared by all three paths.
     private func finishLocally(_ stamp: SignatureStamp, name: String) {
         let stamped = NSMutableAttributedString(attributedString: attributedBody)
-        stamped.stampSignature(stamp, width: bodyWidth)
+        let slot = slots.indices.contains(selectedSlot) ? slots[selectedSlot].range : nil
+        stamped.stampSignature(stamp, width: bodyWidth, slot: slot)
         attributedBody = stamped                     // new instance so the view syncs
 
         let rtfd = try? stamped.data(

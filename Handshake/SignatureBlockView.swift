@@ -78,7 +78,9 @@ extension NSMutableAttributedString {
     /// block, appending it at the end if there's no placeholder.
     /// - Parameter width: layout width in points, for the rendered image.
     @MainActor
-    func stampSignature(_ stamp: SignatureStamp, width: CGFloat) {
+    /// - Parameter slot: which "[Signature]" to replace. nil = the first one
+    ///   (single-party documents, or a box the user placed themselves).
+    func stampSignature(_ stamp: SignatureStamp, width: CGFloat, slot: NSRange? = nil) {
         let blockWidth = max(200, min(width, 420))
 
         let renderer = ImageRenderer(
@@ -107,9 +109,21 @@ extension NSMutableAttributedString {
         block.insert(NSAttributedString(string: "\n"), at: 0)
         block.append(NSAttributedString(string: "\n"))
 
-        let placeholder = (string as NSString).range(of: "[Signature]")
-        if placeholder.location != NSNotFound {
+        let first = (string as NSString).range(of: "[Signature]")
+        let placeholder = slot ?? first
+        if placeholder.location != NSNotFound,
+           (string as NSString).substring(with: placeholder) == "[Signature]" {
             replaceCharacters(in: placeholder, with: block)
+            // Fill the first [Date] after the signature with the signing date.
+            let after = NSRange(location: placeholder.location + block.length,
+                                length: length - (placeholder.location + block.length))
+            let dateField = (string as NSString).range(of: "[Date]", options: [], range: after)
+            if dateField.location != NSNotFound {
+                let f = DateFormatter(); f.dateStyle = .long; f.timeStyle = .none
+                let attrs = attributes(at: dateField.location, effectiveRange: nil)
+                var filled = attrs; filled[.foregroundColor] = UIColor.label
+                replaceCharacters(in: dateField, with: NSAttributedString(string: f.string(from: stamp.signedAt), attributes: filled))
+            }
         } else {
             append(block)
         }
