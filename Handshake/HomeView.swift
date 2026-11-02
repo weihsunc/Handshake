@@ -235,9 +235,14 @@ struct HomeView: View {
             } else {
                 ForEach(hasText ? localSuggestions : templates) { t in
                     TemplateCard(emoji: t.emoji, title: t.title, description: t.prompt) {
+                        // Decide BEFORE assigning: hasText reads `prompt`, so
+                        // checking it after the assignment is always true and
+                        // the launch path never fires. Example → launch;
+                        // suggestion (text already present) → fill.
+                        let isExample = !hasText
                         lastPicked = t.prompt
                         prompt     = t.prompt
-                        if !hasText { showSheet = true }   // example → launch; suggestion → fill
+                        if isExample { showSheet = true }
                     }
                     .transition(.opacity)
                 }

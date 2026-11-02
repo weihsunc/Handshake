@@ -19,6 +19,12 @@
 	<key>NSFaceIDUsageDescription</key>
 	<string>Handshake uses Face ID to confirm it's you before you sign a contract.</string>
 
+	<!-- Dictation in the chat bar. -->
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Handshake turns what you say into the description of the contract you want.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Handshake listens so you can describe a contract out loud instead of typing.</string>
+
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

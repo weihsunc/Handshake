@@ -56,10 +56,18 @@ The full loop — draft → sent → signed, with signer, timestamp and hash per
 
 **Still open from the walkthrough — design calls, not changed:**
 
-- The chat bar's **+ and mic icons do nothing** (plain images). A new user taps the mic first. Either wire voice input or drop them from the design.
-- `needsClarification` / `getClarification` in `AIService` are **defined but never called**. §4e describes a clarifying-questions step that doesn't exist; vague prompts go straight to generation. (The AI suggestions on Home soften this — "rent my spare room" became three good options.)
-- **Generation shows a blank page for ~20 s** with only "Working on it…" in the panel. A document skeleton would help.
+- ~~The chat bar's + and mic icons do nothing~~ — fixed: mic is real dictation (`SpeechInput`, SFSpeechRecognizer); "+" is a Photo / File menu in the workspace and hidden on Home where there's nothing to attach to.
+- ~~`needsClarification` / `getClarification` defined but never called~~ — removed. The heuristic rarely fired anyway (any prompt ≥10 words skipped it), and the AI suggestions on Home cover the vague-prompt case better.
+- ~~Generation shows a blank page for ~20 s~~ — fixed: `GeneratingSkeleton`, a pulsing document-shaped placeholder.
 - The signing screen's "Signing as" name is pre-filled from the first recipient, but with a **multi-party contract the sender never fills in party names** (`[FULL NAME]` stays), so the recipient can't tell which role is theirs from the document alone — the picker labels (Landlord / Tenant) carry that.
+
+**Follow-up fixes (November 1, 2026):** the four walkthrough design calls, resolved:
+
+- **Example cards on Home couldn't launch** — a regression from the focus/tap fix. `hasText` reads `prompt`, and the tap handler checked it *after* assigning `prompt = t.prompt`, so it was always true and the launch branch never fired. Tapping a template just filled the bar. Decide before assigning. (Caught because the walkthrough re-ran from a wiped store.)
+- **Mic is real dictation** (`SpeechInput`: SFSpeechRecognizer + AVAudioEngine, partials streamed into the field, tap again to stop). Permission strings in `Info.plist`. Recognition failures surface as an alert rather than the mic silently flipping back. *Not verifiable on the simulator* — it has no usable input device; the engine starts, the session gets no audio, and the "Couldn't hear anything" alert is what you see. Test on a device.
+- **"+" is a Photo / File menu** in the workspace (same pickers as the toolbar); hidden on Home where there's nothing to attach to.
+- **`GeneratingSkeleton`** replaces the ~20 s blank page during first generation.
+- **Clarification flow removed.** `needsClarification` / `getClarification` were never called, and the heuristic skipped any prompt ≥10 words anyway. Home's AI suggestions handle the vague-prompt case.
 
 **Conversation persistence (October 23, 2026):** the AI chat is saved on the contract (`GeneratedContract.messages`) and restored on reopen, with the panel already open at medium when there's history. Three things fell out of making that work, all verified on the simulator:
 
@@ -132,6 +140,7 @@ A native iOS app that turns a plain-English prompt into a legally formatted cont
 | `RichTextEditor.swift` | `RichTextEditorImpl` — the `UITextView` ↔ SwiftUI bridge |
 | `MarkdownParser.swift` | `NSMutableAttributedString.fromHandshakeMarkdown` |
 | `ListNumbering.swift` | Pure Foundation: what number the next list item gets. Testable outside the app |
+| `SpeechInput.swift` | Dictation for the chat bar — SFSpeechRecognizer + AVAudioEngine, partial results streamed into the field |
 | `SignatureSlots.swift` | Pure Foundation: every `[Signature]` in a document and whose it is (from the `ROLE:` line above). Drives the "Sign as" picker |
 | `MediaPickers.swift` | `PhotoPickerView`, `DocumentPickerView` |
 | `SendFlowView.swift` | Recipient entry + SMS/Mail compose |
@@ -235,8 +244,6 @@ The `handshake://` scheme is registered (see §4f), so that link opens the app.
 ### 4e. AI service (`AIService`)
 
 - `generateContract(for:)` — system prompt instructs Claude to return `TITLE: ...\n---\n<body>`, parsed into `GeneratedContract`
-- `needsClarification(for:)` — heuristic checking word count + presence of parties/duration/amount signals
-- `getClarification(for:)` — asks Claude for 2–3 follow-up questions
 - Custom markdown parser converts `**bold**` to real bold runs with no visible asterisks
 
 ---

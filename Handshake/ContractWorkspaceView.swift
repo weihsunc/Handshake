@@ -92,6 +92,13 @@ struct ContractWorkspaceView: View {
                     contractScrollView(c)
                         .transition(.opacity)
                         .zIndex(0)
+                } else if isLoading {
+                    // ~20 s of blank page while the first draft generates was
+                    // the worst moment of the first-run flow. A document-shaped
+                    // skeleton says "something is coming, here".
+                    GeneratingSkeleton()
+                        .transition(.opacity)
+                        .zIndex(0)
                 }
 
                 // ── 1: Custom draggable AI panel ───────────────────────────────
@@ -248,6 +255,13 @@ struct ContractWorkspaceView: View {
                         }
                     }
                     sendToAI()
+                }, onAttach: contract == nil ? nil : { kind in
+                    // Same pickers the formatting toolbar uses; the insert
+                    // lands at the editor's current cursor.
+                    switch kind {
+                    case .photo: showImagePicker    = true
+                    case .file:  showDocumentPicker = true
+                    }
                 })
                 .padding(.horizontal, 16)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -754,6 +768,52 @@ struct ContractWorkspaceView: View {
         return [.font: UIFont.systemFont(ofSize: 17),
                 .foregroundColor: UIColor.label,
                 .paragraphStyle: para]
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARK: - GeneratingSkeleton
+// Placeholder document shown while the first draft generates. Shapes only —
+// a title block and paragraph lines in the card gray, gently pulsing.
+// ─────────────────────────────────────────────────────────────────────────────
+
+private struct GeneratingSkeleton: View {
+    @State private var pulse = false
+    private let gray = Color(red: 244/255, green: 244/255, blue: 245/255)   // #F4F4F5
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            bar(width: 0.72, height: 30)
+            bar(width: 0.46, height: 30)
+            Spacer().frame(height: 10)
+            bar(width: 0.38, height: 16)
+            Spacer().frame(height: 6)
+            ForEach(0..<4, id: \.self) { _ in bar(width: 1.0, height: 14) }
+            bar(width: 0.58, height: 14)
+            Spacer().frame(height: 16)
+            bar(width: 0.42, height: 16)
+            Spacer().frame(height: 6)
+            ForEach(0..<3, id: \.self) { _ in bar(width: 1.0, height: 14) }
+            bar(width: 0.66, height: 14)
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .opacity(pulse ? 0.55 : 1)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { pulse = true }
+        }
+        .accessibilityLabel("Generating your contract")
+    }
+
+    private func bar(width: CGFloat, height: CGFloat) -> some View {
+        GeometryReader { geo in
+            RoundedRectangle(cornerRadius: height / 2, style: .continuous)
+                .fill(gray)
+                .frame(width: geo.size.width * width, height: height)
+        }
+        .frame(height: height)
     }
 }
 

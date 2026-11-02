@@ -36,35 +36,6 @@ enum AIService {
     // MARK: - Public
     // ─────────────────────────────────────────────────────────────
 
-    /// Returns true when the prompt is too vague to generate directly.
-    static func needsClarification(for prompt: String) -> Bool {
-        let words = prompt.split(separator: " ")
-        let lower = prompt.lowercased()
-
-        let hasEnoughWords = words.count >= 10
-        let hasParties     = lower.contains("between") || lower.contains(" and ")
-        let hasDuration    = ["month","year","week","day","annual","quarterly"]
-                               .contains(where: lower.contains)
-        let hasAmount      = lower.contains("$") || lower.contains("usd") ||
-                             lower.contains("per") || lower.contains("fee")
-
-        // Need at least words + one other signal, or be very detailed
-        return !(hasEnoughWords || (hasParties && (hasDuration || hasAmount)))
-    }
-
-    /// Ask Claude for 2-3 clarifying questions.
-    static func getClarification(for prompt: String) async throws -> String {
-        try await call(
-            system: """
-            You are a friendly contract assistant inside Handshake, an app that creates agreements.
-            The user wants a contract but hasn't provided enough detail.
-            Ask exactly 2–3 short clarifying questions as a numbered list.
-            Keep the intro to one sentence. Focus on: parties, duration, payment, scope.
-            """,
-            message: "I want to create: \(prompt)"
-        )
-    }
-
     /// Autocomplete for the Home chat bar: turn a few typed words ("NDA",
     /// "lease for my", …) into 3 concrete contract ideas the user can tap.
     /// Cheap on purpose — called on a debounce while typing.

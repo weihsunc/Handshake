@@ -6,14 +6,25 @@ import UIKit
 // Compact pill by default; expands to a rounded-rect card when text wraps.
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// What the chat bar's "+" can add. Only offered where there's a document to
+/// add it to (the workspace); Home passes nil and the button is hidden.
+enum ChatAttachment { case photo, file }
+
 struct ChatBar: View {
     @Binding var prompt: String
     var placeholder: String = "Start with HandShake"
     var onSend: () -> Void
     /// Reflects whether the text field is focused — drives template visibility in HomeView
     var onFocusChange: ((Bool) -> Void)? = nil
+    /// nil hides "+". Both icons were inert images before; a new user taps
+    /// the mic first and expects something to happen.
+    var onAttach: ((ChatAttachment) -> Void)? = nil
 
     @FocusState private var isFocused: Bool
+    @State private var speech = SpeechInput()
+    /// Text that was already typed when dictation started; transcription is
+    /// cumulative, so the field shows prefix + latest transcription.
+    @State private var dictationPrefix = ""
 
     // Expand once the text would wrap past ~1 line on a phone screen
     private var isExpanded: Bool {
@@ -37,10 +48,7 @@ struct ChatBar: View {
     // ── Compact: single-line pill ─────────────────────────────────────────
     private var compactBar: some View {
         HStack(spacing: 10) {
-            Image(systemName: "plus")
-                .font(.system(size: 17, weight: .medium))
-                .foregroundStyle(Color(.label))
-                .frame(width: 36, height: 36)
+            attachButton
 
             // Placeholder is the brand gradient (Figma 2160:6641). A TextField
             // can't style its own placeholder, so overlay one while empty.
@@ -66,11 +74,11 @@ struct ChatBar: View {
 
             Spacer(minLength: 0)
 
-            if prompt.trimmingCharacters(in: .whitespaces).isEmpty {
-                Image(systemName: "mic")
-                    .font(.system(size: 17, weight: .medium))
-                    .foregroundStyle(Color(.label))
-                    .frame(width: 36, height: 36)
+            // While recording the mic stays as the stop control even though
+            // the field is no longer empty — otherwise it would vanish behind
+            // the send button mid-sentence and there'd be no way to stop.
+            if speech.isRecording || prompt.trimmingCharacters(in: .whitespaces).isEmpty {
+                micButton
             } else {
                 sendCircle
             }
@@ -80,6 +88,11 @@ struct ChatBar: View {
         .background(.regularMaterial)
         .clipShape(Capsule())
         .shadow(color: .black.opacity(0.10), radius: 20, x: 0, y: 8)
+        .alert("Can't use the microphone",
+               isPresented: Binding(get: { speech.errorText != nil },
+                                    set: { if !$0 { speech.errorText = nil } })) {
+            Button("OK", role: .cancel) { speech.errorText = nil }
+        } message: { Text(speech.errorText ?? "") }
     }
 
     // ── Expanded: multi-line card ─────────────────────────────────────────
@@ -98,18 +111,9 @@ struct ChatBar: View {
 
             // Bottom action row — matches Figma: [+] [mic] [spacer] [→ send]
             HStack(spacing: 4) {
-                Image(systemName: "plus")
-                    .font(.system(size: 17, weight: .medium))
-                    .foregroundStyle(Color(.label))
-                    .frame(width: 36, height: 36)
-
-                Image(systemName: "mic")
-                    .font(.system(size: 17, weight: .medium))
-                    .foregroundStyle(Color(.label))
-                    .frame(width: 36, height: 36)
-
+                attachButton
+                micButton
                 Spacer()
-
                 sendCircle
             }
         }
@@ -119,6 +123,45 @@ struct ChatBar: View {
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 24))
         .shadow(color: .black.opacity(0.10), radius: 20, x: 0, y: 8)
+    }
+
+    // ── "+" attach menu (only where there's a document) ───────────────────
+    @ViewBuilder
+    private var attachButton: some View {
+        if let onAttach {
+            Menu {
+                Button { onAttach(.photo) } label: { Label("Photo", systemImage: "photo") }
+                Button { onAttach(.file)  } label: { Label("File",  systemImage: "paperclip") }
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(Color(.label))
+                    .frame(width: 36, height: 36)
+            }
+        }
+    }
+
+    // ── Mic: tap to dictate, tap again to stop ────────────────────────────
+    private var micButton: some View {
+        Button {
+            if speech.isRecording {
+                speech.stop()
+            } else {
+                let existing = prompt.trimmingCharacters(in: .whitespaces)
+                dictationPrefix = existing.isEmpty ? "" : existing + " "
+                speech.start { text in prompt = dictationPrefix + text }
+            }
+        } label: {
+            Image(systemName: speech.isRecording ? "mic.fill" : "mic")
+                .font(.system(size: 17, weight: .medium))
+                .foregroundStyle(speech.isRecording
+                                 ? Color(red: 76/255, green: 0, blue: 255/255)
+                                 : Color(.label))
+                .frame(width: 36, height: 36)
+                .symbolEffect(.pulse, isActive: speech.isRecording)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(speech.isRecording ? "Stop dictation" : "Dictate")
     }
 
     // ── Shared send button ────────────────────────────────────────────────
