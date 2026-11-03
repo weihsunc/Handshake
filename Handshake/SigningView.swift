@@ -27,6 +27,9 @@ struct SigningView: View {
     /// than one, the signer picks their party; the stamp goes in that slot.
     private let slots: [SignatureSlots.Slot]
     @State private var selectedSlot: Int
+    /// The date the signer puts in the date field — theirs to pick, defaulting
+    /// to today. Shown only when the chosen slot has a date field after it.
+    @State private var signedDate: Date = .now
     @State private var isSigning:   Bool = false
     @State private var signError:   String? = nil
     @State private var confirmed:   SignatureStamp? = nil
@@ -48,7 +51,7 @@ struct SigningView: View {
         _signerName     = State(initialValue: contract.signedBy
                                 ?? contract.recipients.first?.name
                                 ?? "")
-        let found = SignatureSlots.find(in: contract.displayBody().string)
+        let found = SignatureSlots.find(in: contract.displayBody())
         slots = found
         // Default to the LAST party: the sender lists themselves first and the
         // person they sent it to second, far more often than not.
@@ -64,6 +67,17 @@ struct SigningView: View {
     ///   -HandshakeOpenURL '<link>' -HandshakeAutoSign
     private var autoSign: Bool { ProcessInfo.processInfo.arguments.contains("-HandshakeAutoSign") }
     #endif
+
+    /// Does a date field follow the selected signature slot (before the next one)?
+    private var slotHasDateField: Bool {
+        guard slots.indices.contains(selectedSlot) else { return false }
+        let start = slots[selectedSlot].range.location
+        let end   = slots.indices.contains(selectedSlot + 1) ? slots[selectedSlot + 1].range.location : Int.max
+        let doc   = attributedBody
+        if doc.signatureFields().contains(where: { $0.kind == .date && $0.range.location > start && $0.range.location < end }) { return true }
+        let r = (doc.string as NSString).range(of: "[Date]", options: [], range: NSRange(location: start, length: doc.length - start))
+        return r.location != NSNotFound && r.location < end
+    }
 
     private var canSign: Bool {
         !signerName.trimmingCharacters(in: .whitespaces).isEmpty && !isSigning
@@ -197,6 +211,24 @@ struct SigningView: View {
                     .pickerStyle(.segmented)
                 }
 
+                // Date field for this slot ───────────────────────────────────
+                if slotHasDateField {
+                    HStack {
+                        Text("Date")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
+                        Spacer()
+                        DatePicker("", selection: $signedDate, displayedComponents: .date)
+                            .labelsHidden()
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color(red: 244/255, green: 244/255, blue: 245/255))
+                    )
+                }
+
                 // Signing as ─────────────────────────────────────────────────
                 HStack(spacing: 10) {
                     Text("Signing as")
@@ -294,7 +326,7 @@ struct SigningView: View {
     private func finishLocally(_ stamp: SignatureStamp, name: String) {
         let stamped = NSMutableAttributedString(attributedString: attributedBody)
         let slot = slots.indices.contains(selectedSlot) ? slots[selectedSlot].range : nil
-        stamped.stampSignature(stamp, width: bodyWidth, slot: slot)
+        stamped.stampSignature(stamp, width: bodyWidth, slot: slot, signedDate: signedDate)
         attributedBody = stamped                     // new instance so the view syncs
 
         let rtfd = try? stamped.data(

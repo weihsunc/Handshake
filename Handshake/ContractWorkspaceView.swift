@@ -462,6 +462,11 @@ struct ContractWorkspaceView: View {
                 from: NSRange(location: 0, length: body.length),
                 documentAttributes: [.documentType: NSAttributedString.DocumentType.rtfd]
             )
+            // Keep the markdown in step with the edited document. `content` is
+            // what crosses to the recipient in the signing link; frozen at the
+            // AI's first draft, a signature box the sender placed never reached
+            // them.
+            c.content = body.handshakeMarkdown()
         }
         // Status metadata is owned by the store (SendFlow may have marked this
         // contract sent while the workspace was open) — never regress it here.
@@ -710,56 +715,39 @@ struct ContractWorkspaceView: View {
 
     // ── Signature / date fields ───────────────────────────────────────────────
     //
-    // These insert the SAME tokens the signing step looks for — "[Signature]"
-    // and "[Date]" — so a box the user places is where the stamp lands. The
-    // old insert drew a decorative "Signature   Date" rule that the signer
-    // could never find, so the stamp fell to the end of the document.
+    // The sender places a FIELD for the recipient to fill — the e-sign model.
+    // A signature box is where the recipient signs (Face ID → stamp); a date
+    // box is where they pick a date. In the document each is an attachment
+    // drawing a dashed box; in markdown (and in the link to the recipient)
+    // it's "[Signature]" / "[Date]". See SignatureField.
     //
-    // They insert at the END of the current paragraph, never mid-word: the
-    // cursor is wherever the user last tapped, and inserting there split text
-    // like "[TENANT'S CURRENT" / "ADDRESS]".
+    // Inserted on its own line at the END of the current paragraph, never
+    // mid-word: the cursor sits wherever the user last tapped.
 
-    private func insertSignaturePlaceholder() {
-        insertFieldBlock("Signature: [Signature]\nDate: [Date]")
-    }
+    private func insertSignaturePlaceholder() { insertField(.signature) }
+    private func insertDatePlaceholder()      { insertField(.date) }
 
-    private func insertDatePlaceholder() {
-        insertFieldBlock("Date: [Date]")
-    }
-
-    private func insertFieldBlock(_ text: String) {
+    private func insertField(_ kind: SignatureField) {
+        #if DEBUG
+        print("[Handshake] insertField(\(kind)) textView=\(textViewRef == nil ? "nil" : "ok")")
+        #endif
         guard let tv = textViewRef else { return }
         let nsText = tv.text as NSString
         let para   = nsText.paragraphRange(for: tv.selectedRange)
-        var at     = para.location + para.length
-        at = min(at, nsText.length)
+        let at     = min(para.location + para.length, nsText.length)
 
-        // Start on a fresh line (paragraphRange includes its trailing "\n";
-        // only the final paragraph of a document lacks one).
         let needsLeadingNewline = at > 0 && nsText.character(at: at - 1) != 10
-        let block = (needsLeadingNewline ? "\n" : "") + "\n" + text + "\n"
-
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font:            UIFont.systemFont(ofSize: 17),
-            .foregroundColor: UIColor.label,
-            .paragraphStyle:  { let p = NSMutableParagraphStyle(); p.lineSpacing = 3; return p }()
-        ]
-        let attr = NSMutableAttributedString(string: block, attributes: attrs)
-        // The bracketed tokens read as fill-in fields, like the AI's [brackets].
-        for token in ["[Signature]", "[Date]"] {
-            var search = NSRange(location: 0, length: attr.length)
-            while true {
-                let r = (attr.string as NSString).range(of: token, options: [], range: search)
-                if r.location == NSNotFound { break }
-                attr.addAttribute(.foregroundColor, value: UIColor.secondaryLabel, range: r)
-                search = NSRange(location: r.location + r.length, length: attr.length - (r.location + r.length))
-            }
-        }
+        let block = NSMutableAttributedString()
+        block.append(NSAttributedString(string: (needsLeadingNewline ? "\n" : "") + "\n", attributes: baseAttrs()))
+        let box = NSMutableAttributedString(attachment: SignatureField.makeAttachment(kind))
+        box.addAttributes(baseAttrs(), range: NSRange(location: 0, length: 1))
+        block.append(box)
+        block.append(NSAttributedString(string: "\n", attributes: baseAttrs()))
 
         tv.textStorage.beginEditing()
-        tv.textStorage.insert(attr, at: at)
+        tv.textStorage.insert(block, at: at)
         tv.textStorage.endEditing()
-        tv.selectedRange = NSRange(location: at + block.count, length: 0)
+        tv.selectedRange = NSRange(location: at + block.length, length: 0)
         attributedBody = NSMutableAttributedString(attributedString: tv.textStorage)
     }
 

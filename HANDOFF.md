@@ -1,6 +1,6 @@
 # Handshake — Project Handoff
 
-**Last updated:** November 1, 2026
+**Last updated:** November 2, 2026
 **Status:** Full loop works end to end **across two devices** with no server — send → recipient opens on their own phone → signs with Face ID → signed copy returns to the sender (§0). Provider-backed signing scaffolded, awaiting accounts (§7 Feature 4). Remaining: the §9 list.
 
 ---
@@ -60,6 +60,8 @@ The full loop — draft → sent → signed, with signer, timestamp and hash per
 - ~~`needsClarification` / `getClarification` defined but never called~~ — removed. The heuristic rarely fired anyway (any prompt ≥10 words skipped it), and the AI suggestions on Home cover the vague-prompt case better.
 - ~~Generation shows a blank page for ~20 s~~ — fixed: `GeneratingSkeleton`, a pulsing document-shaped placeholder.
 - The signing screen's "Signing as" name is pre-filled from the first recipient, but with a **multi-party contract the sender never fills in party names** (`[FULL NAME]` stays), so the recipient can't tell which role is theirs from the document alone — the picker labels (Landlord / Tenant) carry that.
+
+**Signature + date fields (November 2, 2026):** the toolbar "box" was two lines of text, and a box the sender placed never reached the recipient. Both fixed — see Feature 3 notes and the §6 attachment-name gotcha. One cosmetic nit left: inserting a second field right after the first leaves an extra blank line between them.
 
 **Follow-up fixes (November 1, 2026):** the four walkthrough design calls, resolved:
 
@@ -141,6 +143,8 @@ A native iOS app that turns a plain-English prompt into a legally formatted cont
 | `MarkdownParser.swift` | `NSMutableAttributedString.fromHandshakeMarkdown` |
 | `ListNumbering.swift` | Pure Foundation: what number the next list item gets. Testable outside the app |
 | `SpeechInput.swift` | Dictation for the chat bar — SFSpeechRecognizer + AVAudioEngine, partial results streamed into the field |
+| `SignatureFields.swift` | The field model: `.signature` / `.date` as attachments in the document, `[Signature]` / `[Date]` in markdown; lossless both ways. Detection, `handshakeMarkdown()` (document → markdown), `renderFieldTokens` |
+| `SignatureFieldViews.swift` | The dashed box images, rendered at scale 1 |
 | `SignatureSlots.swift` | Pure Foundation: every `[Signature]` in a document and whose it is (from the `ROLE:` line above). Drives the "Sign as" picker |
 | `MediaPickers.swift` | `PhotoPickerView`, `DocumentPickerView` |
 | `SendFlowView.swift` | Recipient entry + SMS/Mail compose |
@@ -210,8 +214,8 @@ Formatting toolbar — one floating glass pill that scrolls horizontally, matchi
 
 | Group | Actions |
 |---|---|
-| Signature | Inserts `Signature: [Signature]` + `Date: [Date]` at the end of the current paragraph (**first**, per design) |
-| Date | Inserts `Date: [Date]` — filled with the signing date when the signature above it is stamped |
+| Signature | Places a **signature field** — a dashed box the recipient signs (Face ID → stamp). Lands on its own line after the current paragraph (**first**, per design) |
+| Date | Places a **date field** — a dashed box the recipient fills by picking a date (defaults to the day they sign) |
 | Text style | Bold, Italic, Underline |
 | Headings | H1 (26pt bold), H2 (20pt bold) |
 | Lists | Bullet (•), Numbered (1. 2. 3.) |
@@ -303,6 +307,10 @@ Any `ToolbarItem` is wrapped in a 44pt Liquid Glass capsule by the system. Paint
 - The purple Send action in a toolbar is `ToolbarPillButton`: `.buttonStyle(.glassProminent)` + `.tint(#4C00FF)`. The system capsule *is* the filled pill, so there is nothing to ring. Cost: it's a flat tint rather than the §6 gradient, which only the system can draw there.
 - `PurplePillButton` (custom gradient) is now only for full-width actions **outside** toolbars — the signing screen and confirmation — where there's no system container to fight.
 
+### UIKit renames every text attachment to "Attachment.png"
+
+A field's identity can't live in its file name. `FileWrapper.preferredFilename` survives an RTFD round-trip under **AppKit** — which is why a macOS unit test passed — but UIKit regenerates the wrapper from the image whenever it writes, and even a freshly created attachment reports `Attachment.png` on iOS. `SignatureField.kind(of:)` therefore reads the **box size** (300×64 signature, 170×44 date; rendered at scale 1 so points == pixels), with the name only as a secondary check. Custom attributes don't survive RTFD either. A related trap in testing: `print()` never reaches `log show` on the simulator — use `os.Logger` at `.notice` or above (`.debug` isn't persisted).
+
 ### Don't branch a tappable list on text-field focus
 
 **This was a real bug.** Home's cards were `if isTyping { suggestions } else { examples }` with `isTyping = isFocused && hasText`. Tapping a suggestion *launched* the workspace instead of filling the prompt. Touching the card resigns the text field on **touch-down**, focus drops, the condition flips, SwiftUI swaps the *examples* list in under the finger — and it's the examples action (launch) that fires on **touch-up**.
@@ -373,7 +381,9 @@ Verified on the simulator with `xcrun simctl openurl`: a valid link opens the si
 - **Hash components are joined with `U+001F`,** not concatenated. Without a separator, `("ab","c")` and `("a","bc")` hash identically.
 - **The signature block must be rendered at `ImageRenderer.scale = 1`.** The signed body is persisted as RTFD and re-read in the history viewer, and RTFD's importer sizes an attachment by its **pixel** dimensions. Rendering at `UIScreen.main.scale` draws the block 3× oversized after the round-trip, spilling out of the text column. Neither `attachment.bounds` nor a corrected `UIImage` scale survives the import. Cost: the block is slightly soft on a Retina screen.
 - Signing an already-signed contract is not possible — the sign bar is hidden when `status == .signed`.
-- **Which slot gets the stamp:** `SignatureSlots.find` lists them; the picker's choice is passed as `stampSignature(…, slot:)`. One slot (or a user-placed box with no role) → no picker, first token. The `[Date]` immediately after the stamped slot is filled; a standalone `Date: [Date]` elsewhere is left alone.
+- **Fields, the e-sign way (Nov 2):** the sender *places* fields, the recipient *fills* them — the DocuSign / Dropbox Sign model. A field is an `NSTextAttachment` drawing a dashed box in the document and a `[Signature]` / `[Date]` token in markdown (`SignatureField`). The AI emits tokens; the toolbar inserts boxes; `persist()` writes the document back to `content` as markdown (`handshakeMarkdown()`, bold preserved), so a box the sender places **reaches the recipient** — before this, `content` was frozen at the AI's first draft and sender edits never crossed.
+- **Which slot gets the stamp:** `SignatureSlots.find` lists the signature fields with their party (nearest `ROLE:` line above); the picker's choice is passed as `stampSignature(…, slot:)`. Default is the last party. The **date field** after the chosen slot is filled with the date the signer picked in the `DatePicker` (defaults to today); other date fields are left for other signers.
+- Verified across two simulators: sender places a signature + date box mid-document, sends; recipient sees all three fields, signs as Developer with today's date → stamp under DEVELOPER, date filled, the Client's and the sender-placed fields untouched; signed copy returns to the sender with a matching hash.
 
 Verified end to end on the simulator with enrolled biometrics: deep link → Face ID prompt → matched face → stamped document → confirmation → Signed in history, with `status`, `signedAt`, `signedBy` and `signatureHash` all persisted.
 

@@ -9,7 +9,11 @@ import UIKit
 
 extension NSMutableAttributedString {
 
-    static func fromHandshakeMarkdown(_ text: String) -> NSMutableAttributedString {
+    /// - Parameter renderFields: turn "[Signature]" / "[Date]" into field boxes.
+    ///   false keeps them as text — the PDF renderer wants that, since Core
+    ///   Text doesn't draw attachments.
+    @MainActor
+    static func fromHandshakeMarkdown(_ text: String, renderFields: Bool = true) -> NSMutableAttributedString {
         let result   = NSMutableAttributedString()
         let baseFont = UIFont.systemFont(ofSize: 17)
         let boldFont = UIFont.boldSystemFont(ofSize: 17)
@@ -31,6 +35,7 @@ extension NSMutableAttributedString {
                 result.append(NSAttributedString(string: "\n", attributes: base))
             }
         }
+        if renderFields { result.renderFieldTokens(SignatureField.makeAttachment) }
         return result
     }
 

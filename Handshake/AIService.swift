@@ -93,8 +93,8 @@ enum AIService {
               (keep the bracketed tokens verbatim — the app fills them in when someone signs):
               **SIGNATURES**
               [PARTY ROLE, e.g. LANDLORD]: [FULL NAME]
-              Signature: [Signature]
-              Date: [Date]
+              [Signature]
+              [Date]
             - The contract body is the ENTIRE output. Do not add notes, disclaimers, \
               advice, or commentary before or after it.
 

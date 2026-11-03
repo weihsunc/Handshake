@@ -30,20 +30,29 @@ enum SignatureSlots {
 
     static let token = "[Signature]"
 
-    static func find(in text: String) -> [Slot] {
-        let ns = text as NSString
-        var slots: [Slot] = []
-        var search = NSRange(location: 0, length: ns.length)
-        while true {
-            let r = ns.range(of: token, options: [], range: search)
-            if r.location == NSNotFound { break }
-            let role = roleLabel(above: r.location, in: ns) ?? "Party \(slots.count + 1)"
-            slots.append(Slot(role: role, range: r))
-            let next = r.location + r.length
-            search = NSRange(location: next, length: ns.length - next)
+    /// Signature fields in a document, as attachments (the normal case) or as
+    /// bare "[Signature]" text (older records, or markdown that wasn't
+    /// rendered). Ranges are in the attributed string.
+    static func find(in doc: NSAttributedString) -> [Slot] {
+        let ns = doc.string as NSString
+        var ranges = doc.signatureFields().filter { $0.kind == .signature }.map(\.range)
+        if ranges.isEmpty {
+            var search = NSRange(location: 0, length: ns.length)
+            while true {
+                let r = ns.range(of: token, options: [], range: search)
+                if r.location == NSNotFound { break }
+                ranges.append(r)
+                let next = r.location + r.length
+                search = NSRange(location: next, length: ns.length - next)
+            }
         }
-        return slots
+        return ranges.enumerated().map { i, r in
+            Slot(role: roleLabel(above: r.location, in: ns) ?? "Party \(i + 1)", range: r)
+        }
     }
+
+    /// Plain-text convenience (tests, markdown).
+    static func find(in text: String) -> [Slot] { find(in: NSAttributedString(string: text)) }
 
     /// Walks up from `location`, paragraph by paragraph, for a line shaped
     /// like "LANDLORD:" / "PARTY A:" / "SERVICE PROVIDER:". Stops at the
@@ -54,7 +63,7 @@ enum SignatureSlots {
         while loc > 0 && hops < 6 {
             let prev = ns.paragraphRange(for: NSRange(location: loc - 1, length: 0))
             let line = ns.substring(with: prev).trimmingCharacters(in: .whitespacesAndNewlines)
-            if line.contains(token) { return nil }                 // crossed into the slot above
+            if line.contains(token) || line.contains("\u{FFFC}") { return nil }   // crossed into the slot above
             if let role = parseRole(line) { return role }
             loc = prev.location; hops += 1
         }

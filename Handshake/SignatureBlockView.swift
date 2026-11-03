@@ -80,7 +80,9 @@ extension NSMutableAttributedString {
     @MainActor
     /// - Parameter slot: which "[Signature]" to replace. nil = the first one
     ///   (single-party documents, or a box the user placed themselves).
-    func stampSignature(_ stamp: SignatureStamp, width: CGFloat, slot: NSRange? = nil) {
+    /// - Parameter signedDate: what goes in the date field after this slot.
+    ///   The signer picks it (defaults to today), as in DocuSign's date field.
+    func stampSignature(_ stamp: SignatureStamp, width: CGFloat, slot: NSRange? = nil, signedDate: Date? = nil) {
         let blockWidth = max(200, min(width, 420))
 
         let renderer = ImageRenderer(
@@ -109,20 +111,33 @@ extension NSMutableAttributedString {
         block.insert(NSAttributedString(string: "\n"), at: 0)
         block.append(NSAttributedString(string: "\n"))
 
-        let first = (string as NSString).range(of: "[Signature]")
+        // The slot is a signature-field attachment (normal) or a bare
+        // "[Signature]" token (older records). Either way, replace it.
+        let fields = signatureFields()
+        let first  = fields.first { $0.kind == .signature }?.range
+                  ?? (string as NSString).range(of: "[Signature]")
         let placeholder = slot ?? first
-        if placeholder.location != NSNotFound,
-           (string as NSString).substring(with: placeholder) == "[Signature]" {
+        let isField = fields.contains { $0.kind == .signature && $0.range == placeholder }
+        let isToken = placeholder.location != NSNotFound && placeholder.length == 11
+                   && (string as NSString).substring(with: placeholder) == "[Signature]"
+        if isField || isToken {
             replaceCharacters(in: placeholder, with: block)
-            // Fill the first [Date] after the signature with the signing date.
-            let after = NSRange(location: placeholder.location + block.length,
-                                length: length - (placeholder.location + block.length))
-            let dateField = (string as NSString).range(of: "[Date]", options: [], range: after)
-            if dateField.location != NSNotFound {
-                let f = DateFormatter(); f.dateStyle = .long; f.timeStyle = .none
-                let attrs = attributes(at: dateField.location, effectiveRange: nil)
-                var filled = attrs; filled[.foregroundColor] = UIColor.label
-                replaceCharacters(in: dateField, with: NSAttributedString(string: f.string(from: stamp.signedAt), attributes: filled))
+            // Fill the first DATE FIELD after the signature with the signer's date.
+            let afterStart = placeholder.location + block.length
+            let f = DateFormatter(); f.dateStyle = .long; f.timeStyle = .none
+            let dateText = f.string(from: signedDate ?? stamp.signedAt)
+            if let d = signatureFields().first(where: { $0.kind == .date && $0.range.location >= afterStart }) {
+                var attrs = attributes(at: d.range.location, effectiveRange: nil)
+                attrs[.attachment] = nil; attrs[.foregroundColor] = UIColor.label
+                attrs[.font] = attrs[.font] ?? UIFont.systemFont(ofSize: 17)
+                replaceCharacters(in: d.range, with: NSAttributedString(string: dateText, attributes: attrs))
+            } else {
+                let after = NSRange(location: afterStart, length: length - afterStart)
+                let tok = (string as NSString).range(of: "[Date]", options: [], range: after)
+                if tok.location != NSNotFound {
+                    var attrs = attributes(at: tok.location, effectiveRange: nil); attrs[.foregroundColor] = UIColor.label
+                    replaceCharacters(in: tok, with: NSAttributedString(string: dateText, attributes: attrs))
+                }
             }
         } else {
             append(block)

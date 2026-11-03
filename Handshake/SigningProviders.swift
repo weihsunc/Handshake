@@ -175,7 +175,9 @@ enum ContractPDF {
             .font: UIFont.systemFont(ofSize: 22, weight: .bold),
             .foregroundColor: UIColor.black,
         ]))
-        let doc = contract.displayBody()
+        // Fields as text tokens, not boxes: Core Text doesn't draw attachments.
+        let doc = NSMutableAttributedString.fromHandshakeMarkdown(
+            contract.displayBody().handshakeMarkdown(), renderFields: false)
         // Force a print-safe colour; the editor uses dynamic label colours.
         doc.addAttribute(.foregroundColor, value: UIColor.black, range: NSRange(location: 0, length: doc.length))
         body.append(doc)
