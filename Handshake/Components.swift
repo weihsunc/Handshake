@@ -39,72 +39,106 @@ struct ChatBar: View {
     /// newline). The card then grows line by line with the text.
     private var isExpanded: Bool { wraps || prompt.contains("\n") }
 
+    @Namespace private var ns
+
     var body: some View {
-        Group {
-            if isExpanded {
-                expandedBar
-            } else {
-                compactBar
+        bar
+            .background(wrapMeasurer)
+            .animation(.spring(response: 0.32, dampingFraction: 0.82), value: isExpanded)
+            .onChange(of: isFocused) { _, focused in
+                onFocusChange?(focused)
             }
-        }
-        .background(wrapMeasurer)
-        .animation(.spring(response: 0.32, dampingFraction: 0.82), value: isExpanded)
-        .onChange(of: isFocused) { _, focused in
-            onFocusChange?(focused)
-        }
+            .alert("Can't use the microphone",
+                   isPresented: Binding(get: { speech.errorText != nil },
+                                        set: { if !$0 { speech.errorText = nil } })) {
+                Button("OK", role: .cancel) { speech.errorText = nil }
+            } message: { Text(speech.errorText ?? "") }
     }
 
-    // ── Compact: single-line pill ─────────────────────────────────────────
-    private var compactBar: some View {
-        HStack(spacing: 10) {
-            attachButton
-
-            // Placeholder is the brand gradient (Figma 2160:6641). A TextField
-            // can't style its own placeholder, so overlay one while empty.
-            ZStack(alignment: .leading) {
-                if prompt.isEmpty {
-                    Text(placeholder)
-                        .font(.body.weight(.medium))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [Color(red: 76/255, green: 0,      blue: 255/255),
-                                         Color(red: 38/255, green: 6/255,  blue:  93/255)],
-                                startPoint: .leading, endPoint: .trailing
-                            )
-                        )
-                        .allowsHitTesting(false)
+    // ── One bar that morphs between the pill and the card ─────────────────
+    // The text field is the same node in both layouts, so the switch keeps
+    // focus, caret and text; only the buttons move (matchedGeometryEffect
+    // slides them to the bottom row). Two separate views here tore the field
+    // down and rebuilt it, which showed as a flicker mid-word.
+    //   compact   [+] [field………………] [mic | →]          Figma 2160:6641
+    //   expanded  [field…………………………………]
+    //             [+] [mic]            [→]
+    private var bar: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 10) {
+                if !isExpanded {
+                    attachButton
+                        .matchedGeometryEffect(id: "attach", in: ns)
                 }
-                TextField("", text: $prompt)
-                    .font(.body)
-                    .foregroundStyle(Color(.label))
-                    .tint(Color(.label))
-                    .focused($isFocused)
-                    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { w in
-                        if w > 0 { compactFieldWidth = w }
+
+                field
+
+                if !isExpanded {
+                    Spacer(minLength: 0)
+                    // While recording the mic stays as the stop control even
+                    // though the field is no longer empty — otherwise it would
+                    // vanish behind the send button mid-sentence.
+                    if speech.isRecording || prompt.trimmingCharacters(in: .whitespaces).isEmpty {
+                        micButton.matchedGeometryEffect(id: "mic", in: ns)
+                    } else {
+                        sendCircle.matchedGeometryEffect(id: "send", in: ns)
                     }
+                }
             }
 
-            Spacer(minLength: 0)
-
-            // While recording the mic stays as the stop control even though
-            // the field is no longer empty — otherwise it would vanish behind
-            // the send button mid-sentence and there'd be no way to stop.
-            if speech.isRecording || prompt.trimmingCharacters(in: .whitespaces).isEmpty {
-                micButton
-            } else {
-                sendCircle
+            if isExpanded {
+                HStack(spacing: 4) {
+                    attachButton.matchedGeometryEffect(id: "attach", in: ns)
+                    micButton.matchedGeometryEffect(id: "mic", in: ns)
+                    Spacer()
+                    sendCircle.matchedGeometryEffect(id: "send", in: ns)
+                }
+                .padding(.top, 8)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
+        .padding(.horizontal, isExpanded ? 12 : 16)
+        .padding(.top, 14)
+        .padding(.bottom, isExpanded ? 10 : 14)
         .background(.regularMaterial)
-        .clipShape(Capsule())
+        .clipShape(RoundedRectangle(cornerRadius: isExpanded ? 24 : 32, style: .continuous))
         .shadow(color: .black.opacity(0.10), radius: 20, x: 0, y: 8)
-        .alert("Can't use the microphone",
-               isPresented: Binding(get: { speech.errorText != nil },
-                                    set: { if !$0 { speech.errorText = nil } })) {
-            Button("OK", role: .cancel) { speech.errorText = nil }
-        } message: { Text(speech.errorText ?? "") }
+    }
+
+    // ── The text field, with the brand-gradient placeholder ───────────────
+    // A TextField can't style its own placeholder (Figma 2160:6641 wants the
+    // purple gradient), so overlay one while empty.
+    private var field: some View {
+        ZStack(alignment: .leading) {
+            if prompt.isEmpty {
+                Text(placeholder)
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color(red: 76/255, green: 0,      blue: 255/255),
+                                     Color(red: 38/255, green: 6/255,  blue:  93/255)],
+                            startPoint: .leading, endPoint: .trailing
+                        )
+                    )
+                    .allowsHitTesting(false)
+            }
+            TextField("", text: $prompt, axis: .vertical)
+                .font(.body)
+                .foregroundStyle(Color(.label))
+                .tint(Color(.label))
+                .lineLimit(1...8)
+                .focused($isFocused)
+                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { w in
+                    // Only the compact width matters to the wrap decision.
+                    if !isExpanded, w > 0 { compactFieldWidth = w }
+                }
+        }
+        // A vertical-axis TextField hugs its text, so empty it is a sliver
+        // behind the placeholder and a tap on the bar hit nothing. Fill the
+        // row and make the whole area focus the field.
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .onTapGesture { isFocused = true }
+        .padding(.horizontal, isExpanded ? 4 : 0)
     }
 
     // ── Hidden: would the prompt wrap in the compact field? ───────────────
@@ -118,36 +152,6 @@ struct ChatBar: View {
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { h in
                 wraps = compactFieldWidth > 0 && h > lineH * 1.5
             }
-    }
-
-    // ── Expanded: multi-line card ─────────────────────────────────────────
-    private var expandedBar: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Growing text area
-            TextField(placeholder, text: $prompt, axis: .vertical)
-                .font(.body)
-                .foregroundStyle(Color(.label))
-                .tint(Color(.label))
-                .lineLimit(1...8)
-                .focused($isFocused)
-                .padding(.horizontal, 4)
-                .padding(.vertical, 4)
-                .padding(.bottom, 8)
-
-            // Bottom action row — matches Figma: [+] [mic] [spacer] [→ send]
-            HStack(spacing: 4) {
-                attachButton
-                micButton
-                Spacer()
-                sendCircle
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.top, 14)
-        .padding(.bottom, 10)
-        .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        .shadow(color: .black.opacity(0.10), radius: 20, x: 0, y: 8)
     }
 
     // ── "+" attach menu (only where there's a document) ───────────────────
