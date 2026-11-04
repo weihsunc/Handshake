@@ -28,10 +28,16 @@ struct ChatBar: View {
     /// cumulative, so the field shows prefix + latest transcription.
     @State private var dictationPrefix = ""
 
-    // Expand once the text would wrap past ~1 line on a phone screen
-    private var isExpanded: Bool {
-        prompt.count > 50 || prompt.contains("\n")
-    }
+    /// Width of the single-line field in the compact pill, measured once it's
+    /// on screen. The hidden measurer below lays the prompt out at this width
+    /// to decide whether it would wrap — so the decision is the same in both
+    /// layouts and the bar can't flip-flop between them.
+    @State private var compactFieldWidth: CGFloat = 0
+    @State private var wraps = false
+
+    /// Expand the moment the text no longer fits on one line (or has a
+    /// newline). The card then grows line by line with the text.
+    private var isExpanded: Bool { wraps || prompt.contains("\n") }
 
     var body: some View {
         Group {
@@ -41,6 +47,7 @@ struct ChatBar: View {
                 compactBar
             }
         }
+        .background(wrapMeasurer)
         .animation(.spring(response: 0.32, dampingFraction: 0.82), value: isExpanded)
         .onChange(of: isFocused) { _, focused in
             onFocusChange?(focused)
@@ -72,6 +79,9 @@ struct ChatBar: View {
                     .foregroundStyle(Color(.label))
                     .tint(Color(.label))
                     .focused($isFocused)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { w in
+                        if w > 0 { compactFieldWidth = w }
+                    }
             }
 
             Spacer(minLength: 0)
@@ -95,6 +105,19 @@ struct ChatBar: View {
                                     set: { if !$0 { speech.errorText = nil } })) {
             Button("OK", role: .cancel) { speech.errorText = nil }
         } message: { Text(speech.errorText ?? "") }
+    }
+
+    // ── Hidden: would the prompt wrap in the compact field? ───────────────
+    private var wrapMeasurer: some View {
+        let lineH = UIFont.preferredFont(forTextStyle: .body).lineHeight
+        return Text(prompt.isEmpty ? " " : prompt)
+            .font(.body)
+            .frame(width: max(compactFieldWidth, 1), alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
+            .hidden()
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { h in
+                wraps = compactFieldWidth > 0 && h > lineH * 1.5
+            }
     }
 
     // ── Expanded: multi-line card ─────────────────────────────────────────

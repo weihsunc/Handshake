@@ -38,6 +38,10 @@ struct ContractWorkspaceView: View {
     // ── Panel drag state ──────────────────────────────────────────────────────
     /// Measured content-area height (set once by GeometryReader; excludes nav bar).
     @State private var contentH:     CGFloat = 0
+    /// The content area as it is *right now* — shrinks while the keyboard is
+    /// up. The detents are sized from contentH (stable); this clamps the panel
+    /// so a medium panel over the keyboard can't climb under the nav bar.
+    @State private var liveH:        CGFloat = 0
     /// Which detent the panel rests at. A detent, not a height: the heights
     /// depend on contentH, which isn't measured until onAppear, and a draft
     /// reopened before that used to land at the 200 pt floor instead of medium.
@@ -49,6 +53,13 @@ struct ContractWorkspaceView: View {
 
     enum PanelDetent { case medium, large }
     private var panelHeight: CGFloat { detent == .large ? largePanelH : mediumPanelH }
+    /// What the panel card actually renders at: the detent (plus any drag),
+    /// never taller than what fits above the chat bar in the current layout.
+    private var clampedPanelHeight: CGFloat {
+        let wanted = max(120, panelHeight - dragOffset)
+        guard liveH > 0 else { return wanted }
+        return min(wanted, max(120, liveH - Self.chatBarH - Self.panelTopGap))
+    }
 
     // ── Contract / editor state ───────────────────────────────────────────────
     @State private var contract:       GeneratedContract?      = nil
@@ -132,6 +143,7 @@ struct ContractWorkspaceView: View {
             }
             .onChange(of: geo.size.height) { _, h in
                 if contentH == 0, h > 0 { contentH = h }
+                liveH = h
             }
         }
         // ── Custom top bar injected into the safe area so it never squashes ───
@@ -272,6 +284,16 @@ struct ContractWorkspaceView: View {
                         }
                     }
                     sendToAI()
+                }, onFocusChange: { focused in
+                    // Tapping into the bar is the ask to talk — bring the
+                    // conversation up at medium, over the keyboard, instead of
+                    // waiting for the first message to be sent.
+                    if focused && !showAIPanel && contract != nil {
+                        withAnimation(.spring(response: 0.38, dampingFraction: 0.8)) {
+                            detent      = .medium
+                            showAIPanel = true
+                        }
+                    }
                 }, onAttach: contract == nil ? nil : { kind in
                     // Same pickers the formatting toolbar uses; the insert
                     // lands at the editor's current cursor.
@@ -372,7 +394,7 @@ struct ContractWorkspaceView: View {
                     }
                 }
             }
-            .frame(height: max(120, panelHeight - dragOffset))
+            .frame(height: clampedPanelHeight)
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
