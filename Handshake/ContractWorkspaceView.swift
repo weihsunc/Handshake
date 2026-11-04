@@ -43,6 +43,9 @@ struct ContractWorkspaceView: View {
     /// reopened before that used to land at the 200 pt floor instead of medium.
     @State private var detent:       PanelDetent = .large
     @State private var dragOffset:   CGFloat = 0
+    /// Is the message list scrolled to its top? At large, a downward drag
+    /// from the top collapses the panel instead of bouncing the list.
+    @State private var listAtTop:    Bool = true
 
     enum PanelDetent { case medium, large }
     private var panelHeight: CGFloat { detent == .large ? largePanelH : mediumPanelH }
@@ -301,10 +304,8 @@ struct ContractWorkspaceView: View {
             // ── Rounded panel card ────────────────────────────────────────────
             VStack(spacing: 0) {
 
-                // Drag handle. The message list below is a ScrollView, which
-                // wins vertical drags, so this full-width strip is the one place
-                // a drag is guaranteed to resize the panel — make it easy to hit
-                // and give its gesture priority.
+                // Drag handle: a full-width strip that always resizes the panel,
+                // whatever the list is doing.
                 Capsule()
                     .fill(Color(.tertiaryLabel))
                     .frame(width: 36, height: 5)
@@ -358,6 +359,17 @@ struct ContractWorkspaceView: View {
                     .onChange(of: isAILoading) { _, loading in
                         withAnimation { if loading { proxy.scrollTo("loading", anchor: .bottom) } }
                     }
+                    // Sheet behaviour (think the Maps sheet): at medium the
+                    // list doesn't scroll, so a drag anywhere on the panel
+                    // resizes it. At large the list scrolls, and a drag down
+                    // from its top collapses the panel (see panelDragGesture).
+                    .scrollDisabled(detent != .large)
+                    .scrollBounceBehavior(.basedOnSize)
+                    .onScrollGeometryChange(for: Bool.self) { g in
+                        g.contentOffset.y <= g.contentInsets.top + 1
+                    } action: { _, atTop in
+                        listAtTop = atTop
+                    }
                 }
             }
             .frame(height: max(120, panelHeight - dragOffset))
@@ -376,7 +388,16 @@ struct ContractWorkspaceView: View {
                 .frame(height: Self.chatBarH)
                 .ignoresSafeArea(edges: .bottom)
         }
-        .gesture(panelDragGesture)
+        // Simultaneous so it coexists with the list's own scrolling at large;
+        // the gesture itself decides when to act.
+        .simultaneousGesture(panelDragGesture)
+    }
+
+    /// Should this drag move the panel? Always below large (the list is
+    /// scroll-disabled there). At large, only a downward drag that starts
+    /// with the list at its top — otherwise the drag belongs to the list.
+    private func panelShouldFollow(_ delta: CGFloat) -> Bool {
+        detent != .large || (listAtTop && delta > 0)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -387,6 +408,7 @@ struct ContractWorkspaceView: View {
         DragGesture(minimumDistance: 8)
             .onChanged { value in
                 let delta = value.translation.height
+                guard panelShouldFollow(delta) else { dragOffset = 0; return }
                 let projected = panelHeight - delta
                 // Past the large detent the panel follows the finger at a
                 // quarter speed — a sheet-like rubber band instead of a wall.
@@ -394,6 +416,7 @@ struct ContractWorkspaceView: View {
                 dragOffset = over <= 0 ? delta : delta + over * 0.75
             }
             .onEnded { value in
+                guard panelShouldFollow(value.translation.height) else { dragOffset = 0; return }
                 // A flick decides by direction; a slow drag by where it ends.
                 let velocity   = value.velocity.height
                 let projectedH = panelHeight - value.predictedEndTranslation.height
