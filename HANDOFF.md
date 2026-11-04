@@ -44,6 +44,16 @@ Also confirmed: a seeded `contracts.json` decodes correctly (ISO-8601 dates) and
 
 The full loop — draft → sent → signed, with signer, timestamp and hash persisted — now completes on the simulator with no device and no Mail account.
 
+**Design review pass (November 3, 2026):** every screen was reviewed against the HIG using the `mobile-ios-design` skill (`~/.claude/skills/mobile-ios-design/`). Critical and high findings are fixed; the rest are in §9.
+
+- **Dark Mode was broken, not just unsupported.** The hardcoded #FAFAFA / #F5F5F4 backgrounds stayed light while `Color(.label)` text flipped to white — the welcome headline and History section headers vanished. The app is locked to the light appearance (`UIUserInterfaceStyle = Light` in `Info.plist`) until the Figma palette has a dark variant; when it does, move the §6 tokens into asset-catalog colour sets and drop the key.
+- **Dynamic Type did nothing.** All 69 fonts were fixed point sizes. They're text styles now (17 → `.body`, 15 → `.subheadline`, 13 → `.footnote`, 12 → `.caption`, 28 → `.title`, 30 → `.title`, 20 → `.title3`, 16 → `.callout`) with the Figma weights kept; icon squares, the formatting toolbar and pill heights use `@ScaledMetric`. The document uses `UIFont.preferredFont(forTextStyle: .body)` with `adjustsFontForContentSizeCategory`. Decorative sizes (illustration symbols, the 84 pt checkmark) and the rendered field/stamp PNGs stay fixed on purpose. Verified at the largest accessibility size.
+- **VoiceOver:** every icon-only button has a label (`GlassIconButton` requires one; `FormattingToolbar` buttons carry theirs); the confirmation's timestamp + fingerprint read as one element.
+- **Safe areas:** the 34 pt "home indicator" paddings are gone. The signing bar is a `safeAreaInset` whose background bleeds into the safe area; the workspace chat bar pads 8 inside the safe area like Home (34 had doubled it, so the pill sat higher than on Home).
+- **Signing button:** `.disabled` instead of opacity + `allowsHitTesting`, "Enter your name to sign." under the field when empty, and the label names the device's biometry (`SignatureService.biometryName`).
+- **AI panel never reached large** — see the §6 gotcha on `GeometryReader` inside a `fullScreenCover`. It rests at a `PanelDetent` now, flicks between medium and large by velocity, and the chat bar reads "Edit with HandShake" once a document exists.
+- **Long titles ran under Send/Close** on reopen — see the §6 gotcha on principal toolbar items.
+
 **First-time-user walkthrough (November 1, 2026):** wiped the store and walked home → prompt → generate → edit → signature + date boxes → send → sign on a second phone, judging each screen as someone who'd never seen the app. Fixed on the spot, all verified on the simulator:
 
 - **The toolbar's signature box could never be signed.** It inserted a decorative "Signature   Date" rule, but the stamp searches for the literal `[Signature]`. Mismatch → the stamp fell to the *end of the document*. Now inserts `Signature: [Signature]` / `Date: [Date]` — the same tokens the AI emits and the signer looks for.
@@ -317,6 +327,14 @@ A field's identity can't live in its file name. `FileWrapper.preferredFilename` 
 
 Rule: anything that decides which list shows or what a tap does must depend on state that can't change during the tap. `hasText` (is the prompt non-empty) is stable across a tap; focus is not. The hero uses `!isFocused && !hasText` so it stays collapsed after a suggestion fills the prompt.
 
+### A `GeometryReader` inside a `fullScreenCover` measures 0 on its first layout
+
+**This was a real bug for months.** The workspace measures its content area with a `GeometryReader` and read `geo.size.height` once in `onAppear`. Inside a `fullScreenCover` that first layout reports **0**, so `contentH` stayed 0 and the panel's detents sat at their `max(…)` floors — medium 200 pt, large 300 pt. "Large" was barely taller than medium, which is why the panel seemed not to expand. Take the first non-zero value from `onChange(of: geo.size.height)` as well as `onAppear`. The §6 rule above still holds: the height comes from the GeometryReader, never `UIScreen`.
+
+### Don't put a long title in a `ToolbarItem(placement: .principal)`
+
+On iOS 26 a principal `Text` with `lineLimit(1)` is laid out at its full width when the *first* layout already has a long title (a reopened draft, the signing screen) and runs under the trailing button; it only truncates when the title starts short and changes later. Use `.navigationTitle` with `.inline` — the system truncates, and it's the same 17 pt semibold.
+
 ### `ShareLink` doesn't work as a toolbar label
 
 `UINavigationBar` clamps its intrinsic size to a small square. Use a plain `Button` + a state flag + `UIActivityViewController` (see `ActivityView` in `Components.swift`).
@@ -327,8 +345,8 @@ Rule: anything that decides which list shows or what a tap does must depend on s
 Purple gradient   #4C00FF → #26065D, 112° (start 0.08,0 → end 1.47,1)
 Background        #FAFAFA  (stone/50 in Figma is #FAFAF9)
 Card background   #F4F4F5
-Body text         SF Pro Regular 17 / 22, tracking -0.43
-Title             SF Pro Bold 28 / 34, tracking 0.38
+Body text         SF Pro Regular 17 / 22, tracking -0.43  → `.body` (scales with Dynamic Type)
+Title             SF Pro Bold 28 / 34, tracking 0.38      → `.title.weight(.bold)`
 Secondary text    #757575
 Pill radius       Capsule / 296px in Figma
 Toolbar pill      h-48, px-10, shadow 0 8px 40px rgba(0,0,0,0.12)
@@ -457,6 +475,11 @@ Three options were considered:
 - [x] Toolbar pills showed a seam / white ring from the iOS 26 glass container — resolved by not painting a custom background inside toolbar items (see §6)
 - [x] `handshake://` URL scheme registered — see §4f
 - [x] Numbered lists continue from the nearest non-empty paragraph above ("3." → next is "4.") instead of restarting at 1. Logic lives in `ListNumbering` and is unit-tested (8 cases) — the simulator keyboard shifts the toolbar unpredictably, so UI-driving the editor headlessly isn't a reliable test
+- [ ] **Dark Mode** is disabled (`UIUserInterfaceStyle = Light`) rather than designed. Needs dark values for the §6 tokens as asset-catalog colour sets.
+- [ ] **iPad** is in the device family (1,2) but not designed for: Home stretches edge to edge and the panel maths assumes a phone. Either drop to iPhone-only or cap content at ~640 pt and centre it.
+- [ ] No haptics on signing success, send confirmed, or field insertion (`.sensoryFeedback` is one line each).
+- [ ] Home's profile button is inert. It has a VoiceOver label now, but it should either open something or go.
+- [ ] Strings aren't localised.
 - [ ] Photo attachments live only in the `NSAttributedString`; they aren't persisted anywhere
 - [ ] The iOS 26.3 simulator runtime renders no colour emoji (template icons show as `[?]`). Test on 26.5+
 - [ ] A recipient sees the markdown rendering, not the sender's rich-text edits — the RTFD is deliberately excluded from the link payload for size. If that matters, the fix is a real transport (backend or `.fileImporter` with an `.rtfd` attachment), not a bigger link.
