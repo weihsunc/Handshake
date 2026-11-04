@@ -38,8 +38,14 @@ struct ContractWorkspaceView: View {
     // ── Panel drag state ──────────────────────────────────────────────────────
     /// Measured content-area height (set once by GeometryReader; excludes nav bar).
     @State private var contentH:     CGFloat = 0
-    @State private var panelHeight:  CGFloat = 600   // overwritten in onAppear
+    /// Which detent the panel rests at. A detent, not a height: the heights
+    /// depend on contentH, which isn't measured until onAppear, and a draft
+    /// reopened before that used to land at the 200 pt floor instead of medium.
+    @State private var detent:       PanelDetent = .large
     @State private var dragOffset:   CGFloat = 0
+
+    enum PanelDetent { case medium, large }
+    private var panelHeight: CGFloat { detent == .large ? largePanelH : mediumPanelH }
 
     // ── Contract / editor state ───────────────────────────────────────────────
     @State private var contract:       GeneratedContract?      = nil
@@ -114,10 +120,15 @@ struct ContractWorkspaceView: View {
             }
             .animation(.easeInOut(duration: 0.4), value: contract != nil)
             .animation(.spring(response: 0.38, dampingFraction: 0.8), value: showAIPanel)
+            // The first layout inside a fullScreenCover reports a zero
+            // height, so onAppear alone left contentH at 0 and both detents
+            // at their floors (200 / 300 pt) — "large" was barely taller
+            // than "medium". Take the first real measurement, whenever it comes.
             .onAppear {
-                guard contentH == 0 else { return }
-                contentH    = geo.size.height
-                panelHeight = largePanelH
+                if contentH == 0, geo.size.height > 0 { contentH = geo.size.height }
+            }
+            .onChange(of: geo.size.height) { _, h in
+                if contentH == 0, h > 0 { contentH = h }
             }
         }
         // ── Custom top bar injected into the safe area so it never squashes ───
@@ -125,6 +136,10 @@ struct ContractWorkspaceView: View {
         // view to an icon-square. Moving the bar into safeAreaInset gives it full
         // SwiftUI layout and lets PurplePillButton size itself to its content.
         .navigationBarBackButtonHidden(true)
+        // The system title, not a principal Text: iOS 26 lays a custom
+        // principal item out at its full width when the first layout already
+        // has a long title (a reopened draft), and it ran under "Send".
+        .navigationTitle(contract?.title ?? sheetTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
@@ -133,19 +148,14 @@ struct ContractWorkspaceView: View {
                     if isEditing { isEditing = false } else { dismiss() }
                 } label: {
                     Image(systemName: "chevron.backward")
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.body.weight(.semibold))
                 }
-            }
-            ToolbarItem(placement: .principal) {
-                Text(contract?.title ?? sheetTitle)
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Color(.label))
-                    .lineLimit(1)
+                .accessibilityLabel(isEditing ? "Stop editing" : "Back")
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 if isEditing {
                     Button("Done") { isEditing = false }
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.body.weight(.semibold))
                 } else if contract != nil && liveStatus != .signed {
                     ToolbarPillButton(title: "Send") { showSendFlow = true }
                 } else if contract != nil {
@@ -187,7 +197,7 @@ struct ContractWorkspaceView: View {
 
                 HStack(alignment: .top) {
                     Text(c.title)
-                        .font(.system(size: 28, weight: .bold))
+                        .font(.title.weight(.bold))
                         .foregroundStyle(Color(.label))
                         .fixedSize(horizontal: false, vertical: true)
                     if liveStatus != .draft {
@@ -246,11 +256,15 @@ struct ContractWorkspaceView: View {
                     .padding(.bottom, 2)    // small gap above keyboard
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             } else {
-                ChatBar(prompt: $aiChatPrompt, onSend: {
+                // Once there's a document the bar edits it; "Start with" only
+                // makes sense before the first draft exists.
+                ChatBar(prompt: $aiChatPrompt,
+                        placeholder: contract == nil ? "Start with HandShake" : "Edit with HandShake",
+                        onSend: {
                     // Re-open panel when user sends a message after dismissing it
                     if !showAIPanel {
                         withAnimation(.spring(response: 0.38, dampingFraction: 0.8)) {
-                            panelHeight = mediumPanelH
+                            detent      = .medium
                             showAIPanel = true
                         }
                     }
@@ -267,8 +281,9 @@ struct ContractWorkspaceView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        // Bottom padding clears the home indicator safe area
-        .padding(.bottom, 34)
+        // The ZStack already respects the bottom safe area; this is only the
+        // gap above it — same 8 as Home, so the pill sits at the same height.
+        .padding(.bottom, 8)
         .animation(.easeInOut(duration: 0.22), value: isEditing)
         // No background — transparent outside the pill
     }
@@ -286,12 +301,19 @@ struct ContractWorkspaceView: View {
             // ── Rounded panel card ────────────────────────────────────────────
             VStack(spacing: 0) {
 
-                // Drag handle
+                // Drag handle. The message list below is a ScrollView, which
+                // wins vertical drags, so this full-width strip is the one place
+                // a drag is guaranteed to resize the panel — make it easy to hit
+                // and give its gesture priority.
                 Capsule()
-                    .fill(.secondary.opacity(0.35))
+                    .fill(Color(.tertiaryLabel))
                     .frame(width: 36, height: 5)
-                    .padding(.top, 8)
-                    .padding(.bottom, 8)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 28)
+                    .contentShape(Rectangle())
+                    .highPriorityGesture(panelDragGesture)
+                    .accessibilityLabel("Assistant panel")
+                    .accessibilityHint("Drag up to expand, down to shrink or close")
 
                 // Message list
                 ScrollViewReader { proxy in
@@ -306,7 +328,7 @@ struct ContractWorkspaceView: View {
                                 HStack(spacing: 8) {
                                     ProgressView().scaleEffect(0.75)
                                     Text("Working on it…")
-                                        .font(.system(size: 15))
+                                        .font(.subheadline)
                                         .foregroundStyle(.secondary)
                                 }
                                 .padding(.horizontal, 16)
@@ -315,7 +337,7 @@ struct ContractWorkspaceView: View {
 
                             if let err = errorText {
                                 Text(err)
-                                    .font(.system(size: 15))
+                                    .font(.subheadline)
                                     .foregroundStyle(.red)
                                     .padding(.horizontal, 16)
                             }
@@ -366,23 +388,29 @@ struct ContractWorkspaceView: View {
             .onChanged { value in
                 let delta = value.translation.height
                 let projected = panelHeight - delta
-                // Cap upward expansion at the large detent
-                if projected <= largePanelH {
-                    dragOffset = delta
-                }
+                // Past the large detent the panel follows the finger at a
+                // quarter speed — a sheet-like rubber band instead of a wall.
+                let over = projected - largePanelH
+                dragOffset = over <= 0 ? delta : delta + over * 0.75
             }
             .onEnded { value in
-                // Use predicted end for a snappy feel on fast flicks
+                // A flick decides by direction; a slow drag by where it ends.
+                let velocity   = value.velocity.height
                 let projectedH = panelHeight - value.predictedEndTranslation.height
+                let atLarge    = detent == .large
                 withAnimation(.spring(response: 0.42, dampingFraction: 0.78)) {
                     dragOffset = 0
                     let midpoint = (largePanelH + mediumPanelH) / 2
-                    if projectedH < 160 {
-                        showAIPanel = false            // flicked away
+                    if velocity < -500 {
+                        detent = .large               // flicked up
+                    } else if velocity > 500 {
+                        if atLarge { detent = .medium } else { showAIPanel = false }
+                    } else if projectedH < 160 {
+                        showAIPanel = false            // dragged away
                     } else if projectedH < midpoint {
-                        panelHeight = mediumPanelH    // snap to medium
+                        detent = .medium              // settle at medium
                     } else {
-                        panelHeight = largePanelH     // snap to large
+                        detent = .large               // settle at large
                     }
                 }
             }
@@ -412,7 +440,7 @@ struct ContractWorkspaceView: View {
                 } else {
                     // There's a real conversation — show it, at medium, so
                     // the document is still visible behind it.
-                    panelHeight = mediumPanelH
+                    detent = .medium
                     showAIPanel = true
                 }
             }
@@ -437,7 +465,7 @@ struct ContractWorkspaceView: View {
 
                 // Drop panel to medium so the contract is visible behind it
                 withAnimation(.spring(response: 0.55, dampingFraction: 0.82)) {
-                    panelHeight = mediumPanelH
+                    detent = .medium
                 }
             }
         } catch {
@@ -584,7 +612,7 @@ struct ContractWorkspaceView: View {
         let range = tv.selectedRange
         tv.textStorage.beginEditing()
         tv.textStorage.enumerateAttribute(.font, in: range) { value, sub, _ in
-            let cur    = (value as? UIFont) ?? UIFont.systemFont(ofSize: 17)
+            let cur    = (value as? UIFont) ?? UIFont.preferredFont(forTextStyle: .body)
             let has    = cur.fontDescriptor.symbolicTraits.contains(trait)
             var traits = cur.fontDescriptor.symbolicTraits
             if has { traits.remove(trait) } else { traits.insert(trait) }
@@ -617,7 +645,7 @@ struct ContractWorkspaceView: View {
             : nsText.paragraphRange(for: tv.selectedRange)
         tv.textStorage.beginEditing()
         tv.textStorage.enumerateAttribute(.font, in: range) { value, sub, _ in
-            let cur    = (value as? UIFont) ?? UIFont.systemFont(ofSize: 17)
+            let cur    = (value as? UIFont) ?? UIFont.preferredFont(forTextStyle: .body)
             var traits = cur.fontDescriptor.symbolicTraits
             traits.insert(.traitBold)
             let desc   = cur.fontDescriptor.withSymbolicTraits(traits) ?? cur.fontDescriptor
@@ -703,7 +731,7 @@ struct ContractWorkspaceView: View {
         let name = url.lastPathComponent
         let block = "\n📎 \(name)\n"
         let attrs: [NSAttributedString.Key: Any] = [
-            .font:            UIFont.systemFont(ofSize: 15, weight: .medium),
+            .font:            UIFont.preferredFont(forTextStyle: .subheadline),
             .foregroundColor: UIColor.systemBlue
         ]
         let attrStr = NSAttributedString(string: block, attributes: attrs)
@@ -753,7 +781,7 @@ struct ContractWorkspaceView: View {
 
     private func baseAttrs() -> [NSAttributedString.Key: Any] {
         let para = NSMutableParagraphStyle(); para.lineSpacing = 3
-        return [.font: UIFont.systemFont(ofSize: 17),
+        return [.font: UIFont.preferredFont(forTextStyle: .body),
                 .foregroundColor: UIColor.label,
                 .paragraphStyle: para]
     }
