@@ -66,7 +66,7 @@ struct SendFlowView: View {
                         recipients.append(Recipient())
                     } label: {
                         Label("Add Recipient", systemImage: "plus.circle.fill")
-                            .font(.system(size: 17, weight: .medium))
+                            .font(.body.weight(.medium))
                             .foregroundStyle(Color(red: 76/255, green: 0, blue: 255/255))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, 4)
@@ -242,7 +242,7 @@ private struct RecipientCard: View {
             // Header
             HStack {
                 Text("Recipient")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
                     .tracking(0.4)
                     .textCase(.uppercase)
@@ -250,10 +250,11 @@ private struct RecipientCard: View {
                 if canDelete {
                     Button(action: onDelete) {
                         Image(systemName: "trash")
-                            .font(.system(size: 15))
+                            .font(.subheadline)
                             .foregroundStyle(.red.opacity(0.8))
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Remove recipient")
                 }
             }
             .padding(.horizontal, 16)
@@ -264,11 +265,11 @@ private struct RecipientCard: View {
             // Name
             HStack(spacing: 12) {
                 Image(systemName: "person")
-                    .font(.system(size: 15))
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(width: 20)
                 TextField("Full name", text: $recipient.name)
-                    .font(.system(size: 17))
+                    .font(.body)
                     .textContentType(.name)
                     .keyboardType(.default)
                     .submitLabel(.next)
@@ -281,11 +282,11 @@ private struct RecipientCard: View {
             // Email
             HStack(spacing: 12) {
                 Image(systemName: "envelope")
-                    .font(.system(size: 15))
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(width: 20)
                 TextField("Email", text: $recipient.email)
-                    .font(.system(size: 17))
+                    .font(.body)
                     .textContentType(.emailAddress)
                     .keyboardType(.emailAddress)
                     .autocorrectionDisabled()
@@ -300,11 +301,11 @@ private struct RecipientCard: View {
             // Phone
             HStack(spacing: 12) {
                 Image(systemName: "phone")
-                    .font(.system(size: 15))
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(width: 20)
                 TextField("Phone number", text: $recipient.phone)
-                    .font(.system(size: 17))
+                    .font(.body)
                     .textContentType(.telephoneNumber)
                     .keyboardType(.phonePad)
             }

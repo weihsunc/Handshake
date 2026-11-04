@@ -141,12 +141,12 @@ struct HomeView: View {
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                GlassIconButton(systemName: "line.3.horizontal") {
+                GlassIconButton(systemName: "line.3.horizontal", label: "Contracts") {
                     showHistory = true
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                GlassIconButton(systemName: "person")
+                GlassIconButton(systemName: "person", label: "Profile")
             }
         }
         // ── Contract workspace (full-screen, AI panel always on top) ─────
@@ -198,12 +198,12 @@ struct HomeView: View {
 
             VStack(spacing: 16) {
                 Text("Welcome to Handshake!")
-                    .font(.system(size: 30, weight: .semibold))
+                    .font(.title.weight(.semibold))
                     .tracking(-0.75)
                     .foregroundStyle(Color(.label))
 
-                Text("We automate contract and deal\nmaking process.")
-                    .font(.system(size: 20))
+                Text("We automate the contract and deal-making process.")
+                    .font(.title3)
                     .foregroundStyle(Color(.label))
                     .multilineTextAlignment(.center)
                     .lineSpacing(2)

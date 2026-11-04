@@ -62,6 +62,18 @@ enum SignatureService {
     // MARK: - Face ID
     // ─────────────────────────────────────────────────────────────────────────
 
+    /// "Face ID", "Touch ID" or "Optic ID" — whatever this device has, so the
+    /// button and the confirmation don't promise Face ID on a Touch ID phone.
+    static var biometryName: String {
+        let context = LAContext()
+        _ = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
+        switch context.biometryType {
+        case .touchID: return "Touch ID"
+        case .opticID: return "Optic ID"
+        default:       return "Face ID"
+        }
+    }
+
     /// Prompts for Face ID (or Touch ID) and returns only on success.
     static func authenticate(reason: String) async throws {
         let context = LAContext()

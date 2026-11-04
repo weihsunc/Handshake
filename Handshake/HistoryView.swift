@@ -33,7 +33,7 @@ struct HistoryView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") { dismiss() }
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.body.weight(.semibold))
                 }
             }
         }
@@ -100,9 +100,9 @@ struct HistoryView: View {
                 .font(.system(size: 40, weight: .thin))
                 .foregroundStyle(.secondary)
             Text("No contracts yet")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.title3.weight(.semibold))
             Text("Contracts you create will show up here —\ndrafts, pending signatures, and signed.")
-                .font(.system(size: 15))
+                .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
@@ -138,7 +138,7 @@ private struct ContractRow: View {
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(contract.title)
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.body.weight(.semibold))
                         .foregroundStyle(Color(.label))
                         .lineLimit(1)
 
@@ -148,7 +148,7 @@ private struct ContractRow: View {
                         Text("·")
                         Text(displayDate, format: .relative(presentation: .named))
                     }
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
                 }
 
@@ -181,7 +181,7 @@ struct StatusBadge: View {
 
     var body: some View {
         Text(status.label)
-            .font(.system(size: 12, weight: .semibold))
+            .font(.caption.weight(.semibold))
             .foregroundStyle(color)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
@@ -215,7 +215,7 @@ struct ReadOnlyContractView: View {
 
                     HStack(alignment: .top) {
                         Text(contract.title)
-                            .font(.system(size: 28, weight: .bold))
+                            .font(.title.weight(.bold))
                             .foregroundStyle(Color(.label))
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer()
@@ -245,7 +245,7 @@ struct ReadOnlyContractView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") { dismiss() }
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.body.weight(.semibold))
                 }
             }
         }

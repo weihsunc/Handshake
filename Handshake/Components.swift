@@ -22,6 +22,8 @@ struct ChatBar: View {
 
     @FocusState private var isFocused: Bool
     @State private var speech = SpeechInput()
+    /// Icon squares grow with the user's text size so they stay tappable.
+    @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 36
     /// Text that was already typed when dictation started; transcription is
     /// cumulative, so the field shows prefix + latest transcription.
     @State private var dictationPrefix = ""
@@ -55,7 +57,7 @@ struct ChatBar: View {
             ZStack(alignment: .leading) {
                 if prompt.isEmpty {
                     Text(placeholder)
-                        .font(.system(size: 17, weight: .medium))
+                        .font(.body.weight(.medium))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [Color(red: 76/255, green: 0,      blue: 255/255),
@@ -66,7 +68,7 @@ struct ChatBar: View {
                         .allowsHitTesting(false)
                 }
                 TextField("", text: $prompt)
-                    .font(.system(size: 17))
+                    .font(.body)
                     .foregroundStyle(Color(.label))
                     .tint(Color(.label))
                     .focused($isFocused)
@@ -100,7 +102,7 @@ struct ChatBar: View {
         VStack(alignment: .leading, spacing: 0) {
             // Growing text area
             TextField(placeholder, text: $prompt, axis: .vertical)
-                .font(.system(size: 17))
+                .font(.body)
                 .foregroundStyle(Color(.label))
                 .tint(Color(.label))
                 .lineLimit(1...8)
@@ -134,10 +136,11 @@ struct ChatBar: View {
                 Button { onAttach(.file)  } label: { Label("File",  systemImage: "paperclip") }
             } label: {
                 Image(systemName: "plus")
-                    .font(.system(size: 17, weight: .medium))
+                    .font(.body.weight(.medium))
                     .foregroundStyle(Color(.label))
-                    .frame(width: 36, height: 36)
+                    .frame(width: iconSize, height: iconSize)
             }
+            .accessibilityLabel("Add photo or file")
         }
     }
 
@@ -153,11 +156,11 @@ struct ChatBar: View {
             }
         } label: {
             Image(systemName: speech.isRecording ? "mic.fill" : "mic")
-                .font(.system(size: 17, weight: .medium))
+                .font(.body.weight(.medium))
                 .foregroundStyle(speech.isRecording
                                  ? Color(red: 76/255, green: 0, blue: 255/255)
                                  : Color(.label))
-                .frame(width: 36, height: 36)
+                .frame(width: iconSize, height: iconSize)
                 .symbolEffect(.pulse, isActive: speech.isRecording)
         }
         .buttonStyle(.plain)
@@ -168,9 +171,9 @@ struct ChatBar: View {
     private var sendCircle: some View {
         Button(action: onSend) {
             Image(systemName: "arrow.up")
-                .font(.system(size: 15, weight: .bold))
+                .font(.subheadline.weight(.bold))
                 .foregroundStyle(.white)
-                .frame(width: 36, height: 36)
+                .frame(width: iconSize, height: iconSize)
                 .background(
                     LinearGradient(
                         colors: [Color(red: 0.298, green: 0, blue: 1),
@@ -182,6 +185,7 @@ struct ChatBar: View {
                 .clipShape(Circle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Send")
     }
 }
 
@@ -204,13 +208,13 @@ struct TemplateCard: View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 16) {
                 Text(verbatim: "\(emoji) \(title)")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.body.weight(.semibold))
                     .tracking(-0.43)
                     .foregroundStyle(Color(red: 30/255, green: 30/255, blue: 30/255))
                     .lineLimit(2)
 
                 Text(description)
-                    .font(.system(size: 17))
+                    .font(.body)
                     .tracking(-0.43)
                     .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
                     .multilineTextAlignment(.leading)
@@ -239,14 +243,17 @@ struct TemplateCard: View {
 
 struct GlassIconButton: View {
     let systemName: String
+    /// What VoiceOver reads — the icon alone says nothing.
+    var label: String
     var action: (() -> Void)? = nil
 
     var body: some View {
         Button(action: { action?() }) {
             Image(systemName: systemName)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.callout.weight(.semibold))
                 .foregroundStyle(Color(.label))
         }
+        .accessibilityLabel(label)
     }
 }
 
@@ -267,7 +274,7 @@ struct ToolbarPillButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 17, weight: .medium))
+                .font(.body.weight(.medium))
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
         }
@@ -286,11 +293,15 @@ struct PurplePillButton: View {
     /// the signing screen. Toolbar usages keep the default hug-to-content width.
     var fullWidth: Bool = false
     var action: () -> Void
+    /// 44 matches the glass toolbar button height at the default text size;
+    /// both scale with Dynamic Type so the label never clips.
+    @ScaledMetric(relativeTo: .body) private var barH:  CGFloat = 44
+    @ScaledMetric(relativeTo: .body) private var fullH: CGFloat = 52
 
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 17, weight: .medium))
+                .font(.body.weight(.medium))
                 // mix-blend-plus-lighter from Figma — gives the text a slight glow
                 // against the dark gradient background
                 .blendMode(.plusLighter)
@@ -302,7 +313,7 @@ struct PurplePillButton: View {
                 .fixedSize(horizontal: true, vertical: false)
                 .padding(.horizontal, 14)
                 .frame(maxWidth: fullWidth ? .infinity : nil)
-                .frame(height: fullWidth ? 52 : 44)   // 44 matches glass button height exactly
+                .frame(height: fullWidth ? fullH : barH)
                 .background(
                     LinearGradient(
                         colors: [Color(red: 76/255, green: 0/255,  blue: 255/255),   // #4C00FF
@@ -329,7 +340,7 @@ struct BlackPillButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 17, weight: .medium))
+                .font(.body.weight(.medium))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
@@ -365,14 +376,16 @@ enum FormatAction {
 
 struct PurpleCircleButton: View {
     let systemName: String
+    var label: String
     var action: () -> Void
+    @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 36
 
     var body: some View {
         Button(action: { action() }) {
             Image(systemName: systemName)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.callout.weight(.semibold))
                 .foregroundStyle(.white)
-                .frame(width: 36, height: 36)
+                .frame(width: iconSize, height: iconSize)
         }
         .frame(height: 44)
         .padding(.horizontal, 4)
@@ -386,6 +399,7 @@ struct PurpleCircleButton: View {
             in: Capsule()
         )
         .buttonStyle(.plain)
+        .accessibilityLabel(label)
     }
 }
 
@@ -429,6 +443,9 @@ struct ActivityView: UIViewControllerRepresentable {
 
 struct FormattingToolbar: View {
     var onAction: (FormatAction) -> Void
+    @ScaledMetric(relativeTo: .callout) private var barH:     CGFloat = 48
+    @ScaledMetric(relativeTo: .callout) private var iconSize: CGFloat = 36
+    @ScaledMetric(relativeTo: .callout) private var labelW:   CGFloat = 30
 
     var body: some View {
         // Outer row: pill left-aligned with 8 pt side insets (matches Figma px-[8])
@@ -437,44 +454,44 @@ struct FormattingToolbar: View {
                 HStack(spacing: 2) {
 
                     // ── eSignature — first per design ─────────────────────────
-                    toolBtn("signature")        { onAction(.insertSignature) }
-                    toolBtn("calendar")         { onAction(.insertDate) }
+                    toolBtn("signature", "Add signature box") { onAction(.insertSignature) }
+                    toolBtn("calendar",  "Add date box")      { onAction(.insertDate) }
 
                     sep
 
                     // ── Text style ────────────────────────────────────────────
-                    toolBtn("bold")             { onAction(.bold) }
-                    toolBtn("italic")           { onAction(.italic) }
-                    toolBtn("underline")        { onAction(.underline) }
+                    toolBtn("bold",      "Bold")      { onAction(.bold) }
+                    toolBtn("italic",    "Italic")    { onAction(.italic) }
+                    toolBtn("underline", "Underline") { onAction(.underline) }
 
                     sep
 
                     // ── Headings ──────────────────────────────────────────────
-                    labelBtn("H1")              { onAction(.heading1) }
-                    labelBtn("H2")              { onAction(.heading2) }
+                    labelBtn("H1", "Heading 1") { onAction(.heading1) }
+                    labelBtn("H2", "Heading 2") { onAction(.heading2) }
 
                     sep
 
                     // ── Lists ─────────────────────────────────────────────────
-                    toolBtn("list.bullet")      { onAction(.bulletList) }
-                    toolBtn("list.number")      { onAction(.numberedList) }
+                    toolBtn("list.bullet", "Bulleted list") { onAction(.bulletList) }
+                    toolBtn("list.number", "Numbered list") { onAction(.numberedList) }
 
                     sep
 
                     // ── Alignment ─────────────────────────────────────────────
-                    toolBtn("text.alignleft")   { onAction(.alignLeft) }
-                    toolBtn("text.aligncenter") { onAction(.alignCenter) }
-                    toolBtn("text.alignright")  { onAction(.alignRight) }
+                    toolBtn("text.alignleft",   "Align left")   { onAction(.alignLeft) }
+                    toolBtn("text.aligncenter", "Align center") { onAction(.alignCenter) }
+                    toolBtn("text.alignright",  "Align right")  { onAction(.alignRight) }
 
                     sep
 
                     // ── Insert ────────────────────────────────────────────────
-                    toolBtn("photo")            { onAction(.insertImage) }
-                    toolBtn("paperclip")        { onAction(.insertAttachment) }
+                    toolBtn("photo",     "Insert photo") { onAction(.insertImage) }
+                    toolBtn("paperclip", "Attach file")  { onAction(.insertAttachment) }
                 }
                 .padding(.horizontal, 10)   // Figma: px-[10] inside the pill
             }
-            .frame(height: 48)              // Figma: h-[48px]
+            .frame(height: barH)            // Figma: h-[48px] at the default text size
             .background(.regularMaterial)
             .clipShape(Capsule())
             .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 8)
@@ -492,25 +509,27 @@ struct FormattingToolbar: View {
     }
 
     // ── SF Symbol button — 36 × 36 tap target ────────────────────────────────
-    private func toolBtn(_ icon: String, action: @escaping () -> Void) -> some View {
+    private func toolBtn(_ icon: String, _ label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
+                .font(.callout.weight(.medium))
                 .foregroundStyle(Color(.label))
-                .frame(width: 36, height: 36)
+                .frame(width: iconSize, height: iconSize)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(label)
     }
 
     // ── Short text button for H1 / H2 ────────────────────────────────────────
-    private func labelBtn(_ text: String, action: @escaping () -> Void) -> some View {
+    private func labelBtn(_ text: String, _ label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(text)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color(.label))
-                .frame(width: 30, height: 36)
+                .frame(width: labelW, height: iconSize)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(label)
     }
 }
 
@@ -603,7 +622,7 @@ struct MessageBubble: View {
                     Text(message.content)
                 }
             }
-            .font(.system(size: 17))
+            .font(.body)
             .lineSpacing(3)
             .foregroundStyle(message.isUser ? .white : Color(.label))
             .padding(.horizontal, 16)

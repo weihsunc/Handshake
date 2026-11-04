@@ -85,16 +85,18 @@ struct SigningView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack(alignment: .bottom) {
+            ZStack {
 
                 Color(red: 0.98, green: 0.98, blue: 0.98)
                     .ignoresSafeArea()
 
+                // The sign bar is a safe-area inset, not an overlay: the
+                // document gets the right bottom inset on every device and
+                // the bar sits above the home indicator without a magic 34.
                 document
-
-                if !isSigned {
-                    signBar
-                }
+                    .safeAreaInset(edge: .bottom) {
+                        if !isSigned { signBar }
+                    }
             }
             #if DEBUG
             .task {
@@ -103,17 +105,12 @@ struct SigningView: View {
                 await sign()
             }
             #endif
+            .navigationTitle(contract.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text(contract.title)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(Color(.label))
-                        .lineLimit(1)
-                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Close") { dismiss() }
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.body.weight(.semibold))
                 }
             }
             .alert("Couldn't sign",
@@ -153,7 +150,7 @@ struct SigningView: View {
 
                 HStack(alignment: .top) {
                     Text(contract.title)
-                        .font(.system(size: 28, weight: .bold))
+                        .font(.title.weight(.bold))
                         .foregroundStyle(Color(.label))
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 8)
@@ -178,7 +175,7 @@ struct SigningView: View {
             }
             .padding(.horizontal, 16)
             .padding(.top, 24)
-            .padding(.bottom, isSigned ? 40 : 190)
+            .padding(.bottom, 24)
         }
     }
 
@@ -215,7 +212,7 @@ struct SigningView: View {
                 if slotHasDateField {
                     HStack {
                         Text("Date")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.footnote.weight(.semibold))
                             .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
                         Spacer()
                         DatePicker("", selection: $signedDate, displayedComponents: .date)
@@ -232,10 +229,10 @@ struct SigningView: View {
                 // Signing as ─────────────────────────────────────────────────
                 HStack(spacing: 10) {
                     Text("Signing as")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.footnote.weight(.semibold))
                         .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
                     TextField("Your full name", text: $signerName)
-                        .font(.system(size: 15))
+                        .font(.subheadline)
                         .textContentType(.name)
                         .submitLabel(.done)
                 }
@@ -246,21 +243,29 @@ struct SigningView: View {
                         .fill(Color(red: 244/255, green: 244/255, blue: 245/255))
                 )
 
-                PurplePillButton(title: isSigning ? "Verifying…" : "Sign with Face ID",
+                // A greyed button with no reason is a dead end; say why.
+                if signerName.trimmingCharacters(in: .whitespaces).isEmpty {
+                    Text("Enter your name to sign.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                PurplePillButton(title: isSigning ? "Verifying…" : "Sign with \(SignatureService.biometryName)",
                                  fullWidth: true) {
                     Task { await sign() }
                 }
                 .opacity(canSign ? 1 : 0.4)
-                .allowsHitTesting(canSign)
+                .disabled(!canSign)
 
                 Text(Self.consentText)
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
                     .multilineTextAlignment(.center)
             }
             .padding(.horizontal, 16)
-            .padding(.bottom, 34)
-            .background(Color(red: 0.98, green: 0.98, blue: 0.98))
+            .padding(.bottom, 12)
+            .background(Color(red: 0.98, green: 0.98, blue: 0.98).ignoresSafeArea(edges: .bottom))
         }
     }
 
@@ -379,12 +384,12 @@ struct SigningConfirmationView: View {
                     .padding(.bottom, 28)
 
                 Text("Signed")
-                    .font(.system(size: 28, weight: .bold))
+                    .font(.title.weight(.bold))
                     .foregroundStyle(Color(.label))
                     .padding(.bottom, 10)
 
                 Text(contractTitle)
-                    .font(.system(size: 17))
+                    .font(.body)
                     .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
@@ -393,9 +398,9 @@ struct SigningConfirmationView: View {
                 VStack(spacing: 6) {
                     HStack(spacing: 5) {
                         Image(systemName: "checkmark.seal.fill")
-                            .font(.system(size: 12, weight: .semibold))
-                        Text("Verified with Face ID")
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(.caption.weight(.semibold))
+                        Text("Verified with \(SignatureService.biometryName)")
+                            .font(.caption.weight(.semibold))
                     }
                     .foregroundStyle(Self.purple)
                     .padding(.horizontal, 9)
@@ -406,8 +411,9 @@ struct SigningConfirmationView: View {
                     Text("Fingerprint \(stamp.fingerprint)")
                         .monospaced()
                 }
-                .font(.system(size: 11))
+                .font(.caption2)
                 .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
+                .accessibilityElement(children: .combine)
 
                 Spacer()
 
@@ -420,7 +426,7 @@ struct SigningConfirmationView: View {
                             .opacity(sentBack ? 0.6 : 1)
 
                         Button(sentBack ? "Done" : "Not now") { onDone() }
-                            .font(.system(size: 17, weight: .medium))
+                            .font(.body.weight(.medium))
                             .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
                             .padding(.vertical, 6)
                     } else {
@@ -428,7 +434,7 @@ struct SigningConfirmationView: View {
                     }
                 }
                 .padding(.horizontal, 16)
-                .padding(.bottom, 34)
+                .padding(.bottom, 16)
             }
         }
         .onAppear {

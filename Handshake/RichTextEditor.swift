@@ -23,6 +23,7 @@ struct RichTextEditorImpl: UIViewRepresentable {
     func makeUIView(context: Context) -> UITextView {
         let tv = UITextView()
         tv.isScrollEnabled  = false
+        tv.adjustsFontForContentSizeCategory = true
         tv.backgroundColor  = .clear
         tv.textContainerInset = .zero
         tv.textContainer.lineFragmentPadding = 0

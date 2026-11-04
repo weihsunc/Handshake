@@ -15,8 +15,12 @@ extension NSMutableAttributedString {
     @MainActor
     static func fromHandshakeMarkdown(_ text: String, renderFields: Bool = true) -> NSMutableAttributedString {
         let result   = NSMutableAttributedString()
-        let baseFont = UIFont.systemFont(ofSize: 17)
-        let boldFont = UIFont.boldSystemFont(ofSize: 17)
+        // preferredFont carries the text-style metadata UITextView needs to
+        // rescale the document when the user changes their text size.
+        let baseFont = UIFont.preferredFont(forTextStyle: .body)
+        let boldFont = UIFont(
+            descriptor: baseFont.fontDescriptor.withSymbolicTraits(.traitBold) ?? baseFont.fontDescriptor,
+            size: 0)
 
         let para = NSMutableParagraphStyle()
         para.lineSpacing      = 3
