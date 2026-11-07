@@ -33,6 +33,7 @@ struct ContractWorkspaceView: View {
     @State private var showAIPanel:       Bool  = true
     @State private var showSendFlow:      Bool  = false
     @State private var showImagePicker:   Bool  = false
+    @State private var pickedPhoto: PhotosPickerItem? = nil
     @State private var showDocumentPicker: Bool = false
 
     // ── Panel drag state ──────────────────────────────────────────────────────
@@ -185,17 +186,23 @@ struct ContractWorkspaceView: View {
                 SendFlowView(contract: c)
             }
         }
-        .sheet(isPresented: $showImagePicker) {
-            PhotoPickerView { image in
-                showImagePicker = false
-                insertImage(image)
+        // System pickers, owned by SwiftUI. The old UIKit bridges sat inside a
+        // .sheet and dismissed themselves; SwiftUI then dismissed again and
+        // took the whole workspace with it.
+        .photosPicker(isPresented: $showImagePicker, selection: $pickedPhoto, matching: .images)
+        .onChange(of: pickedPhoto) { _, item in
+            guard let item else { return }
+            pickedPhoto = nil
+            Task {
+                if let data = try? await item.loadTransferable(type: Data.self),
+                   let image = UIImage(data: data) {
+                    insertImage(image)
+                }
             }
         }
-        .sheet(isPresented: $showDocumentPicker) {
-            DocumentPickerView { url in
-                showDocumentPicker = false
-                insertAttachmentPlaceholder(url: url)
-            }
+        .fileImporter(isPresented: $showDocumentPicker,
+                      allowedContentTypes: [.data, .pdf, .image, .plainText]) { result in
+            if case .success(let url) = result { insertAttachmentPlaceholder(url: url) }
         }
         .task { await generateInitial() }
         .onDisappear { persist() }
@@ -759,11 +766,17 @@ struct ContractWorkspaceView: View {
 
     private func insertImage(_ image: UIImage) {
         guard let tv = textViewRef else { return }
-        let attachment = NSTextAttachment()
-        let maxW = tv.textContainer.size.width
-        let scale = maxW / max(image.size.width, 1)
-        attachment.image = image
-        attachment.bounds = CGRect(x: 0, y: 0, width: maxW, height: image.size.height * scale)
+        // An attachment built from `image` alone is dropped when the document
+        // is saved as RTFD, so the photo vanished the next time the contract
+        // opened. Built from data it is kept — and as the JPEG itself; with
+        // `image` set, iOS re-encodes it as PNG (~4 MB a photo). The bytes
+        // live in the contract store, so downscale first.
+        let photo = image.downscaled(maxPixels: 1200)
+        guard let jpeg = photo.jpegData(compressionQuality: 0.75) else { return }
+        let attachment = NSTextAttachment(data: jpeg, ofType: UTType.jpeg.identifier)
+        let maxW = tv.textContainer.size.width - 2 * tv.textContainer.lineFragmentPadding
+        let scale = maxW / max(photo.size.width, 1)
+        attachment.bounds = CGRect(x: 0, y: 0, width: maxW, height: photo.size.height * scale)
         let attrImg = NSMutableAttributedString(attachment: attachment)
         // Wrap with newlines so it sits on its own line
         attrImg.insert(NSAttributedString(string: "\n", attributes: baseAttrs()), at: 0)

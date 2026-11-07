@@ -323,6 +323,8 @@ A field's identity can't live in its file name. `FileWrapper.preferredFilename` 
 
 iOS's RTFD importer sizes every attachment by its **pixel** dimensions and throws away `bounds`. That's why the stamp and boxes used to render at 1× (right size, soft on Retina). Now everything Handshake draws into a document renders at `SignatureField.renderScale` (3×), and `persist()` / `markSigned` store each attachment's point size, in document order, in `GeneratedContract.attachmentSizes`; `displayBody()` puts them back with `applyAttachmentSizes`. If the count doesn't match (an older record) nothing is touched, so 1× records still display as they always did. **Any new code that writes `bodyRTFD` must write `attachmentSizes` with it.**
 
+**RTFD keeps an attachment only if it has data.** An `NSTextAttachment` with just `image` set is silently dropped when the document is written as RTFD. Give it bytes — `NSTextAttachment(data:ofType:)` or a `fileWrapper`. When `image` is also set, iOS writes the image as PNG and ignores the bytes you gave it, so for photos leave `image` nil and let TextKit draw from the JPEG data. Small drawn images (fields, the stamp) set both; PNG is fine there.
+
 ### Measure a drag on a moving view in global coordinates
 
 The AI panel moves with the finger while it's dragged, so a `DragGesture` in the panel's own (default, local) space sees the finger barely move: translation near zero and a velocity that can come out **reversed** — a flick down snapped the panel to large. `DragGesture(coordinateSpace: .global)` measures against the screen.
@@ -490,7 +492,8 @@ Three options were considered:
 - [ ] Profile needs from the owner: App Store Connect subscription products (until then the plan always reads "Free"), Terms and Privacy Policy URLs in `LegalLinks` (rows hide while nil; the App Store requires a privacy policy), and the Sign in with Apple capability registered for the App ID — automatic signing does this on the first device build from Xcode. `Handshake.entitlements` lives at the repo root for the same reason as `Info.plist`.
 - [x] The AI panel's "Working on it…" spinner is a `ThinkingIndicator` (Nov 6): a breathing sparkle and shimmering status text stepping through stages ("Looking for similar templates…"). The stages are timed, not real progress — the API call isn't streamed — so they advance every 2.4 s and hold on the last rather than loop. Reduce Motion turns off the shimmer.
 - [ ] Strings aren't localised.
-- [ ] Photo attachments live only in the `NSAttributedString`; they aren't persisted anywhere
+- [x] Photos added to a contract are saved with it (Nov 7). They were built from `image` alone, which RTFD drops on save, so they vanished on reopen. Now `NSTextAttachment(data:ofType:)` with a JPEG (long edge ≤ 1200 px, quality 0.75): ~270 KB a photo. Setting `image` as well makes iOS re-encode it as PNG (~4 MB). Photos still don't reach the recipient — the link carries markdown only (see below).
+- [x] Picking a photo or file closed the whole workspace. The UIKit picker bridges sat inside a `.sheet` and dismissed themselves, and SwiftUI's own dismiss then took the fullScreenCover with it. Replaced with SwiftUI's `.photosPicker` and `.fileImporter`.
 - [ ] The iOS 26.3 simulator runtime renders no colour emoji (template icons show as `[?]`). Test on 26.5+
 - [ ] A recipient sees the markdown rendering, not the sender's rich-text edits — the RTFD is deliberately excluded from the link payload for size. If that matters, the fix is a real transport (backend or `.fileImporter` with an `.rtfd` attachment), not a bigger link.
 - [x] The stamped signature block and the field boxes were soft on Retina — they render at 3× now, sized by `attachmentSizes` (§6)
