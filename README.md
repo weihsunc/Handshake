@@ -55,7 +55,7 @@ Nothing in the app's UI claims otherwise, and it shouldn't be changed to.
 
 - **The AI panel is a custom `ZStack` layer, not a `.sheet`.** Anything inside a `UISheetPresentationController` moves when the sheet is dragged, including the chat bar, which must stay fixed.
 - **The text view is always `isEditable = true`.** Gating it on an `isEditing` flag deadlocks — UIKit never fires `textViewDidBeginEditing` on a non-editable text view, so the flag can never flip.
-- **The signature block renders at `ImageRenderer.scale = 1`.** RTFD's importer sizes attachments by pixel dimensions, so a Retina-scale render comes back 3× oversized after a round-trip through history.
+- **RTFD forgets attachment sizes.** Its importer sizes attachments by pixels, so the 3× signature stamp and field boxes would come back 3× too big. Their point sizes are saved beside the RTFD and restored on load.
 
 ## Known limitations
 

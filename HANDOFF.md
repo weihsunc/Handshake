@@ -100,14 +100,12 @@ One detour worth knowing: restarting SpringBoard on a simulator (`launchctl kick
 **Verification tooling notes (environment, not app bugs):**
 
 - The Claude simulator MCP *build* server can't read `Handshake/Assets.xcassets` (`actool` permission error, though the same command works from a normal shell). Build with `xcodebuild` directly. Its `control`/`attach` action works once Xcode is properly selected.
-- `#if DEBUG` launch-argument hooks let a headless run drive flows the simulator panel can't tap (a second device it hasn't been granted, the system "Open in Handshake?" prompt):
+- The `#if DEBUG` launch-argument hooks (`-HandshakeOpenHistory`, `-HandshakeDumpPDF`, `-HandshakeOpenURL`, `-HandshakeAutoSign`) were **removed on November 6, 2026** as release prep. Drive the same flows without them:
   ```
-  -HandshakeOpenHistory          open History on launch
-  -HandshakeDumpPDF              write the newest contract's PDF to Application Support/Handshake/preview.pdf
-  -HandshakeOpenURL '<url>'      feed a handshake:// URL to the router, bypassing the system prompt
-  -HandshakeAutoSign             tap "Sign with Face ID" ~1 s after the signing screen appears
+  xcrun simctl openurl <udid> 'handshake://sign/<uuid>'                    # open a signing link (no prompt while the app is frontmost)
+  xcrun simctl spawn <udid> notifyutil -p com.apple.BiometricKit_Sim.pearl.match   # answer Face ID with a match
   ```
-  The biometric prompt is still real; answer it with `notifyutil -p com.apple.BiometricKit_Sim.pearl.match`. Debug-only; safe to delete.
+  History is the menu button on Home. Take a second screenshot ~0.5 s after a gesture: one taken immediately can catch a spring animation mid-flight and look like the gesture did nothing.
 
 ---
 
@@ -154,7 +152,7 @@ A native iOS app that turns a plain-English prompt into a legally formatted cont
 | `ListNumbering.swift` | Pure Foundation: what number the next list item gets. Testable outside the app |
 | `SpeechInput.swift` | Dictation for the chat bar — SFSpeechRecognizer + AVAudioEngine, partial results streamed into the field |
 | `SignatureFields.swift` | The field model: `.signature` / `.date` as attachments in the document, `[Signature]` / `[Date]` in markdown; lossless both ways. Detection, `handshakeMarkdown()` (document → markdown), `renderFieldTokens` |
-| `SignatureFieldViews.swift` | The dashed box images, rendered at scale 1 |
+| `SignatureFieldViews.swift` | The dashed box images, rendered at 3× |
 | `SignatureSlots.swift` | Pure Foundation: every `[Signature]` in a document and whose it is (from the `ROLE:` line above). Drives the "Sign as" picker |
 | `MediaPickers.swift` | `PhotoPickerView`, `DocumentPickerView` |
 | `SendFlowView.swift` | Recipient entry + SMS/Mail compose |
@@ -319,7 +317,15 @@ Any `ToolbarItem` is wrapped in a 44pt Liquid Glass capsule by the system. Paint
 
 ### UIKit renames every text attachment to "Attachment.png"
 
-A field's identity can't live in its file name. `FileWrapper.preferredFilename` survives an RTFD round-trip under **AppKit** — which is why a macOS unit test passed — but UIKit regenerates the wrapper from the image whenever it writes, and even a freshly created attachment reports `Attachment.png` on iOS. `SignatureField.kind(of:)` therefore reads the **box size** (300×64 signature, 170×44 date; rendered at scale 1 so points == pixels), with the name only as a secondary check. Custom attributes don't survive RTFD either. A related trap in testing: `print()` never reaches `log show` on the simulator — use `os.Logger` at `.notice` or above (`.debug` isn't persisted).
+A field's identity can't live in its file name. `FileWrapper.preferredFilename` survives an RTFD round-trip under **AppKit** — which is why a macOS unit test passed — but UIKit regenerates the wrapper from the image whenever it writes, and even a freshly created attachment reports `Attachment.png` on iOS. `SignatureField.kind(of:)` therefore reads the **box size** (300×64 signature, 170×44 date, or any 1×/2×/3× multiple of it, since the boxes now render at 3×), with the name only as a secondary check. Custom attributes don't survive RTFD either. A related trap in testing: `print()` never reaches `log show` on the simulator — use `os.Logger` at `.notice` or above (`.debug` isn't persisted).
+
+### RTFD drops attachment bounds, so point sizes are saved beside it
+
+iOS's RTFD importer sizes every attachment by its **pixel** dimensions and throws away `bounds`. That's why the stamp and boxes used to render at 1× (right size, soft on Retina). Now everything Handshake draws into a document renders at `SignatureField.renderScale` (3×), and `persist()` / `markSigned` store each attachment's point size, in document order, in `GeneratedContract.attachmentSizes`; `displayBody()` puts them back with `applyAttachmentSizes`. If the count doesn't match (an older record) nothing is touched, so 1× records still display as they always did. **Any new code that writes `bodyRTFD` must write `attachmentSizes` with it.**
+
+### Measure a drag on a moving view in global coordinates
+
+The AI panel moves with the finger while it's dragged, so a `DragGesture` in the panel's own (default, local) space sees the finger barely move: translation near zero and a velocity that can come out **reversed** — a flick down snapped the panel to large. `DragGesture(coordinateSpace: .global)` measures against the screen.
 
 ### Don't branch a tappable list on text-field focus
 
@@ -397,7 +403,7 @@ Verified on the simulator with `xcrun simctl openurl`: a valid link opens the si
 - **The signer's name is a field, not `recipients.first`.** It's pre-filled from the first recipient but editable — the person holding the device is the one signing and may not be in the list at all.
 - **`GeneratedContract` gained `signedBy` and `signatureHash`,** so the record is real rather than cosmetic — the fingerprint on screen is verifiably the first 12 chars of the stored hash.
 - **Hash components are joined with `U+001F`,** not concatenated. Without a separator, `("ab","c")` and `("a","bc")` hash identically.
-- **The signature block must be rendered at `ImageRenderer.scale = 1`.** The signed body is persisted as RTFD and re-read in the history viewer, and RTFD's importer sizes an attachment by its **pixel** dimensions. Rendering at `UIScreen.main.scale` draws the block 3× oversized after the round-trip, spilling out of the text column. Neither `attachment.bounds` nor a corrected `UIImage` scale survives the import. Cost: the block is slightly soft on a Retina screen.
+- **The signature block renders at 3× and its point size is saved beside the RTFD** (`attachmentSizes`; see the §6 gotcha). It used to render at 1× because RTFD's importer sizes attachments by pixels and drops `bounds` — rendering at screen scale drew it 3× oversized after the round-trip. Verified Nov 6: sharp, right size, after a relaunch.
 - Signing an already-signed contract is not possible — the sign bar is hidden when `status == .signed`.
 - **Fields, the e-sign way (Nov 2):** the sender *places* fields, the recipient *fills* them — the DocuSign / Dropbox Sign model. A field is an `NSTextAttachment` drawing a dashed box in the document and a `[Signature]` / `[Date]` token in markdown (`SignatureField`). The AI emits tokens; the toolbar inserts boxes; `persist()` writes the document back to `content` as markdown (`handshakeMarkdown()`, bold preserved), so a box the sender places **reaches the recipient** — before this, `content` was frozen at the AI's first draft and sender edits never crossed.
 - **Which slot gets the stamp:** `SignatureSlots.find` lists the signature fields with their party (nearest `ROLE:` line above); the picker's choice is passed as `stampSignature(…, slot:)`. Default is the last party. The **date field** after the chosen slot is filled with the date the signer picked in the `DatePicker` (defaults to today); other date fields are left for other signers.
@@ -446,8 +452,8 @@ Answers from the product owner (6 Sep 2026):
   off, so the app behaves exactly as before until they're set.
 
 **Not yet verified end to end** — needs DocuSeal + SignWell + Supabase
-accounts, which only the owner can create. `-HandshakeDumpPDF` writes the
-provider-bound PDF to Application Support for eyeballing without an account.
+accounts, which only the owner can create. (`ContractPDF.render` builds the
+provider-bound PDF; the debug hook that dumped it to disk was removed Nov 6.)
 
 ## 8. The eSignature Decision
 
@@ -477,13 +483,15 @@ Three options were considered:
 - [x] Numbered lists continue from the nearest non-empty paragraph above ("3." → next is "4.") instead of restarting at 1. Logic lives in `ListNumbering` and is unit-tested (8 cases) — the simulator keyboard shifts the toolbar unpredictably, so UI-driving the editor headlessly isn't a reliable test
 - [ ] **Dark Mode** is disabled (`UIUserInterfaceStyle = Light`) rather than designed. Needs dark values for the §6 tokens as asset-catalog colour sets.
 - [ ] **iPad** is in the device family (1,2) but not designed for: Home stretches edge to edge and the panel maths assumes a phone. Either drop to iPhone-only or cap content at ~640 pt and centre it.
-- [ ] No haptics on signing success, send confirmed, or field insertion (`.sensoryFeedback` is one line each).
+- [x] Haptics: success on signing and on a confirmed send, a light tap when a field lands (`Haptics` in `Components.swift`; imperative because both success moments are followed by a dismiss)
+- [x] Two fields inserted back to back drifted apart a blank line at a time — `insertFieldBox` now stacks them, keeps one blank line from surrounding text, and puts the caret after the box (unit-tested, 6 cases)
+- [x] `#if DEBUG` launch hooks and stray `print`s removed
 - [ ] Home's profile button is inert. It has a VoiceOver label now, but it should either open something or go.
 - [ ] Strings aren't localised.
 - [ ] Photo attachments live only in the `NSAttributedString`; they aren't persisted anywhere
 - [ ] The iOS 26.3 simulator runtime renders no colour emoji (template icons show as `[?]`). Test on 26.5+
 - [ ] A recipient sees the markdown rendering, not the sender's rich-text edits — the RTFD is deliberately excluded from the link payload for size. If that matters, the fix is a real transport (backend or `.fileImporter` with an `.rtfd` attachment), not a bigger link.
-- [ ] The stamped signature block is slightly soft on Retina — it has to render 1:1 to survive the RTFD round-trip at the right size (see Feature 3 notes)
+- [x] The stamped signature block and the field boxes were soft on Retina — they render at 3× now, sized by `attachmentSizes` (§6)
 - [x] `PurplePillButton` in the nav bar rendered clamped ("S e" wrapped over two lines) — first patched with `lineLimit(1)` + `fixedSize`, then superseded by `ToolbarPillButton` (system glass); see §6
 - [x] Malformed AI output (missing `TITLE:` / `---`, or a body under 40 chars) now throws `AIError.malformedContract` with a "try rephrasing" message instead of filing an empty "Agreement"
 - [x] ~~Nothing compile-verified~~ — stale since August; everything since has been built and run on the simulator (§0)

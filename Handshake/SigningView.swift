@@ -60,14 +60,6 @@ struct SigningView: View {
 
     private var isSigned: Bool { status == .signed }
 
-    #if DEBUG
-    /// Headless verification: taps "Sign with Face ID" ~1 s after appearing.
-    /// The biometric prompt is still real — the test answers it with a
-    /// simulated matching face. Launch with:
-    ///   -HandshakeOpenURL '<link>' -HandshakeAutoSign
-    private var autoSign: Bool { ProcessInfo.processInfo.arguments.contains("-HandshakeAutoSign") }
-    #endif
-
     /// Does a date field follow the selected signature slot (before the next one)?
     private var slotHasDateField: Bool {
         guard slots.indices.contains(selectedSlot) else { return false }
@@ -98,13 +90,6 @@ struct SigningView: View {
                         if !isSigned { signBar }
                     }
             }
-            #if DEBUG
-            .task {
-                guard autoSign, !isSigned else { return }
-                try? await Task.sleep(for: .seconds(1))
-                await sign()
-            }
-            #endif
             .navigationTitle(contract.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -343,10 +328,12 @@ struct SigningView: View {
             id:            contract.id,
             signedBy:      name,
             signatureHash: stamp.hash,
-            bodyRTFD:      rtfd
+            bodyRTFD:      rtfd,
+            attachmentSizes: stamped.attachmentSizes
         )
 
         status    = .signed
+        Haptics.success()
         confirmed = stamp
     }
 }

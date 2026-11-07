@@ -33,6 +33,10 @@ struct GeneratedContract: Identifiable, Codable {
     var title: String
     var content: String
     var bodyRTFD: Data?             = nil
+    /// Point size of each attachment in `bodyRTFD`, in document order. RTFD
+    /// drops attachment bounds, and the boxes and stamp are drawn at 3×, so
+    /// without these they'd load 3× too big. nil on older records.
+    var attachmentSizes: [CGSize]?  = nil
     var recipients: [Recipient]     = []
     var status: ContractStatus      = .draft
     var createdAt: Date             = .now
@@ -72,6 +76,7 @@ extension GeneratedContract {
         title         = try c.decode(String.self,          forKey: .title)
         content       = try c.decode(String.self,          forKey: .content)
         bodyRTFD      = try c.decodeIfPresent(Data.self,            forKey: .bodyRTFD)
+        attachmentSizes = try c.decodeIfPresent([CGSize].self,      forKey: .attachmentSizes)
         recipients    = try c.decodeIfPresent([Recipient].self,     forKey: .recipients)    ?? []
         status        = try c.decodeIfPresent(ContractStatus.self,  forKey: .status)        ?? .draft
         createdAt     = try c.decodeIfPresent(Date.self,            forKey: .createdAt)     ?? .now

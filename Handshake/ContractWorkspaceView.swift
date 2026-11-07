@@ -427,7 +427,11 @@ struct ContractWorkspaceView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var panelDragGesture: some Gesture {
-        DragGesture(minimumDistance: 8)
+        // Global coordinates: the panel moves with the finger while it's being
+        // dragged, so in its own space the finger barely moves and the
+        // velocity comes out near zero or reversed — a flick down could snap
+        // it to large. Measured against the screen, it's the real motion.
+        DragGesture(minimumDistance: 8, coordinateSpace: .global)
             .onChanged { value in
                 let delta = value.translation.height
                 guard panelShouldFollow(delta) else { dragOffset = 0; return }
@@ -535,6 +539,7 @@ struct ContractWorkspaceView: View {
                 from: NSRange(location: 0, length: body.length),
                 documentAttributes: [.documentType: NSAttributedString.DocumentType.rtfd]
             )
+            c.attachmentSizes = body.attachmentSizes
             // Keep the markdown in step with the edited document. `content` is
             // what crosses to the recipient in the signing link; frozen at the
             // AI's first draft, a signature box the sender placed never reached
@@ -604,6 +609,7 @@ struct ContractWorkspaceView: View {
                         updated.title    = result.title
                         updated.content  = result.content
                         updated.bodyRTFD = nil   // body regenerated from markdown
+                        updated.attachmentSizes = nil
                         contract = updated
                     } else {
                         contract = result
@@ -801,27 +807,17 @@ struct ContractWorkspaceView: View {
     private func insertDatePlaceholder()      { insertField(.date) }
 
     private func insertField(_ kind: SignatureField) {
-        #if DEBUG
-        print("[Handshake] insertField(\(kind)) textView=\(textViewRef == nil ? "nil" : "ok")")
-        #endif
         guard let tv = textViewRef else { return }
-        let nsText = tv.text as NSString
-        let para   = nsText.paragraphRange(for: tv.selectedRange)
-        let at     = min(para.location + para.length, nsText.length)
-
-        let needsLeadingNewline = at > 0 && nsText.character(at: at - 1) != 10
-        let block = NSMutableAttributedString()
-        block.append(NSAttributedString(string: (needsLeadingNewline ? "\n" : "") + "\n", attributes: baseAttrs()))
         let box = NSMutableAttributedString(attachment: SignatureField.makeAttachment(kind))
         box.addAttributes(baseAttrs(), range: NSRange(location: 0, length: 1))
-        block.append(box)
-        block.append(NSAttributedString(string: "\n", attributes: baseAttrs()))
 
         tv.textStorage.beginEditing()
-        tv.textStorage.insert(block, at: at)
+        let caret = tv.textStorage.insertFieldBox(box, near: tv.selectedRange.location,
+                                                  attributes: baseAttrs())
         tv.textStorage.endEditing()
-        tv.selectedRange = NSRange(location: at + block.length, length: 0)
+        tv.selectedRange = NSRange(location: caret, length: 0)
         attributedBody = NSMutableAttributedString(attributedString: tv.textStorage)
+        Haptics.place()
     }
 
     private func baseAttrs() -> [NSAttributedString.Key: Any] {

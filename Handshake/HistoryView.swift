@@ -265,6 +265,7 @@ extension GeneratedContract {
                options: [.documentType: NSAttributedString.DocumentType.rtfd],
                documentAttributes: nil
            ) {
+            attr.applyAttachmentSizes(attachmentSizes)
             return attr
         }
         return .fromHandshakeMarkdown(content)

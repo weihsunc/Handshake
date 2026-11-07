@@ -2,6 +2,20 @@ import SwiftUI
 import UIKit
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MARK: - Haptics
+// Imperative on purpose: the moments that deserve feedback (signed, sent) are
+// often followed straight away by a dismiss, and a .sensoryFeedback modifier
+// on a view that's leaving never gets to fire.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Haptics {
+    /// Something finished: signed, sent.
+    static func success() { UINotificationFeedbackGenerator().notificationOccurred(.success) }
+    /// Something landed in the document: a signature or date box.
+    static func place()   { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MARK: - Chat Bar
 // Compact pill by default; expands to a rounded-rect card when text wraps.
 // ─────────────────────────────────────────────────────────────────────────────

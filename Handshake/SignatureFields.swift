@@ -1,12 +1,9 @@
 import Foundation
-import os
 #if canImport(UIKit)
 import UIKit
 #else
 import AppKit
 #endif
-
-private let fieldLog = Logger(subsystem: "com.weihsun.Handshake", category: "fields")
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MARK: - SignatureField
@@ -24,9 +21,8 @@ private let fieldLog = Logger(subsystem: "com.weihsun.Handshake", category: "fie
 // a box the sender places reaches the recipient, and a token the AI writes
 // renders as a box.
 //
-// A field attachment is recognised by its file name (handshake-signature.png /
-// handshake-date.png). That's the one attachment property that survives an
-// RTFD round-trip; custom attributes do not.
+// A field attachment is recognised by its size (see Detection below), with
+// its file name as a secondary check. Custom attributes don't survive RTFD.
 // ─────────────────────────────────────────────────────────────────────────────
 
 enum SignatureField: String, CaseIterable {
@@ -45,10 +41,11 @@ enum SignatureField: String, CaseIterable {
     // Identity is the box's SIZE. The file name was the first idea, and it
     // round-trips fine through AppKit — but UIKit regenerates the file wrapper
     // from the image when it writes RTFD, so on iOS every box came back as
-    // "Attachment.png". Dimensions survive everything (RTFD stores them), the
-    // boxes are rendered at scale 1 so points == pixels, and 300×64 / 170×44
-    // don't collide with anything a user would insert. Name is kept as a
-    // secondary check for the AppKit path.
+    // "Attachment.png". Dimensions survive everything, and 300×64 / 170×44
+    // don't collide with anything a user would insert. The boxes render at 3×
+    // for a sharp Retina image, so a box read back without its point size
+    // (see attachmentSizes) measures 900×192 — any 1×/2×/3× multiple counts.
+    // Name is kept as a secondary check for the AppKit path.
 
     static let boxSize: [SignatureField: CGSize] = [
         .signature: CGSize(width: 300, height: 64),
@@ -59,10 +56,14 @@ enum SignatureField: String, CaseIterable {
         let name = attachment.fileWrapper?.preferredFilename ?? attachment.fileWrapper?.filename ?? ""
         let byName = allCases.first(where: { name.hasPrefix($0.rawValue) })
         let size = Self.size(of: attachment)
-        let bySize = size.flatMap { sz in allCases.first { abs(boxSize[$0]!.width - sz.width) < 1 && abs(boxSize[$0]!.height - sz.height) < 1 } }
-        #if DEBUG
-        fieldLog.notice("kind(of:) name=\(name, privacy: .public) bounds=\(attachment.bounds.size.debugDescription, privacy: .public) size=\(size.map { $0.debugDescription } ?? "nil", privacy: .public) → \((byName ?? bySize)?.rawValue ?? "nil", privacy: .public)")
-        #endif
+        let bySize = size.flatMap { sz in
+            allCases.first { kind in
+                let box = boxSize[kind]!
+                return [1, 2, 3].contains { (k: CGFloat) in
+                    abs(box.width * k - sz.width) < 1 && abs(box.height * k - sz.height) < 1
+                }
+            }
+        }
         return byName ?? bySize
     }
 
@@ -86,10 +87,99 @@ enum SignatureField: String, CaseIterable {
         let a = NSTextAttachment()
         a.fileWrapper = wrapper
         #if canImport(UIKit)
-        a.image = UIImage(data: png)
+        a.image = UIImage(data: png, scale: renderScale)
         #endif
         a.bounds = CGRect(origin: .zero, size: boxSize[kind] ?? size)
         return a
+    }
+
+    /// Pixels per point for every image Handshake draws into a document
+    /// (field boxes, the signature stamp). 3 is sharp on every iPhone; the
+    /// point size that keeps it the right size is restored on load from
+    /// `GeneratedContract.attachmentSizes`.
+    static let renderScale: CGFloat = 3
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARK: - Attachment sizes across an RTFD round-trip
+//
+// RTFD keeps an attachment's image but not its bounds: on import iOS sizes it
+// by PIXELS. A 3× image therefore comes back 3× too big, which is why the
+// stamp used to be rendered at 1× (soft on Retina). Instead, the point size of
+// every attachment is saved next to the RTFD, in document order, and put back
+// when the document is read.
+// ─────────────────────────────────────────────────────────────────────────────
+
+extension NSAttributedString {
+    /// Point size of every attachment, in document order.
+    var attachmentSizes: [CGSize] {
+        var out: [CGSize] = []
+        enumerateAttribute(.attachment, in: NSRange(location: 0, length: length)) { v, _, _ in
+            guard let a = v as? NSTextAttachment else { return }
+            #if canImport(UIKit)
+            let fallback = a.image?.size ?? .zero
+            #else
+            let fallback = a.image?.size ?? .zero
+            #endif
+            out.append(a.bounds.size.width > 0 ? a.bounds.size : fallback)
+        }
+        return out
+    }
+}
+
+extension NSMutableAttributedString {
+    /// Puts saved point sizes back. Only when the counts match — an older
+    /// record (no sizes, 1× images) is left exactly as it was.
+    func applyAttachmentSizes(_ sizes: [CGSize]?) {
+        guard let sizes, sizes.count == attachmentSizes.count else { return }
+        var i = 0
+        enumerateAttribute(.attachment, in: NSRange(location: 0, length: length)) { v, _, _ in
+            guard let a = v as? NSTextAttachment else { return }
+            if sizes[i].width > 0 { a.bounds = CGRect(origin: .zero, size: sizes[i]) }
+            i += 1
+        }
+    }
+
+    /// Inserts a field box on its own line after the paragraph holding
+    /// `cursor`, with one blank line before it — except straight after another
+    /// field, so a signature and its date stack as a pair instead of drifting
+    /// apart a blank line at a time. A blank line follows the box when text
+    /// comes next. Returns the caret: just after the box, so a second insert
+    /// lands right beneath it.
+    @discardableResult
+    func insertFieldBox(_ box: NSAttributedString, near cursor: Int,
+                        attributes: [NSAttributedString.Key: Any]) -> Int {
+        let ns    = string as NSString
+        let para  = ns.paragraphRange(for: NSRange(location: min(max(cursor, 0), ns.length), length: 0))
+        let at    = NSMaxRange(para)
+
+        var lead = ""
+        if at > 0 && ns.character(at: at - 1) != 10 { lead += "\n" }        // last line had no newline
+        if !isBlankLine(para) && !isFieldLine(para) { lead += "\n" }        // blank line after text
+
+        var trail = "\n"
+        if at < ns.length {
+            let next = ns.paragraphRange(for: NSRange(location: at, length: 0))
+            if !isBlankLine(next) && !isFieldLine(next) { trail += "\n" }   // blank line before text
+        }
+
+        let block = NSMutableAttributedString(string: lead, attributes: attributes)
+        block.append(box)
+        block.append(NSAttributedString(string: trail, attributes: attributes))
+        insert(block, at: at)
+        return at + lead.utf16.count + box.length
+    }
+
+    private func isBlankLine(_ r: NSRange) -> Bool {
+        (string as NSString).substring(with: r).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private func isFieldLine(_ r: NSRange) -> Bool {
+        let s = (string as NSString).substring(with: r).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard s == "\u{FFFC}" else { return false }
+        let at = (string as NSString).range(of: "\u{FFFC}", options: [], range: r).location
+        guard let a = attribute(.attachment, at: at, effectiveRange: nil) as? NSTextAttachment else { return false }
+        return SignatureField.kind(of: a) != nil
     }
 }
 

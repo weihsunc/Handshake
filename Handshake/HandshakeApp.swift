@@ -32,19 +32,6 @@ struct RootView: View {
             HomeView()
         }
         .onOpenURL { open($0) }
-        #if DEBUG
-        // Feeds a handshake:// URL straight to the router at launch, skipping
-        // the system "Open in Handshake?" prompt that a headless test can't tap:
-        //   xcrun simctl launch <udid> com.weihsun.Handshake -HandshakeOpenURL 'handshake://…'
-        .task {
-            let args = ProcessInfo.processInfo.arguments
-            if let i = args.firstIndex(of: "-HandshakeOpenURL"), i + 1 < args.count,
-               let url = URL(string: args[i + 1]) {
-                try? await Task.sleep(for: .milliseconds(600))
-                open(url)
-            }
-        }
-        #endif
         .fullScreenCover(item: $signingTarget) { target in
             SigningView(contract: target.contract)
         }

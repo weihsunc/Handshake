@@ -63,7 +63,7 @@ extension SignatureField {
         case .signature: renderer = ImageRenderer(content: AnyView(SignatureFieldBox()))
         case .date:      renderer = ImageRenderer(content: AnyView(DateFieldBox()))
         }
-        renderer.scale = 1
+        renderer.scale = renderScale          // sharp; size restored on load (attachmentSizes)
         let image = renderer.uiImage ?? UIImage()
         let png   = image.pngData() ?? Data()
         return attachment(kind, png: png, size: image.size)

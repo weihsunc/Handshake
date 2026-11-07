@@ -88,13 +88,17 @@ final class ContractStore {
     func markSigned(id: UUID,
                     signedBy: String? = nil,
                     signatureHash: String? = nil,
-                    bodyRTFD: Data? = nil) {
+                    bodyRTFD: Data? = nil,
+                    attachmentSizes: [CGSize]? = nil) {
         guard let i = contracts.firstIndex(where: { $0.id == id }) else { return }
         contracts[i].status   = .signed
         contracts[i].signedAt = .now
         if let signedBy      { contracts[i].signedBy      = signedBy }
         if let signatureHash { contracts[i].signatureHash = signatureHash }
-        if let bodyRTFD      { contracts[i].bodyRTFD      = bodyRTFD }
+        if let bodyRTFD {
+            contracts[i].bodyRTFD        = bodyRTFD
+            contracts[i].attachmentSizes = attachmentSizes
+        }
         save()
     }
 

@@ -88,18 +88,11 @@ extension NSMutableAttributedString {
         let renderer = ImageRenderer(
             content: SignatureBlockView(stamp: stamp).frame(width: blockWidth)
         )
-        // Must render 1:1 — one pixel per point.
-        //
-        // The signed document is persisted as RTFD and re-read in the history
-        // viewer, and RTFD's importer sizes an attachment by the image's PIXEL
-        // dimensions. Rendering at UIScreen.main.scale therefore draws the block
-        // 3× oversized once it round-trips, spilling far outside the text
-        // column. Neither attachment.bounds nor a corrected UIImage scale
-        // survives the round-trip to fix it — both are discarded on import.
-        //
-        // Cost of 1:1: the block is slightly soft on a Retina screen. That's the
-        // trade for it being the right size everywhere it's displayed.
-        renderer.scale = 1
+        // Rendered at 3× so it's sharp on Retina. RTFD's importer sizes an
+        // attachment by PIXELS and drops bounds, so on its own this would come
+        // back 3× too big from history — the point size is saved next to the
+        // RTFD (GeneratedContract.attachmentSizes) and restored on load.
+        renderer.scale = SignatureField.renderScale
 
         guard let image = renderer.uiImage else { return }
 

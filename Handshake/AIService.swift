@@ -126,9 +126,6 @@ enum AIService {
         }
 
         guard let title, let bodyStart else {
-            #if DEBUG
-            print("[Handshake AI] rejected reply (no TITLE/---). First 400 chars:\n\(raw.prefix(400))")
-            #endif
             throw AIError.malformedContract
         }
 
@@ -136,9 +133,6 @@ enum AIService {
             .joined(separator: "\n")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard body.count >= 40 else {
-            #if DEBUG
-            print("[Handshake AI] rejected reply (body \(body.count) chars):\n\(raw.prefix(400))")
-            #endif
             throw AIError.malformedContract
         }
 

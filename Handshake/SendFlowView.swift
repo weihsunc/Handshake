@@ -169,6 +169,7 @@ struct SendFlowView: View {
         let backend = Secrets.signingBackend
         guard backend != .onDevice, BackendClient.isConfigured else {
             ContractStore.shared.markSent(id: contract.id, recipients: validRecipients)
+            Haptics.success()
             dismiss()
             return
         }
@@ -179,6 +180,7 @@ struct SendFlowView: View {
                                                            recipients: validRecipients,
                                                            backend: backend)
                 ContractStore.shared.markSent(id: contract.id, recipients: validRecipients, providerRef: ref)
+                Haptics.success()
                 dismiss()
             } catch {
                 providerError = error.localizedDescription
