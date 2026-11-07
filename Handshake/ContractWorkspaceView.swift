@@ -348,14 +348,11 @@ struct ContractWorkspaceView: View {
                             }
 
                             if isLoading || isAILoading {
-                                HStack(spacing: 8) {
-                                    ProgressView().scaleEffect(0.75)
-                                    Text("Working on it…")
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
-                                }
-                                .padding(.horizontal, 16)
-                                .id("loading")
+                                // First draft vs a follow-up edit get different stages.
+                                ThinkingIndicator(task: contract == nil ? .drafting : .editing)
+                                    .padding(.horizontal, 16)
+                                    .id("loading")
+                                    .transition(.opacity)
                             }
 
                             if let err = errorText {

@@ -32,6 +32,11 @@ enum AIService {
 
     private static let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
 
+    /// The model that drafts and revises contracts. Named on the Profile
+    /// screen's legal section, so it must stay the one actually called.
+    static let modelID          = "claude-haiku-4-5-20251001"
+    static let modelDisplayName = "Claude Haiku 4.5"
+
     // ─────────────────────────────────────────────────────────────
     // MARK: - Public
     // ─────────────────────────────────────────────────────────────
@@ -162,7 +167,7 @@ enum AIService {
         }
 
         let body: [String: Any] = [
-            "model":      "claude-haiku-4-5-20251001",
+            "model":      modelID,
             "max_tokens": maxTokens,
             "system":     system,
             "messages":   [["role": "user", "content": message]]

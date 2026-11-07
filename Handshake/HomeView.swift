@@ -52,6 +52,7 @@ struct HomeView: View {
     @State private var prompt      = ""
     @State private var showSheet   = false
     @State private var showHistory = false
+    @State private var showProfile = false
     @State private var isFocused   = false
     private var router = DeepLinkRouter.shared
 
@@ -146,7 +147,9 @@ struct HomeView: View {
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                GlassIconButton(systemName: "person", label: "Profile")
+                GlassIconButton(systemName: "person", label: "Profile") {
+                    showProfile = true
+                }
             }
         }
         // ── Contract workspace (full-screen, AI panel always on top) ─────
@@ -159,11 +162,16 @@ struct HomeView: View {
         .sheet(isPresented: $showHistory) {
             HistoryView()
         }
+        // ── Profile (person button) ──────────────────────────────────────
+        .sheet(isPresented: $showProfile) {
+            ProfileView()
+        }
         // ── Deep link arriving: close our presentations so RootView can
         //    present the signing screen (see DeepLinkRouter).
         .onChange(of: router.dismissTick) { _, _ in
             showSheet   = false
             showHistory = false
+            showProfile = false
         }
     }
 

@@ -486,7 +486,9 @@ Three options were considered:
 - [x] Haptics: success on signing and on a confirmed send, a light tap when a field lands (`Haptics` in `Components.swift`; imperative because both success moments are followed by a dismiss)
 - [x] Two fields inserted back to back drifted apart a blank line at a time — `insertFieldBox` now stacks them, keeps one blank line from surrounding text, and puts the caret after the box (unit-tested, 6 cases)
 - [x] `#if DEBUG` launch hooks and stray `print`s removed
-- [ ] Home's profile button is inert. It has a VoiceOver label now, but it should either open something or go.
+- [x] Home's profile button opens **Profile** (`ProfileView.swift`, Nov 6): Sign in with Apple account (`AccountStore` in `Account.swift`, on-device; Log Out forgets it, contracts stay), plan and billing through StoreKit (Apple's manage-subscriptions sheet, `AppStore.sync()` restore), and a Legal section naming the AI model (`AIService.modelDisplayName`, read from the same constant the API call uses) and the e-signature path (`Secrets.signingBackend`).
+- [ ] Profile needs from the owner: App Store Connect subscription products (until then the plan always reads "Free"), Terms and Privacy Policy URLs in `LegalLinks` (rows hide while nil; the App Store requires a privacy policy), and the Sign in with Apple capability registered for the App ID — automatic signing does this on the first device build from Xcode. `Handshake.entitlements` lives at the repo root for the same reason as `Info.plist`.
+- [x] The AI panel's "Working on it…" spinner is a `ThinkingIndicator` (Nov 6): a breathing sparkle and shimmering status text stepping through stages ("Looking for similar templates…"). The stages are timed, not real progress — the API call isn't streamed — so they advance every 2.4 s and hold on the last rather than loop. Reduce Motion turns off the shimmer.
 - [ ] Strings aren't localised.
 - [ ] Photo attachments live only in the `NSAttributedString`; they aren't persisted anywhere
 - [ ] The iOS 26.3 simulator runtime renders no colour emoji (template icons show as `[?]`). Test on 26.5+
