@@ -123,6 +123,19 @@ One detour worth knowing: restarting SpringBoard on a simulator (`launchctl kick
 - **Recipients couldn't tell who sent it.** The link carries the sender's name when they're signed in with Apple (`from`); shown on the signing screen and in History ("From …"). The invite text names them too, and no longer claims the link is "unique to you" (every recipient gets the same link).
 - Link errors distinguish a cut-off link ("This link is incomplete…") from a link with no payload.
 
+**Parties and the recipient redesign (November 8, 2026, evening)** — modelled on DocuSign / Dropbox Sign. See `Parties.swift` for the model.
+
+- **Signatures are records, not pixels.** `GeneratedContract.signatures: [PartySignature]` (slot, role, name, time, hash, date, method). The document stays unsigned (`baseBody()`); `displayBody()` draws each stamp into its box on the way to the screen, fills that party's date field (only up to the next party's block) and writes the signer's name over the placeholder on their party line ("TENANT: [FULL NAME]" → "TENANT: Dana Whitfield"). Copies **merge** by slot — a second signer no longer overwrites the first. Old records (stamp baked into the RTFD, no records) show exactly as before. The workspace edits `baseBody()`; if the wording changes, the signatures on the record are dropped (`persist()`).
+- **The sender assigns parties.** Send screen: each recipient has "Signs as [Tenant ▾]" (picking a taken party swaps). Default: recipients take the 2nd party, then 3rd…, the 1st last (the sender usually writes themselves in first). Validation: more recipients than boxes, or more than one box with no one assigned, blocks Send with a reason.
+- **The sender countersigns.** A box nobody is assigned to is the sender's — "You · Signs as Landlord", name field, and the button becomes **Sign & Send** (Face ID first). The signature is saved only once something is actually sent.
+- **One link per recipient** (`me` in the payload = their box), one compose sheet each — Messages if they have a phone, else Mail, else the share sheet. The recipient sees "You're signing as Tenant", no picker. Older links without `me` still get a picker, limited to unsigned boxes.
+- **"1 of 2 signed".** `partyCount` is set at send; the sender's copy turns Signed only when every box has a signature. Read-only viewer lists the signers (✓ time / Waiting). A completed copy can be sent round from there.
+- **Recipient screen:** one-row bar — "jump to your box" + **Sign as Tenant**; name / date / consent / Face ID live in a sheet. The bar fades out under any sheet (iOS 26 glass sheets let the purple pill glow through). ⋯ menu: **Ask for Changes** (free text) and **Decline to Sign** (optional reason) — both go back as `handshake://reply/<id>?d=…`. Sender side: "Changes Asked" / "Declined" badges, a banner, and **Revise Contract** (back to draft, signatures cleared, the request pre-filled in the chat bar for the AI).
+- **Replies come back addressed.** "Signed copies come back to" (email or phone, remembered) rides in the link as `reply`; the recipient's Send-back / decline / changes open Mail or Messages already addressed (`ReplyComposeSheet`), share sheet as fallback. Apple private-relay addresses are skipped (they bounce non-registered senders).
+- **Blanks warning.** "[ADDRESS]"-style placeholders left in the text (not the field tokens, not the name on a party line) are listed on the send screen and confirmed before sending (`SignatureSlots.blanks`).
+- Stamp shows local time with zone (was ISO UTC). Placeholder app icon (white handshake strokes from the home illustration on the brand gradient) — replace with a designed one.
+- Not done (needs a domain/backend, owner decision): web / universal links and short links; per-recipient tracking beyond what links carry; signing order.
+
 ## 1. What Handshake Is
 
 A native iOS app that turns a plain-English prompt into a legally formatted contract, lets you edit it like Apple Notes, then send it to recipients who sign with Face ID.
@@ -167,9 +180,11 @@ A native iOS app that turns a plain-English prompt into a legally formatted cont
 | `SpeechInput.swift` | Dictation for the chat bar — SFSpeechRecognizer + AVAudioEngine, partial results streamed into the field |
 | `SignatureFields.swift` | The field model: `.signature` / `.date` as attachments in the document, `[Signature]` / `[Date]` in markdown; lossless both ways. Detection, `handshakeMarkdown()` (document → markdown), `renderFieldTokens` |
 | `SignatureFieldViews.swift` | The dashed box images, rendered at 3× |
-| `SignatureSlots.swift` | Pure Foundation: every `[Signature]` in a document and whose it is (from the `ROLE:` line above). Drives the "Sign as" picker |
+| `SignatureSlots.swift` | Pure Foundation: every `[Signature]` in a document and whose it is (from the `ROLE:` line above), its date field and party line; `blanks(in:)` for unfilled placeholders |
+| `Parties.swift` | `baseBody()` / `displayBody()`, drawing `PartySignature` records into their boxes, merging copies, "N of M signed" |
+| `ComposeBridges.swift` | Messages / Mail compose bridges + `ReplyComposeSheet` (a reply already addressed to the sender) |
 | `MediaPickers.swift` | `PhotoPickerView`, `DocumentPickerView` |
-| `SendFlowView.swift` | Recipient entry + SMS/Mail compose |
+| `SendFlowView.swift` | Recipients and the party each signs, the sender's own signature, blanks warning, one link per recipient |
 | `SigningView.swift` | Recipient's signing screen + confirmation screen |
 | `SignatureService.swift` | Face ID auth + CryptoKit SHA256 stamp |
 | `SignatureBlockView.swift` | The signature block + stamping it into the document |

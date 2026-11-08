@@ -45,7 +45,13 @@ final class ContractStore {
 
     var completed: [GeneratedContract] {
         contracts
-            .filter { $0.status == .signed || $0.status == .declined }
+            .filter { $0.status == .signed }
+            .sorted { ($0.signedAt ?? $0.createdAt) > ($1.signedAt ?? $1.createdAt) }
+    }
+
+    var declined: [GeneratedContract] {
+        contracts
+            .filter { $0.status == .declined }
             .sorted { ($0.signedAt ?? $0.createdAt) > ($1.signedAt ?? $1.createdAt) }
     }
 
@@ -74,12 +80,32 @@ final class ContractStore {
         save()
     }
 
-    func markSent(id: UUID, recipients: [Recipient], providerRef: ProviderRef? = nil) {
+    func markSent(id: UUID, recipients: [Recipient], providerRef: ProviderRef? = nil,
+                  partyCount: Int? = nil, replyTo: String? = nil,
+                  senderName: String? = nil, ownSignature: PartySignature? = nil) {
         guard let i = contracts.firstIndex(where: { $0.id == id }) else { return }
         contracts[i].recipients  = recipients
         contracts[i].status      = .sent
         contracts[i].sentAt      = .now
+        contracts[i].partyCount  = partyCount
+        contracts[i].replyTo     = replyTo
+        contracts[i].senderName  = senderName
+        // A fresh send answers any earlier request for changes.
+        contracts[i].changeRequest = nil
+        contracts[i].declinedBy    = nil
+        contracts[i].declineReason = nil
+        if let ownSignature {
+            contracts[i].signatures.removeAll { $0.slot == ownSignature.slot }
+            contracts[i].merge(signatures: [ownSignature])
+        }
         if let providerRef { contracts[i].providerRef = providerRef }
+        save()
+    }
+
+    /// Any other change to one contract, saved.
+    func update(id: UUID, _ change: (inout GeneratedContract) -> Void) {
+        guard let i = contracts.firstIndex(where: { $0.id == id }) else { return }
+        change(&contracts[i])
         save()
     }
 

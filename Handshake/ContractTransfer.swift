@@ -43,6 +43,19 @@ enum ContractTransfer {
         /// entered, so the sender's copy can be stamped to match.
         var signedSlot: Int?
         var signedDate: Date?
+        // Parties (Nov 8 evening) — optional for the same reason.
+        /// Every signature so far, one per box.
+        var sigs: [PartySignature]?
+        /// How many signatures complete it.
+        var parties: Int?
+        /// The box THIS link's recipient signs. Each recipient gets their own
+        /// link, so this is how their phone knows without asking.
+        var me: Int?
+        /// The sender's email or phone, for the copy coming back.
+        var reply: String?
+        var declinedBy: String?
+        var declineReason: String?
+        var change: ChangeRequest?
 
         init(_ c: GeneratedContract) {
             id = c.id; title = c.title; content = c.content
@@ -50,6 +63,9 @@ enum ContractTransfer {
             createdAt = c.createdAt; sentAt = c.sentAt; signedAt = c.signedAt
             signedBy = c.signedBy; signatureHash = c.signatureHash
             from = c.senderName; signedSlot = c.signedSlot; signedDate = c.signedDate
+            sigs = c.signatures.isEmpty ? nil : c.signatures
+            parties = c.partyCount; me = c.myParty; reply = c.replyTo
+            declinedBy = c.declinedBy; declineReason = c.declineReason; change = c.changeRequest
         }
 
         var contract: GeneratedContract {
@@ -58,6 +74,17 @@ enum ContractTransfer {
             c.createdAt = createdAt; c.sentAt = sentAt; c.signedAt = signedAt
             c.signedBy = signedBy; c.signatureHash = signatureHash
             c.senderName = from; c.signedSlot = signedSlot; c.signedDate = signedDate
+            c.partyCount = parties; c.myParty = me; c.replyTo = reply
+            c.declinedBy = declinedBy; c.declineReason = declineReason; c.changeRequest = change
+            if let sigs {
+                c.signatures = sigs
+            } else if let signedBy, let signatureHash {
+                // A signed copy from an older build: one signer, the slot and
+                // date as separate fields.
+                c.signatures = [PartySignature(slot: signedSlot ?? 0, role: nil, name: signedBy,
+                                               signedAt: signedAt ?? .now, hash: signatureHash,
+                                               date: signedDate, method: nil)]
+            }
             return c
         }
     }
@@ -70,6 +97,11 @@ enum ContractTransfer {
 
     static func signedCopyLink(for c: GeneratedContract) -> String {
         "handshake://signed/\(c.id.uuidString)?d=\(encode(c))"
+    }
+
+    /// A recipient's answer that isn't a signature: declined, or asked for changes.
+    static func replyLink(for c: GeneratedContract) -> String {
+        "handshake://reply/\(c.id.uuidString)?d=\(encode(c))"
     }
 
     static func encode(_ c: GeneratedContract) -> String {

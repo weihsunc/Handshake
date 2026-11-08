@@ -91,6 +91,14 @@ struct HistoryView: View {
                 }
             }
 
+            if !store.declined.isEmpty {
+                Section("Declined") {
+                    ForEach(store.declined) { c in
+                        ContractRow(contract: c) { viewContract = c }
+                    }
+                }
+            }
+
             if !store.drafts.isEmpty {
                 Section("Drafts") {
                     ForEach(store.drafts) { c in
@@ -180,7 +188,7 @@ private struct ContractRow: View {
 
                 Spacer(minLength: 8)
 
-                StatusBadge(status: contract.status, incoming: contract.isIncoming)
+                StatusBadge(contract: contract)
             }
             .padding(.vertical, 4)
             .contentShape(Rectangle())
@@ -197,12 +205,30 @@ struct StatusBadge: View {
     let status: ContractStatus
     /// A contract that came in to be signed reads "To Sign", not "Pending".
     var incoming: Bool = false
+    /// Overrides for a whole contract: "1 of 2 Signed", "Changes Asked".
+    private var override: (label: String, color: Color)? = nil
+
+    init(status: ContractStatus, incoming: Bool = false) {
+        self.status = status
+        self.incoming = incoming
+    }
+
+    /// The badge for a contract, with where it's got to.
+    init(contract c: GeneratedContract) {
+        self.init(status: c.status, incoming: c.isIncoming)
+        if !c.isIncoming, c.changeRequest != nil, c.status == .sent || c.status == .draft {
+            override = (String(localized: "Changes Asked"), .orange)
+        } else if let progress = c.progressLabel {
+            override = (progress, Color.brand)
+        }
+    }
 
     private var label: String {
-        incoming && status == .sent ? String(localized: "To Sign") : status.label
+        override?.label ?? (incoming && status == .sent ? String(localized: "To Sign") : status.label)
     }
 
     private var color: Color {
+        if let override { return override.color }
         switch status {
         case .draft:    return Color(.secondaryLabel)
         case .sent:     return Color.brand
@@ -234,18 +260,30 @@ struct ReadOnlyContractView: View {
     @State private var attributedBody: NSMutableAttributedString
     @State private var editorHeight:   CGFloat = 300
     @State private var showShare = false
+    @State private var revising: GeneratedContract? = nil
     @Environment(\.dismiss) private var dismiss
+
+    private let slots: [SignatureSlots.Slot]
 
     init(contract: GeneratedContract) {
         self.contract = contract
         _attributedBody = State(initialValue: contract.displayBody())
+        slots = contract.signatureSlots()
     }
 
-    /// A contract this phone signed for someone else. "Not now" on the
-    /// confirmation screen used to be the last chance to send the signed
-    /// copy back; now it's here for as long as the contract is.
-    private var canSendBack: Bool {
-        contract.isIncoming && contract.status == .signed
+    /// A contract this phone signed for someone else — or the sender's copy
+    /// once everyone has signed, to send round. "Not now" on the
+    /// confirmation screen used to be the last chance to send it.
+    private var canShareSigned: Bool {
+        contract.status == .signed && (contract.isIncoming || !contract.signatures.isEmpty)
+    }
+
+    /// Where the completed copy goes when the sender shares it: straight to
+    /// the one recipient, or the share sheet for several.
+    private var shareAddress: String? {
+        if contract.isIncoming { return contract.replyTo }
+        guard contract.recipients.count == 1, let r = contract.recipients.first else { return nil }
+        return r.phone.isEmpty ? r.email : r.phone
     }
 
     var body: some View {
@@ -259,9 +297,20 @@ struct ReadOnlyContractView: View {
                             .foregroundStyle(Color(.label))
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer()
-                        StatusBadge(status: contract.status, incoming: contract.isIncoming)
+                        StatusBadge(contract: contract)
                             .padding(.top, 6)
                     }
+
+                    if contract.status == .declined {
+                        declinedBanner
+                        // Revise and send again, the way DocuSign offers "Correct" on a declined envelope.
+                        if !contract.isIncoming {
+                            PurplePillButton(title: String(localized: "Revise Contract"), fullWidth: true) { revise() }
+                        }
+                    } else if let request = contract.changeRequest, !contract.isIncoming {
+                        changesBanner(request)
+                    }
+                    if !contract.isIncoming, contract.status != .draft, !signers.isEmpty { signersCard }
 
                     GeometryReader { geo in
                         RichTextEditorImpl(
@@ -284,7 +333,7 @@ struct ReadOnlyContractView: View {
             .background(Color.pageBackground.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                if canSendBack {
+                if canShareSigned {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button {
                             showShare = true
@@ -300,33 +349,130 @@ struct ReadOnlyContractView: View {
             }
         }
         .sheet(isPresented: $showShare) {
-            ActivityView(activityItems: [SigningConfirmationView.returnMessage(for: contract)]) { _ in
+            ReplyComposeSheet(address: shareAddress,
+                              subject: String(localized: "Signed: \(contract.title)"),
+                              message: SigningConfirmationView.returnMessage(for: contract)) { _ in
                 showShare = false
             }
-            .presentationDetents([.medium, .large])
         }
+        .fullScreenCover(item: $revising, onDismiss: { dismiss() }) { draft in
+            NavigationStack {
+                ContractWorkspaceView(initialPrompt: draft.title, existing: draft,
+                                      prefillPrompt: draft.changeRequest.map {
+                                          String(localized: "\($0.by) asked for these changes: \($0.text)")
+                                      })
+            }
+        }
+    }
+
+    // ── Who signs, and who has ───────────────────────────────────────────────
+
+    private struct Signer: Identifiable {
+        let id: Int
+        let role: String?
+        let name: String
+        let signed: PartySignature?
+    }
+
+    /// One row per party: the recipient assigned to it, or the sender.
+    private var signers: [Signer] {
+        let count = contract.partyCount ?? slots.count
+        guard count > 0 else { return [] }
+        return (0..<count).map { i in
+            let who = contract.recipients.first { $0.party == i }?.name
+                ?? contract.signature(forSlot: i)?.name
+                ?? String(localized: "You")
+            return Signer(id: i,
+                          role: slots.indices.contains(i) && slots.count > 1 ? slots[i].role : nil,
+                          name: who,
+                          signed: contract.signature(forSlot: i))
+        }
+    }
+
+    private var signersCard: some View {
+        VStack(spacing: 0) {
+            ForEach(signers) { s in
+                HStack(spacing: 12) {
+                    Image(systemName: s.signed == nil ? "circle.dashed" : "checkmark.circle.fill")
+                        .foregroundStyle(s.signed == nil ? Color(.tertiaryLabel) : Color.statusSigned)
+                        .font(.title3)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(s.name).font(.subheadline.weight(.semibold))
+                        if let role = s.role {
+                            Text(role).font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    Spacer()
+                    Group {
+                        if let sig = s.signed {
+                            Text(sig.signedAt, format: .dateTime.month(.abbreviated).day().hour().minute())
+                        } else {
+                            Text("Waiting")
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                if s.id != signers.last?.id { Divider().padding(.leading, 48) }
+            }
+        }
+        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.cardFill))
+    }
+
+    // ── Banners ──────────────────────────────────────────────────────────────
+
+    private var declinedBanner: some View {
+        Banner(icon: "xmark.circle.fill", tint: Color.statusDeclined,
+               title: String(localized: "\(contract.declinedBy ?? String(localized: "The recipient")) declined to sign"),
+               detail: contract.declineReason)
+    }
+
+    private func changesBanner(_ r: ChangeRequest) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Banner(icon: "text.bubble.fill", tint: .orange,
+                   title: String(localized: "\(r.by) asked for changes"),
+                   detail: r.text)
+            PurplePillButton(title: String(localized: "Revise Contract"), fullWidth: true) { revise() }
+        }
+    }
+
+    /// Back to a draft so it can be edited and sent again. Signatures go:
+    /// they were on the old wording.
+    private func revise() {
+        ContractStore.shared.update(id: contract.id) { c in
+            c.status = .draft
+            c.signatures = []
+            c.signedBy = nil; c.signatureHash = nil
+            c.declinedBy = nil; c.declineReason = nil
+        }
+        revising = ContractStore.shared.contract(id: contract.id)
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MARK: - Display body helper
-// RTFD (rich edits) wins over markdown source when present.
-// ─────────────────────────────────────────────────────────────────────────────
+private struct Banner: View {
+    let icon: String
+    let tint: Color
+    let title: String
+    let detail: String?
 
-extension GeneratedContract {
-    func displayBody() -> NSMutableAttributedString {
-        if let data = bodyRTFD,
-           let attr = try? NSMutableAttributedString(
-               data: data,
-               options: [.documentType: NSAttributedString.DocumentType.rtfd],
-               documentAttributes: nil
-           ) {
-            attr.applyAttachmentSizes(attachmentSizes)
-            attr.adaptTextColorsToAppearance()
-            attr.redrawSignatureFieldBoxes()
-            return attr
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: icon).foregroundStyle(tint).font(.title3)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(.subheadline.weight(.semibold))
+                if let detail, !detail.isEmpty {
+                    Text(detail)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.secondaryInk)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Spacer(minLength: 0)
         }
-        return .fromHandshakeMarkdown(content)
+        .padding(14)
+        .background(tint.opacity(0.10), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 

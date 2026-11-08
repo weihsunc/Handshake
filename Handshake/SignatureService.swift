@@ -36,6 +36,8 @@ struct SignatureStamp {
     let signerName: String
     let signedAt:   Date
     let hash:       String
+    /// What confirmed it, for the badge. nil reads "Face ID" (older records).
+    var method:     String? = nil
 
     /// First 12 hex characters, grouped — enough to eyeball, short enough to fit.
     var fingerprint: String {

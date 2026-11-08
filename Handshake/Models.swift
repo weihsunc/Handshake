@@ -71,6 +71,53 @@ struct GeneratedContract: Identifiable, Codable {
     /// sender's document gets the same stamp in the same place.
     var signedSlot: Int?            = nil
     var signedDate: Date?           = nil
+
+    // ── Parties (Nov 8) ─────────────────────────────────────────────────────
+    /// Every signature on the contract, one per party, the way DocuSign keeps
+    /// one per recipient. Stamps are drawn from these when the document is
+    /// shown (displayBody), never baked into bodyRTFD — so two copies signed
+    /// by different people merge instead of the last one overwriting the
+    /// first. Empty on older records, whose RTFD already has the stamp in it.
+    var signatures: [PartySignature] = []
+    /// How many signatures complete the contract (the signature boxes, or the
+    /// recipients when there are no boxes). Set when it's sent.
+    var partyCount: Int?            = nil
+    /// Incoming: the party this phone's owner was asked to sign as. Carried
+    /// in their own link, so they never have to pick. nil on older links.
+    var myParty: Int?               = nil
+    /// Where the signed copy goes back to: the sender's email or phone.
+    var replyTo: String?            = nil
+    /// A recipient declined, and why (optional).
+    var declinedBy: String?         = nil
+    var declineReason: String?      = nil
+    /// A recipient asked for changes instead of signing.
+    var changeRequest: ChangeRequest? = nil
+}
+
+/// One party's signature. `slot` indexes SignatureSlots.find on the
+/// UNSIGNED document (baseBody), so it means the same box on every phone.
+struct PartySignature: Codable, Hashable {
+    var slot: Int
+    var role: String?
+    var name: String
+    var signedAt: Date
+    var hash: String
+    /// What the signer put in the date field after their box, if it has one.
+    var date: Date?
+    /// "Face ID" / "Touch ID" — whatever confirmed it.
+    var method: String?
+}
+
+struct ChangeRequest: Codable, Hashable {
+    var by: String
+    var text: String
+    var at: Date
+}
+
+extension GeneratedContract {
+    /// Signatures still missing before the contract is complete.
+    var signaturesNeeded: Int { max(0, (partyCount ?? 1) - signatures.count) }
+    var isPartlySigned: Bool { !signatures.isEmpty && signaturesNeeded > 0 }
 }
 
 // Declared in an extension on purpose: an initializer inside the struct body
@@ -103,6 +150,13 @@ extension GeneratedContract {
         senderName    = try c.decodeIfPresent(String.self,          forKey: .senderName)
         signedSlot    = try c.decodeIfPresent(Int.self,             forKey: .signedSlot)
         signedDate    = try c.decodeIfPresent(Date.self,            forKey: .signedDate)
+        signatures    = try c.decodeIfPresent([PartySignature].self, forKey: .signatures)   ?? []
+        partyCount    = try c.decodeIfPresent(Int.self,             forKey: .partyCount)
+        myParty       = try c.decodeIfPresent(Int.self,             forKey: .myParty)
+        replyTo       = try c.decodeIfPresent(String.self,          forKey: .replyTo)
+        declinedBy    = try c.decodeIfPresent(String.self,          forKey: .declinedBy)
+        declineReason = try c.decodeIfPresent(String.self,          forKey: .declineReason)
+        changeRequest = try c.decodeIfPresent(ChangeRequest.self,   forKey: .changeRequest)
     }
 }
 
@@ -125,11 +179,15 @@ struct Recipient: Identifiable, Codable {
     var name:  String
     var email: String
     var phone: String
+    /// The party (signature slot) this recipient signs as. nil on records
+    /// from before parties were assigned.
+    var party: Int?
 
-    init(id: UUID = UUID(), name: String = "", email: String = "", phone: String = "") {
+    init(id: UUID = UUID(), name: String = "", email: String = "", phone: String = "", party: Int? = nil) {
         self.id    = id
         self.name  = name
         self.email = email
         self.phone = phone
+        self.party = party
     }
 }

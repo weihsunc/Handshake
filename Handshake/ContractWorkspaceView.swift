@@ -28,6 +28,9 @@ struct ContractWorkspaceView: View {
     /// When set, the workspace opens this saved contract instead of generating
     /// a new one (used by HistoryView for drafts).
     var existing: GeneratedContract? = nil
+    /// Put in the chat bar on open: a recipient's request for changes, ready
+    /// to hand to the AI or to act on by hand.
+    var prefillPrompt: String? = nil
 
     // ── AI state ──────────────────────────────────────────────────────────────
     @State private var messages:     [ChatMessage] = []
@@ -653,7 +656,8 @@ struct ContractWorkspaceView: View {
                 // the conversation back.
                 showSidePanel  = false
                 contract       = saved
-                attributedBody = saved.displayBody()
+                // Unsigned: signatures are drawn for viewing, not edited.
+                attributedBody = saved.baseBody()
                 // Pick the conversation up where it left off. The greeting is
                 // only for drafts that never had one (older records).
                 messages = saved.messages
@@ -670,6 +674,10 @@ struct ContractWorkspaceView: View {
                     // the document is still visible behind it.
                     detent = .medium
                     showAIPanel = true
+                }
+                if let prefillPrompt {
+                    aiChatPrompt  = prefillPrompt
+                    showSidePanel = true
                 }
             }
             return
@@ -732,6 +740,13 @@ struct ContractWorkspaceView: View {
             c.status     = stored.status
             c.sentAt     = stored.sentAt
             c.signedAt   = stored.signedAt
+            c.partyCount = stored.partyCount
+            c.replyTo    = stored.replyTo
+            c.senderName = stored.senderName
+            c.changeRequest = stored.changeRequest
+            // A signature is on the words it was given. If they've changed
+            // since, it doesn't carry over to the new wording.
+            c.signatures = stored.content == c.content ? stored.signatures : []
         }
         c.messages = messages
         contract = c

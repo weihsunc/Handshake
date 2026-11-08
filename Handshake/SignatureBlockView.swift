@@ -38,7 +38,7 @@ struct SignatureBlockView: View {
             HStack(spacing: 5) {
                 Image(systemName: "checkmark.seal.fill")
                     .font(.system(size: 12, weight: .semibold))
-                Text("Verified with Face ID")
+                Text("Verified with \(stamp.method ?? "Face ID")")
                     .font(.system(size: 12, weight: .semibold))
             }
             .foregroundStyle(Self.purple)
@@ -47,8 +47,13 @@ struct SignatureBlockView: View {
             .background(Self.purple.opacity(0.10), in: Capsule())
 
             // ── Timestamp + fingerprint ───────────────────────────────────────
+            // Local time with its zone. It used to be the ISO string in UTC
+            // ("2026-11-08T21:14:03Z"), which read like a log line and was
+            // hours off for everyone outside UTC. The stamp is drawn on each
+            // phone that shows it, so each reader sees their own zone.
             VStack(alignment: .leading, spacing: 2) {
-                Text(stamp.isoTimestamp)
+                Text(stamp.signedAt, format: .dateTime.year().month(.abbreviated).day()
+                                                .hour().minute().timeZone(.specificName(.short)))
                 Text("Fingerprint \(stamp.fingerprint)")
                     .monospaced()
             }
@@ -82,7 +87,10 @@ extension NSMutableAttributedString {
     ///   (single-party documents, or a box the user placed themselves).
     /// - Parameter signedDate: what goes in the date field after this slot.
     ///   The signer picks it (defaults to today), as in DocuSign's date field.
-    func stampSignature(_ stamp: SignatureStamp, width: CGFloat, slot: NSRange? = nil, signedDate: Date? = nil) {
+    /// - Parameter dateLimit: the date field must come before here (the next
+    ///   party's block), so a box with no date of its own can't fill theirs.
+    func stampSignature(_ stamp: SignatureStamp, width: CGFloat, slot: NSRange? = nil,
+                        signedDate: Date? = nil, dateLimit: Int? = nil) {
         let blockWidth = max(200, min(width, 420))
 
         let renderer = ImageRenderer(
@@ -118,9 +126,12 @@ extension NSMutableAttributedString {
             replaceCharacters(in: placeholder, with: block)
             // Fill the first DATE FIELD after the signature with the signer's date.
             let afterStart = placeholder.location + block.length
+            let delta = block.length - placeholder.length
+            let limit = dateLimit.map { $0 == Int.max ? Int.max : $0 + delta } ?? Int.max
             let f = DateFormatter(); f.dateStyle = .long; f.timeStyle = .none
             let dateText = f.string(from: signedDate ?? stamp.signedAt)
-            if let d = signatureFields().first(where: { $0.kind == .date && $0.range.location >= afterStart }) {
+            if let d = signatureFields().first(where: { $0.kind == .date && $0.range.location >= afterStart
+                                                         && $0.range.location < limit }) {
                 var attrs = attributes(at: d.range.location, effectiveRange: nil)
                 attrs[.attachment] = nil; attrs[.foregroundColor] = UIColor.label
                 attrs[.font] = attrs[.font] ?? UIFont.systemFont(ofSize: 17)
@@ -128,7 +139,7 @@ extension NSMutableAttributedString {
             } else {
                 let after = NSRange(location: afterStart, length: length - afterStart)
                 let tok = (string as NSString).range(of: "[Date]", options: [], range: after)
-                if tok.location != NSNotFound {
+                if tok.location != NSNotFound && tok.location < limit {
                     var attrs = attributes(at: tok.location, effectiveRange: nil); attrs[.foregroundColor] = UIColor.label
                     replaceCharacters(in: tok, with: NSAttributedString(string: dateText, attributes: attrs))
                 }

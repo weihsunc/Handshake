@@ -20,12 +20,16 @@ struct SigningView: View {
 
     @State private var attributedBody: NSMutableAttributedString
     @State private var editorHeight:   CGFloat = 300
-    @State private var bodyWidth:      CGFloat = 320
+    @State private var textView:       UITextView? = nil
 
     @State private var signerName:  String
-    /// Every "[Signature]" in the document and whose it is. When there's more
-    /// than one, the signer picks their party; the stamp goes in that slot.
+    /// Every "[Signature]" in the UNSIGNED document and whose it is.
     private let slots: [SignatureSlots.Slot]
+    /// The box this person signs, when their link named it — the normal case
+    /// now. nil for links from before parties were assigned: they pick.
+    private let assignedSlot: Int?
+    /// Boxes no one has signed yet (the sender may have signed theirs).
+    private let openSlots: [Int]
     @State private var selectedSlot: Int
     /// The date the signer puts in the date field — theirs to pick, defaulting
     /// to today. Shown only when the chosen slot has a date field after it.
@@ -40,39 +44,78 @@ struct SigningView: View {
     /// re-reading the store.
     @State private var status: ContractStatus
 
+    // ── Sheets: sign details, a request for changes, the reply to the sender
+    @State private var sheet: SignSheet? = nil
+    @State private var askDecline = false
+    @State private var declineReason = ""
+    @State private var changesText = ""
+
+    private enum SignSheet: Identifiable {
+        case sign, changes, reply(subject: String, message: String)
+        var id: String {
+            switch self {
+            case .sign: "sign"
+            case .changes: "changes"
+            case .reply: "reply"
+            }
+        }
+    }
+
     @Environment(\.dismiss) private var dismiss
 
     init(contract: GeneratedContract) {
         self.contract   = contract
         _attributedBody = State(initialValue: contract.displayBody())
         _status         = State(initialValue: contract.status)
-        // Pre-fill with the first recipient; editable because the person
-        // holding the device is the one signing and may not be listed.
-        _signerName     = State(initialValue: contract.signedBy
-                                ?? contract.recipients.first?.name
-                                ?? "")
-        let found = SignatureSlots.find(in: contract.displayBody())
+        let found = contract.signatureSlots()
         slots = found
-        // Default to the LAST party: the sender lists themselves first and the
-        // person they sent it to second, far more often than not.
-        _selectedSlot = State(initialValue: max(0, found.count - 1))
+        let open = found.indices.filter { contract.signature(forSlot: $0) == nil }
+        openSlots = open
+        if let p = contract.myParty, found.isEmpty || open.contains(p) {
+            assignedSlot = p
+        } else {
+            assignedSlot = nil
+        }
+        // Unassigned (older link): default to the LAST open party — the
+        // sender lists themselves first far more often than not.
+        _selectedSlot = State(initialValue: assignedSlot ?? open.last ?? 0)
+        // The name the sender gave this recipient; editable, because the
+        // person holding the phone is the one signing.
+        let mine = contract.recipients.first { $0.party != nil && $0.party == contract.myParty }
+        // (signedBy only once it's signed: on an incoming copy it can be
+        // the sender's, from their own signature.)
+        _signerName = State(initialValue: (contract.status == .signed ? contract.signedBy : nil)
+                            ?? mine?.name
+                            ?? contract.recipients.first?.name
+                            ?? "")
     }
 
     private var isSigned: Bool { status == .signed }
+    private var isDeclined: Bool { status == .declined }
+
+    private var role: String? {
+        slots.indices.contains(selectedSlot) && slots.count > 1 ? slots[selectedSlot].role : nil
+    }
 
     /// Does a date field follow the selected signature slot (before the next one)?
     private var slotHasDateField: Bool {
-        guard slots.indices.contains(selectedSlot) else { return false }
-        let start = slots[selectedSlot].range.location
-        let end   = slots.indices.contains(selectedSlot + 1) ? slots[selectedSlot + 1].range.location : Int.max
-        let doc   = attributedBody
-        if doc.signatureFields().contains(where: { $0.kind == .date && $0.range.location > start && $0.range.location < end }) { return true }
-        let r = (doc.string as NSString).range(of: "[Date]", options: [], range: NSRange(location: start, length: doc.length - start))
-        return r.location != NSNotFound && r.location < end
+        slots.indices.contains(selectedSlot) && slots[selectedSlot].hasDate
     }
+
+    /// Old links don't say who's who: the signer picks among the open boxes.
+    private var needsPicker: Bool { assignedSlot == nil && openSlots.count > 1 }
 
     private var canSign: Bool {
         !signerName.trimmingCharacters(in: .whitespaces).isEmpty && !isSigning
+    }
+
+    /// The signer's own box in the document as shown (signed boxes are
+    /// stamps there, so count among the unsigned ones).
+    private var myBoxRange: NSRange? {
+        guard !isSigned, slots.indices.contains(selectedSlot) else { return nil }
+        let k = openSlots.filter { $0 < selectedSlot }.count
+        let boxes = attributedBody.signatureFields().filter { $0.kind == .signature }
+        return boxes.indices.contains(k) ? boxes[k].range : nil
     }
 
     var body: some View {
@@ -87,15 +130,33 @@ struct SigningView: View {
                 // the bar sits above the home indicator without a magic 34.
                 document
                     .safeAreaInset(edge: .bottom) {
-                        if !isSigned { signBar }
+                        if !isSigned && !isDeclined { signBar }
                     }
             }
             .navigationTitle(contract.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .navigationBarLeading) {
                     Button("Close") { dismiss() }
-                        .font(.body.weight(.semibold))
+                }
+                if !isSigned && !isDeclined {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Menu {
+                            Button {
+                                sheet = .changes
+                            } label: {
+                                Label("Ask for Changes", systemImage: "text.bubble")
+                            }
+                            Button(role: .destructive) {
+                                askDecline = true
+                            } label: {
+                                Label("Decline to Sign", systemImage: "xmark.circle")
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis")
+                        }
+                        .accessibilityLabel("More")
+                    }
                 }
             }
             .alert("Couldn't sign",
@@ -104,6 +165,26 @@ struct SigningView: View {
                 Button("OK", role: .cancel) { signError = nil }
             } message: {
                 Text(signError ?? "")
+            }
+            .alert("Decline to sign?", isPresented: $askDecline) {
+                TextField("Reason (optional)", text: $declineReason)
+                Button("Decline", role: .destructive) { decline() }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("The sender is told you declined, with your reason if you give one.")
+            }
+        }
+        .sheet(item: $sheet) { s in
+            switch s {
+            case .sign:
+                signSheet
+            case .changes:
+                changesSheet
+            case .reply(let subject, let message):
+                ReplyComposeSheet(address: contract.replyTo, subject: subject, message: message) { _ in
+                    sheet = nil
+                    dismiss()
+                }
             }
         }
         .fullScreenCover(item: $confirmed) { stamp in
@@ -143,14 +224,17 @@ struct SigningView: View {
                         .padding(.top, 6)
                 }
 
-                // Who's asking. A recipient had no way to tell from the
-                // screen who sent this; the link now carries the sender's
-                // name when they were signed in.
-                if let from = contract.senderName {
-                    Label(String(localized: "From \(from)"), systemImage: "person.crop.circle")
-                        .font(.subheadline)
-                        .foregroundStyle(Color.secondaryInk)
+                // Who's asking, and as whom they're asked to sign.
+                VStack(alignment: .leading, spacing: 6) {
+                    if let from = contract.senderName {
+                        Label(String(localized: "From \(from)"), systemImage: "person.crop.circle")
+                    }
+                    if let role, !isSigned, !isDeclined, assignedSlot != nil {
+                        Label(String(localized: "You're signing as \(role)"), systemImage: "signature")
+                    }
                 }
+                .font(.subheadline)
+                .foregroundStyle(Color.secondaryInk)
 
                 GeometryReader { geo in
                     RichTextEditorImpl(
@@ -158,12 +242,10 @@ struct SigningView: View {
                         dynamicHeight:   $editorHeight,
                         isEditing:       false,
                         availableWidth:  geo.size.width,
-                        onReady:         { _ in },
+                        onReady:         { tv in textView = tv },
                         onEditingBegan:  { },
                         allowsEditing:   false
                     )
-                    .onAppear { bodyWidth = geo.size.width }
-                    .onChange(of: geo.size.width) { _, w in bodyWidth = w }
                 }
                 .frame(height: editorHeight)
             }
@@ -174,94 +256,198 @@ struct SigningView: View {
         }
     }
 
+    /// Scrolls to their box, like DocuSign's "Start" tab. (A highlight was
+    /// tried; the box image is opaque, so only its corners showed.)
+    private func jumpToMyBox() {
+        guard let tv = textView, let r = myBoxRange else { return }
+        DocumentSearch.reveal(r, in: tv)
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // MARK: - Sign bar
+    //
+    // One row: jump to your box, and the button that opens the sign sheet.
+    // It used to hold the party picker, the date, the name, the button and
+    // the consent line — about 40% of a phone screen, with the contract
+    // squeezed into what was left.
     // ─────────────────────────────────────────────────────────────────────────
+
+    @ScaledMetric(relativeTo: .body) private var barH: CGFloat = 52
 
     private var signBar: some View {
         VStack(spacing: 0) {
-            // Fade so document text doesn't collide with the pill as it scrolls
-            LinearGradient(
-                colors: [Color.pageBackground.opacity(0),
-                         Color.pageBackground],
-                startPoint: .top,
-                endPoint:   .bottom
-            )
-            .frame(height: 32)
-            .allowsHitTesting(false)
+            LinearGradient(colors: [Color.pageBackground.opacity(0), Color.pageBackground],
+                           startPoint: .top, endPoint: .bottom)
+                .frame(height: 28)
+                .allowsHitTesting(false)
 
-            VStack(spacing: 12) {
-
-                // Sign as (which party) — only when the document has more than
-                // one signature slot ───────────────────────────────────────────
-                if slots.count > 1 {
-                    Picker("Sign as", selection: $selectedSlot) {
-                        ForEach(Array(slots.enumerated()), id: \.offset) { i, slot in
-                            Text(slot.role).tag(i)
-                        }
-                    }
-                    .pickerStyle(.segmented)
+            HStack(spacing: 10) {
+                if myBoxRange != nil {
+                    BarCircleButton(systemImage: "arrow.down.to.line",
+                                    label: String(localized: "Go to your signature box"),
+                                    size: barH, action: jumpToMyBox)
                 }
-
-                // Date field for this slot ───────────────────────────────────
-                if slotHasDateField {
-                    HStack {
-                        Text("Date")
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(Color.secondaryInk)
-                        Spacer()
-                        DatePicker("", selection: $signedDate, displayedComponents: .date)
-                            .labelsHidden()
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color.cardFill)
-                    )
-                }
-
-                // Signing as ─────────────────────────────────────────────────
-                HStack(spacing: 10) {
-                    Text("Signing as")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Color.secondaryInk)
-                    TextField("Your full name", text: $signerName)
-                        .font(.subheadline)
-                        .textContentType(.name)
-                        .submitLabel(.done)
-                }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 11)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color.cardFill)
-                )
-
-                // A greyed button with no reason is a dead end; say why.
-                if signerName.trimmingCharacters(in: .whitespaces).isEmpty {
-                    Text("Enter your name to sign.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                PurplePillButton(title: isSigning ? String(localized: "Verifying…") : String(localized: "Sign with \(SignatureService.biometryName)"),
+                PurplePillButton(title: role.map { String(localized: "Sign as \($0)") } ?? String(localized: "Sign"),
                                  fullWidth: true) {
-                    Task { await sign() }
+                    sheet = .sign
                 }
-                .opacity(canSign ? 1 : 0.4)
-                .disabled(!canSign)
-
-                Text(Self.consentText)
-                    .font(.footnote)
-                    .foregroundStyle(Color.secondaryInk)
-                    .multilineTextAlignment(.center)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 12)
             .readableColumn(Layout.readableWidth + 32)
             .background(Color.pageBackground.ignoresSafeArea(edges: .bottom))
+        }
+        // iOS 26 sheets are glass: the purple pill glowed through the bottom
+        // of every sheet opened over it. It steps back while one is up.
+        .opacity(sheet == nil ? 1 : 0)
+        .animation(.easeOut(duration: 0.2), value: sheet == nil)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Sign sheet
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private var signSheet: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(role.map { String(localized: "Sign as \($0)") } ?? String(localized: "Sign"))
+                .font(.title3.weight(.bold))
+                .padding(.top, 8)
+
+            if needsPicker {
+                Picker("Sign as", selection: $selectedSlot) {
+                    ForEach(openSlots, id: \.self) { i in
+                        Text(slots[i].role).tag(i)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+
+            HStack(spacing: 10) {
+                Text("Name")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Color.secondaryInk)
+                TextField("Your full name", text: $signerName)
+                    .font(.body)
+                    .textContentType(.name)
+                    .submitLabel(.done)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.cardFill))
+
+            if slotHasDateField {
+                HStack {
+                    Text("Date")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Color.secondaryInk)
+                    Spacer()
+                    DatePicker("", selection: $signedDate, displayedComponents: .date)
+                        .labelsHidden()
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.cardFill))
+            }
+
+            Spacer(minLength: 0)
+
+            Text(Self.consentText)
+                .font(.footnote)
+                .foregroundStyle(Color.secondaryInk)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+
+            PurplePillButton(title: isSigning ? String(localized: "Verifying…") : String(localized: "Sign with \(SignatureService.biometryName)"),
+                             fullWidth: true) {
+                Task { await sign() }
+            }
+            .opacity(canSign ? 1 : 0.4)
+            .disabled(!canSign)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 16)
+        .padding(.bottom, 12)
+        .presentationDetents([.height(needsPicker ? 380 : (slotHasDateField ? 340 : 290)), .large])
+        .presentationDragIndicator(.visible)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Ask for changes / decline
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private var changesSheet: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Tell \(contract.senderName ?? String(localized: "the sender")) what you'd like changed. They can revise it and send you a new version.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.secondaryInk)
+                TextEditor(text: $changesText)
+                    .frame(minHeight: 140)
+                    .padding(8)
+                    .scrollContentBackground(.hidden)
+                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.cardFill))
+                Spacer()
+            }
+            .padding(16)
+            .navigationTitle("Ask for Changes")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") { sheet = nil }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Send") { requestChanges() }
+                        .fontWeight(.semibold)
+                        .disabled(changesText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private var myName: String {
+        let n = signerName.trimmingCharacters(in: .whitespaces)
+        return n.isEmpty ? String(localized: "The recipient") : n
+    }
+
+    private func requestChanges() {
+        let text = changesText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let request = ChangeRequest(by: myName, text: text, at: .now)
+        ContractStore.shared.update(id: contract.id) { $0.changeRequest = request }
+        var c = ContractStore.shared.contract(id: contract.id) ?? contract
+        c.changeRequest = request
+        let message = String(localized: """
+            \(myName) asked for changes to "\(contract.title)":
+
+            \(text)
+
+            Open in Handshake to revise it:
+            \(ContractTransfer.replyLink(for: c))
+            """)
+        showReply(subject: String(localized: "Changes requested: \(contract.title)"), message: message)
+    }
+
+    private func decline() {
+        let reason = declineReason.trimmingCharacters(in: .whitespacesAndNewlines)
+        ContractStore.shared.update(id: contract.id) { c in
+            c.status = .declined
+            c.declinedBy = myName
+            c.declineReason = reason.isEmpty ? nil : reason
+        }
+        status = .declined
+        let c = ContractStore.shared.contract(id: contract.id) ?? contract
+        let line = reason.isEmpty
+            ? String(localized: "\(myName) declined to sign \"\(contract.title)\".")
+            : String(localized: "\(myName) declined to sign \"\(contract.title)\": \(reason)")
+        let message = String(localized: "\(line)\n\nOpen in Handshake to record it:\n\(ContractTransfer.replyLink(for: c))")
+        showReply(subject: String(localized: "Declined: \(contract.title)"), message: message)
+    }
+
+    /// One sheet at a time: the current one comes down, then the reply goes up.
+    private func showReply(subject: String, message: String) {
+        sheet = nil
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+            sheet = .reply(subject: subject, message: message)
         }
     }
 
@@ -311,6 +497,7 @@ struct SigningView: View {
                 signError = String(localized: "No signing link from the provider.")
                 return
             }
+            sheet = nil
             pendingStamp       = stamp
             providerSigningURL = url
 
@@ -323,37 +510,38 @@ struct SigningView: View {
     /// intent + consent, so it's also sent to the provider as evidence.
     static var consentText: String { String(localized: "By signing you agree to this contract and to doing business electronically.") }
 
-    /// Stamp the document, persist, confirm — shared by all three paths.
+    /// Record the signature, redraw, confirm — shared by all three paths.
     private func finishLocally(_ stamp: SignatureStamp, name: String) {
-        // Read before stamping: stamping fills the date box, after which
-        // slotHasDateField is false and the date never reached the sender.
-        let dateUsed: Date? = slotHasDateField ? signedDate : nil
-        let stamped = NSMutableAttributedString(attributedString: attributedBody)
-        let slot = slots.indices.contains(selectedSlot) ? slots[selectedSlot].range : nil
-        stamped.stampSignature(stamp, width: bodyWidth, slot: slot, signedDate: signedDate)
-        attributedBody = stamped                     // new instance so the view syncs
+        // A document with no boxes still needs each signature told apart:
+        // the party index the sender gave this recipient does that.
+        let slot = slots.isEmpty ? (contract.myParty ?? 0) : selectedSlot
+        let sig = PartySignature(slot: slot,
+                                 role: slots.indices.contains(slot) ? slots[slot].role : nil,
+                                 name: name,
+                                 signedAt: stamp.signedAt,
+                                 hash: stamp.hash,
+                                 date: slotHasDateField ? signedDate : nil,
+                                 method: SignatureService.biometryName)
 
-        let rtfd = try? stamped.data(
-            from: NSRange(location: 0, length: stamped.length),
-            documentAttributes: [.documentType: NSAttributedString.DocumentType.rtfd]
-        )
+        ContractStore.shared.update(id: contract.id) { c in
+            c.merge(signatures: [sig])
+            c.status        = .signed
+            c.signedAt      = stamp.signedAt
+            c.signedBy      = name
+            c.signatureHash = stamp.hash
+            c.signedSlot    = slot
+            c.signedDate    = sig.date
+            c.changeRequest = nil
+        }
+        if let updated = ContractStore.shared.contract(id: contract.id) {
+            attributedBody = updated.displayBody()
+        }
 
-        ContractStore.shared.markSigned(
-            id:            contract.id,
-            signedBy:      name,
-            signatureHash: stamp.hash,
-            bodyRTFD:      rtfd,
-            attachmentSizes: stamped.attachmentSizes,
-            // The stamp's own time, so the copy sent back re-stamps the
-            // sender's document with exactly what the signer saw.
-            signedAt:      stamp.signedAt,
-            signedSlot:    slots.isEmpty ? nil : selectedSlot,
-            signedDate:    dateUsed
-        )
-
-        status    = .signed
+        status = .signed
         Haptics.success()
-        confirmed = stamp
+        // The sign sheet comes down first; the confirmation goes up after.
+        sheet = nil
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { confirmed = stamp }
     }
 }
 
@@ -434,6 +622,13 @@ struct SigningConfirmationView: View {
                                          fullWidth: true) { showShare = true }
                             .opacity(sentBack ? 0.6 : 1)
 
+                        // Where it's going, when the sender said.
+                        if let to = signedContract?.replyTo, !sentBack {
+                            Text("To \(to)")
+                                .font(.footnote)
+                                .foregroundStyle(Color.secondaryInk)
+                        }
+
                         Button(sentBack ? "Done" : "Not now") { onDone() }
                             .font(.body.weight(.medium))
                             .foregroundStyle(Color.secondaryInk)
@@ -445,6 +640,8 @@ struct SigningConfirmationView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 16)
                 .readableColumn(480)
+                .opacity(showShare ? 0 : 1)        // see SigningView.signBar
+                .animation(.easeOut(duration: 0.2), value: showShare)
             }
         }
         .onAppear {
@@ -452,13 +649,16 @@ struct SigningConfirmationView: View {
         }
         .sheet(isPresented: $showShare) {
             if let c = signedContract {
-                ActivityView(activityItems: [Self.returnMessage(for: c)],
-                             onFinishActivity: { completed, type in
+                ReplyComposeSheet(address: c.replyTo,
+                                  subject: String(localized: "Signed: \(c.title)"),
+                                  message: Self.returnMessage(for: c)) { outcome in
                     showShare = false
-                    guard completed else { return }
-                    if type == .copyToPasteboard { copied = true } else { sentBack = true }
-                })
-                .presentationDetents([.medium, .large])
+                    switch outcome {
+                    case .sent:      sentBack = true
+                    case .copied:    copied = true
+                    case .cancelled: break
+                    }
+                }
             }
         }
     }
@@ -467,7 +667,17 @@ struct SigningConfirmationView: View {
     /// carries the signed document (ContractTransfer). Opening it on the
     /// sender's phone moves their copy to Signed.
     static func returnMessage(for c: GeneratedContract) -> String {
-        let who = c.signedBy ?? String(localized: "The recipient")
+        // The sender's completed copy, going round to everyone.
+        if !c.isIncoming {
+            return String(localized: """
+                Everyone has signed "\(c.title)".
+
+                Open in Handshake for the completed copy:
+                \(ContractTransfer.signedCopyLink(for: c))
+                """)
+        }
+        let who = c.myParty.flatMap { c.signature(forSlot: $0)?.name }
+            ?? c.signedBy ?? String(localized: "The recipient")
         return String(localized: """
             \(who) signed "\(c.title)" with \(SignatureService.biometryName).
 
