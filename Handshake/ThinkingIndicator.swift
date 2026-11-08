@@ -4,7 +4,7 @@ import SwiftUI
 // MARK: - ThinkingIndicator
 //
 // What the AI panel shows while the model works — the Claude / ChatGPT
-// pattern: a breathing sparkle and a status line that shimmers and steps
+// pattern: a status line that shimmers and steps
 // through stages ("Looking for similar templates…", "Drafting the clauses…").
 //
 // The stages are paced by time, not by the model: the Messages API call isn't
@@ -50,12 +50,8 @@ struct ThinkingIndicator: View {
     private var label: String { task.stages[min(stage, task.stages.count - 1)] + "…" }
 
     var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "sparkle")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color.brand)
-                .symbolEffect(.breathe, isActive: !reduceMotion)
-
+        // Just the shimmering line; no icon in front of it (owner's call).
+        ZStack(alignment: .leading) {
             ShimmerText(text: label, animated: !reduceMotion)
                 .id(label)                                    // crossfade on each stage
                 .transition(.opacity.combined(with: .offset(y: 4)))

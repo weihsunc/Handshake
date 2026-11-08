@@ -15,6 +15,11 @@ import UniformTypeIdentifiers
 //
 // The ChatBar is NOT inside the AI panel. It lives above it in the ZStack,
 // so dragging the panel never affects the ChatBar.
+//
+// iPad (regular width): no bottom sheet. The conversation is a trailing
+// side panel (the system inspector) with the chat bar at its foot, opened
+// and closed with "Edit" in the toolbar. The document keeps the rest of the
+// screen. Split View / Slide Over at compact width falls back to the sheet.
 // ─────────────────────────────────────────────────────────────────────────────
 
 struct ContractWorkspaceView: View {
@@ -31,6 +36,9 @@ struct ContractWorkspaceView: View {
     @State private var errorText:    String?       = nil
     @State private var aiChatPrompt: String        = ""
     @State private var showAIPanel:       Bool  = true
+    /// iPad: is the side panel open? Separate from showAIPanel, which is the
+    /// phone sheet's state (editing hides it; that shouldn't close the side).
+    @State private var showSidePanel:     Bool  = true
     @State private var showSendFlow:      Bool  = false
     @State private var showImagePicker:   Bool  = false
     @State private var pickedPhoto: PhotosPickerItem? = nil
@@ -70,6 +78,10 @@ struct ContractWorkspaceView: View {
     @State private var textViewRef:    UITextView?             = nil
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var hSizeClass
+
+    /// Regular width (iPad full screen or a wide split): side panel, not sheet.
+    private var usesSidePanel: Bool { hSizeClass == .regular }
 
     // ── Layout constants ──────────────────────────────────────────────────────
     /// Spacing reserved at the bottom for the floating ChatBar pill + safe area
@@ -124,7 +136,7 @@ struct ContractWorkspaceView: View {
                 }
 
                 // ── 1: Custom draggable AI panel ───────────────────────────────
-                if showAIPanel {
+                if showAIPanel && !usesSidePanel {
                     aiPanel
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                         .zIndex(1)
@@ -148,6 +160,14 @@ struct ContractWorkspaceView: View {
                 liveH = h
             }
         }
+        // iPad: the conversation as a trailing column. The binding reads false
+        // at compact width, so on iPhone the inspector never shows (it would
+        // otherwise become a sheet on top of the custom one).
+        .inspector(isPresented: Binding(get: { usesSidePanel && showSidePanel },
+                                        set: { if usesSidePanel { showSidePanel = $0 } })) {
+            sidePanel
+                .inspectorColumnWidth(min: 320, ideal: 380, max: 480)
+        }
         // ── Custom top bar injected into the safe area so it never squashes ───
         // SwiftUI's ToolbarItem(.navigationBarTrailing) clamps any custom-styled
         // view to an icon-square. Moving the bar into safeAreaInset gives it full
@@ -168,6 +188,16 @@ struct ContractWorkspaceView: View {
                         .font(.body.weight(.semibold))
                 }
                 .accessibilityLabel(isEditing ? "Stop editing" : "Back")
+            }
+            if usesSidePanel {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    // A toggle, so it reads as on while the panel is open.
+                    // Plain "Edit", no AI sparkle (owner's call).
+                    Toggle("Edit", isOn: $showSidePanel.animation())
+                    .toggleStyle(.button)
+                    .tint(Color.brandFill)
+                    .accessibilityHint("Shows or hides the conversation with HandShake")
+                }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 if isEditing {
@@ -280,40 +310,10 @@ struct ContractWorkspaceView: View {
                 FormattingToolbar { action in handleFormat(action) }
                     .padding(.bottom, 2)    // small gap above keyboard
                     .transition(.move(edge: .bottom).combined(with: .opacity))
-            } else {
-                // Once there's a document the bar edits it; "Start with" only
-                // makes sense before the first draft exists.
-                ChatBar(prompt: $aiChatPrompt,
-                        placeholder: contract == nil ? "Start with HandShake" : "Edit with HandShake",
-                        onSend: {
-                    // Re-open panel when user sends a message after dismissing it
-                    if !showAIPanel {
-                        withAnimation(.spring(response: 0.38, dampingFraction: 0.8)) {
-                            detent      = .medium
-                            showAIPanel = true
-                        }
-                    }
-                    sendToAI()
-                }, onFocusChange: { focused in
-                    // Tapping into the bar is the ask to talk — bring the
-                    // conversation up at medium, over the keyboard, instead of
-                    // waiting for the first message to be sent.
-                    if focused && !showAIPanel && contract != nil {
-                        withAnimation(.spring(response: 0.38, dampingFraction: 0.8)) {
-                            detent      = .medium
-                            showAIPanel = true
-                        }
-                    }
-                }, onAttach: contract == nil ? nil : { kind in
-                    // Same pickers the formatting toolbar uses; the insert
-                    // lands at the editor's current cursor.
-                    switch kind {
-                    case .photo: showImagePicker    = true
-                    case .file:  showDocumentPicker = true
-                    }
-                })
-                .padding(.horizontal, 16)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if !usesSidePanel {
+                // iPad keeps its chat bar in the side panel.
+                chatBar(inSidePanel: false)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         // The ZStack already respects the bottom safe area; this is only the
@@ -322,6 +322,116 @@ struct ContractWorkspaceView: View {
         .readableColumn(Layout.readableWidth + 32)
         .animation(.easeInOut(duration: 0.22), value: isEditing)
         // No background — transparent outside the pill
+    }
+
+    /// The "Edit with HandShake" bar. On the phone it floats over the sheet
+    /// and re-opens it; in the iPad side panel the conversation is already
+    /// showing, so it just sends.
+    private func chatBar(inSidePanel: Bool) -> some View {
+        // Once there's a document the bar edits it; "Start with" only
+        // makes sense before the first draft exists.
+        ChatBar(prompt: $aiChatPrompt,
+                placeholder: contract == nil ? "Start with HandShake" : "Edit with HandShake",
+                onSend: {
+            // Re-open panel when user sends a message after dismissing it
+            if !inSidePanel && !showAIPanel {
+                withAnimation(.spring(response: 0.38, dampingFraction: 0.8)) {
+                    detent      = .medium
+                    showAIPanel = true
+                }
+            }
+            sendToAI()
+        }, onFocusChange: inSidePanel ? nil : { focused in
+            // Tapping into the bar is the ask to talk — bring the
+            // conversation up at medium, over the keyboard, instead of
+            // waiting for the first message to be sent.
+            if focused && !showAIPanel && contract != nil {
+                withAnimation(.spring(response: 0.38, dampingFraction: 0.8)) {
+                    detent      = .medium
+                    showAIPanel = true
+                }
+            }
+        }, onAttach: contract == nil ? nil : { kind in
+            // Same pickers the formatting toolbar uses; the insert
+            // lands at the editor's current cursor.
+            switch kind {
+            case .photo: showImagePicker    = true
+            case .file:  showDocumentPicker = true
+            }
+        })
+        .padding(.horizontal, 16)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - iPad side panel
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private var sidePanel: some View {
+        VStack(spacing: 0) {
+            messageList(asSheet: false)
+            chatBar(inSidePanel: true)
+                .padding(.top, 4)
+                .padding(.bottom, 8)
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Message list (shared by the phone sheet and the iPad side panel)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private func messageList(asSheet: Bool) -> some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+
+                    ForEach(messages) { msg in
+                        MessageBubble(message: msg).id(msg.id)
+                    }
+
+                    if isLoading || isAILoading {
+                        // First draft vs a follow-up edit get different stages.
+                        ThinkingIndicator(task: contract == nil ? .drafting : .editing)
+                            .padding(.horizontal, 16)
+                            .id("loading")
+                            .transition(.opacity)
+                    }
+
+                    if let err = errorText {
+                        Text(err)
+                            .font(.subheadline)
+                            .foregroundStyle(.red)
+                            .padding(.horizontal, 16)
+                    }
+
+                    Color.clear.frame(height: 16)
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+            }
+            .onChange(of: messages.count) { _, _ in
+                withAnimation {
+                    if let last = messages.last { proxy.scrollTo(last.id, anchor: .bottom) }
+                }
+            }
+            .onChange(of: isLoading) { _, loading in
+                withAnimation { if loading { proxy.scrollTo("loading", anchor: .bottom) } }
+            }
+            .onChange(of: isAILoading) { _, loading in
+                withAnimation { if loading { proxy.scrollTo("loading", anchor: .bottom) } }
+            }
+            // Sheet behaviour (think the Maps sheet): at medium the
+            // list doesn't scroll, so a drag anywhere on the panel
+            // resizes it. At large the list scrolls, and a drag down
+            // from its top collapses the panel (see panelDragGesture).
+            // The side panel is a plain column and always scrolls.
+            .scrollDisabled(asSheet && detent != .large)
+            .scrollBounceBehavior(.basedOnSize)
+            .onScrollGeometryChange(for: Bool.self) { g in
+                g.contentOffset.y <= g.contentInsets.top + 1
+            } action: { _, atTop in
+                listAtTop = atTop
+            }
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -349,58 +459,7 @@ struct ContractWorkspaceView: View {
                     .accessibilityLabel("Assistant panel")
                     .accessibilityHint("Drag up to expand, down to shrink or close")
 
-                // Message list
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 16) {
-
-                            ForEach(messages) { msg in
-                                MessageBubble(message: msg).id(msg.id)
-                            }
-
-                            if isLoading || isAILoading {
-                                // First draft vs a follow-up edit get different stages.
-                                ThinkingIndicator(task: contract == nil ? .drafting : .editing)
-                                    .padding(.horizontal, 16)
-                                    .id("loading")
-                                    .transition(.opacity)
-                            }
-
-                            if let err = errorText {
-                                Text(err)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.red)
-                                    .padding(.horizontal, 16)
-                            }
-
-                            Color.clear.frame(height: 16)
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
-                    }
-                    .onChange(of: messages.count) { _, _ in
-                        withAnimation {
-                            if let last = messages.last { proxy.scrollTo(last.id, anchor: .bottom) }
-                        }
-                    }
-                    .onChange(of: isLoading) { _, loading in
-                        withAnimation { if loading { proxy.scrollTo("loading", anchor: .bottom) } }
-                    }
-                    .onChange(of: isAILoading) { _, loading in
-                        withAnimation { if loading { proxy.scrollTo("loading", anchor: .bottom) } }
-                    }
-                    // Sheet behaviour (think the Maps sheet): at medium the
-                    // list doesn't scroll, so a drag anywhere on the panel
-                    // resizes it. At large the list scrolls, and a drag down
-                    // from its top collapses the panel (see panelDragGesture).
-                    .scrollDisabled(detent != .large)
-                    .scrollBounceBehavior(.basedOnSize)
-                    .onScrollGeometryChange(for: Bool.self) { g in
-                        g.contentOffset.y <= g.contentInsets.top + 1
-                    } action: { _, atTop in
-                        listAtTop = atTop
-                    }
-                }
+                messageList(asSheet: true)
             }
             .frame(height: clampedPanelHeight)
             .frame(maxWidth: .infinity)
@@ -484,6 +543,9 @@ struct ContractWorkspaceView: View {
         // ── Reopening a saved draft: load it, skip generation ────────────────
         if let saved = existing {
             await MainActor.run {
+                // iPad: a reopened draft opens on the document; Edit brings
+                // the conversation back.
+                showSidePanel  = false
                 contract       = saved
                 attributedBody = saved.displayBody()
                 // Pick the conversation up where it left off. The greeting is
