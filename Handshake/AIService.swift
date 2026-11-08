@@ -8,6 +8,9 @@ enum AIError: Error, LocalizedError {
     /// for. Distinct from invalidResponse (which is transport-level) so the
     /// user sees "try again" rather than "check your key".
     case malformedContract
+    /// The model's safety check declined the request (HTTP 200 with
+    /// stop_reason "refusal"). Haiku 5.5 has no server-side fallback.
+    case refused
 
     var errorDescription: String? {
         switch self {
@@ -15,6 +18,7 @@ enum AIError: Error, LocalizedError {
         case .apiError(let c):    return "API error (status \(c)). Check your key in Secrets.swift."
         case .missingAPIKey:      return "Add your Anthropic API key to Secrets.swift."
         case .malformedContract:  return "The AI didn't return a usable contract. Try rephrasing your request or sending it again."
+        case .refused:            return "The AI declined this request. Try describing the agreement differently."
         }
     }
 }
@@ -34,8 +38,8 @@ enum AIService {
 
     /// The model that drafts and revises contracts. Named on the Profile
     /// screen's legal section, so it must stay the one actually called.
-    static let modelID          = "claude-haiku-4-5-20251001"
-    static let modelDisplayName = "Claude Haiku 4.5"
+    static let modelID          = "claude-haiku-5-5"
+    static let modelDisplayName = "Claude Haiku 5.5"
 
     // ─────────────────────────────────────────────────────────────
     // MARK: - Public
@@ -61,7 +65,8 @@ enum AIService {
               confidential information, duration, and exclusions.")
             """,
             message: text,
-            maxTokens: 300
+            maxTokens: 1024,       // Haiku 5.5 thinks by default and thinking counts here
+            effort: "low"          // fires while typing: keep it fast and cheap
         )
 
         return raw
@@ -106,7 +111,8 @@ enum AIService {
             Be thorough, professional, and complete.
             """,
             message: prompt,
-            maxTokens: 8192        // a revised full contract exceeds the 2048 default
+            maxTokens: 16000,      // thinking + a full contract; 16K is the non-streaming ceiling
+            effort: "medium"
         )
 
         // Parse TITLE / body. Both markers are required: without "---" the
@@ -148,7 +154,11 @@ enum AIService {
     // MARK: - Private
     // ─────────────────────────────────────────────────────────────
 
-    private static func call(system: String, message: String, maxTokens: Int = 2048) async throws -> String {
+    /// One Messages API call. Haiku 5.5 runs adaptive thinking by default and
+    /// rejects temperature / top_p / top_k and assistant prefill, so none are
+    /// sent; `effort` (low…max, default medium) is the knob for how much it thinks.
+    private static func call(system: String, message: String,
+                             maxTokens: Int = 2048, effort: String = "medium") async throws -> String {
         // With a backend configured the key stays on the server (HANDOFF §9):
         // same request body, different door.
         let viaBackend = BackendClient.baseURL?.appendingPathComponent("ai/messages")
@@ -169,6 +179,7 @@ enum AIService {
         let body: [String: Any] = [
             "model":      modelID,
             "max_tokens": maxTokens,
+            "output_config": ["effort": effort],
             "system":     system,
             "messages":   [["role": "user", "content": message]]
         ]
@@ -182,9 +193,18 @@ enum AIService {
 
         guard
             let json    = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let content = json["content"]  as? [[String: Any]],
-            let text    = content.first?["text"] as? String
+            let content = json["content"]  as? [[String: Any]]
         else { throw AIError.invalidResponse }
+
+        if json["stop_reason"] as? String == "refusal" { throw AIError.refused }
+
+        // The reply can open with `thinking` blocks (empty text by default), so
+        // read the answer by block type, never by position.
+        let text = content
+            .filter  { $0["type"] as? String == "text" }
+            .compactMap { $0["text"] as? String }
+            .joined()
+        guard !text.isEmpty else { throw AIError.invalidResponse }
 
         return text
     }

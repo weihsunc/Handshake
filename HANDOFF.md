@@ -124,7 +124,7 @@ A native iOS app that turns a plain-English prompt into a legally formatted cont
 | | |
 |---|---|
 | **Platform** | Native iOS 26, SwiftUI |
-| **AI** | Anthropic Messages API, `claude-haiku-4-5-20251001` |
+| **AI** | Anthropic Messages API, `claude-haiku-5-5` (adaptive thinking; effort `low` for suggestions, `medium` for contracts) |
 | **Persistence** | JSON file in Application Support (`ContractStore`) |
 | **Backend** | Optional — one Supabase Edge Function in `backend/` that holds the API keys (Anthropic, DocuSeal, SignWell). Off until `Secrets.backendURL` is set |
 | **Min target** | iOS 26 (uses liquid-glass toolbar behavior) |
@@ -192,7 +192,7 @@ Implementation notes:
 - `TemplateCard` is the Figma "Snackbar": stone/100 `#F5F5F4`, radius 24, 16pt padding, title with the emoji inline (`"📄 Consulting Agreement"` as one string), gray body. It fills its container's width; the list owns the horizontal inset.
 - The chat bar placeholder is the brand gradient ("Start with HandShake"). A `TextField` can't style its placeholder, so a gradient `Text` is overlaid while the field is empty.
 - Hero type follows the Figma frame (30pt semibold / 20pt regular, system font) rather than the older 28/17 tokens in §6.
-- **AI suggestions** (`AIService.suggestPrompts`, haiku, `max_tokens` 300): fired ~450 ms after the last keystroke on ≥3 characters, cancelled by the next keystroke, cached per lowercased query, and skipped when the text is exactly a suggestion that was just tapped. The model returns `EMOJI | TITLE | PROMPT` lines; anything unparseable is dropped. On any failure the local ranking simply stays up — there's no error state, by design. The suggestions state isn't drawn in Figma (frame 18 shows typed text with the example cards); the 3-card layout reuses `TemplateCard`.
+- **AI suggestions** (`AIService.suggestPrompts`, Haiku 5.5 at effort `low`, `max_tokens` 1024 so thinking has room): fired ~450 ms after the last keystroke on ≥3 characters, cancelled by the next keystroke, cached per lowercased query, and skipped when the text is exactly a suggestion that was just tapped. The model returns `EMOJI | TITLE | PROMPT` lines; anything unparseable is dropped. On any failure the local ranking simply stays up — there's no error state, by design. The suggestions state isn't drawn in Figma (frame 18 shows typed text with the example cards); the 3-card layout reuses `TemplateCard`.
 
 Launches `ContractWorkspaceView` via `.fullScreenCover`.
 
