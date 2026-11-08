@@ -58,6 +58,19 @@ struct GeneratedContract: Identifiable, Codable {
     /// reopening a draft shows what was actually discussed rather than a
     /// canned greeting.
     var messages: [ChatMessage]     = []
+
+    // ── Recipient side ──────────────────────────────────────────────────────
+    /// true when this copy arrived through a signing link — it's someone
+    /// else's contract for this phone's owner to sign, not one they wrote.
+    /// History lists these under "Waiting for You" and opens them to sign.
+    var isIncoming: Bool            = false
+    /// Who sent it, when the sender was signed in (carried in the link).
+    var senderName: String?         = nil
+    /// Which signature slot was signed (index into SignatureSlots.find) and
+    /// the date the signer entered. Carried back with the signed copy so the
+    /// sender's document gets the same stamp in the same place.
+    var signedSlot: Int?            = nil
+    var signedDate: Date?           = nil
 }
 
 // Declared in an extension on purpose: an initializer inside the struct body
@@ -86,6 +99,10 @@ extension GeneratedContract {
         signatureHash = try c.decodeIfPresent(String.self,          forKey: .signatureHash)
         providerRef   = try c.decodeIfPresent(ProviderRef.self,     forKey: .providerRef)
         messages      = try c.decodeIfPresent([ChatMessage].self,   forKey: .messages)      ?? []
+        isIncoming    = try c.decodeIfPresent(Bool.self,            forKey: .isIncoming)    ?? false
+        senderName    = try c.decodeIfPresent(String.self,          forKey: .senderName)
+        signedSlot    = try c.decodeIfPresent(Int.self,             forKey: .signedSlot)
+        signedDate    = try c.decodeIfPresent(Date.self,            forKey: .signedDate)
     }
 }
 

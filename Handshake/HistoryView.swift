@@ -5,8 +5,12 @@ import UIKit
 // MARK: - HistoryView
 //
 // Contract history, grouped by status:
-//   Pending Signature · Signed · Drafts
+//   Waiting for You · Pending Signature · Signed · Drafts
 //
+// Waiting for You: contracts that came in by link and aren't signed yet —
+//   tap to open the signing screen. Before, these sat under "Pending
+//   Signature" and opened read-only, so a recipient who closed the signing
+//   screen once had no way back to sign except the original link.
 // Drafts: swipe-to-delete, tap to reopen in the workspace (editable).
 // Sent / signed: tap to view read-only.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -16,6 +20,7 @@ struct HistoryView: View {
     @State private var store = ContractStore.shared
     @State private var openDraft:    GeneratedContract? = nil
     @State private var viewContract: GeneratedContract? = nil
+    @State private var signContract: GeneratedContract? = nil
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -47,7 +52,14 @@ struct HistoryView: View {
         .sheet(item: $viewContract) { contract in
             ReadOnlyContractView(contract: contract)
         }
+        // Received, not yet signed → the signing screen
+        .fullScreenCover(item: $signContract) { contract in
+            SigningView(contract: contract)
+        }
     }
+
+    private var toSign:  [GeneratedContract] { store.pending.filter(\.isIncoming) }
+    private var waiting: [GeneratedContract] { store.pending.filter { !$0.isIncoming } }
 
     // ─────────────────────────────────────────────────────────────────────────
     // MARK: - List
@@ -55,9 +67,17 @@ struct HistoryView: View {
 
     private var contractList: some View {
         List {
-            if !store.pending.isEmpty {
+            if !toSign.isEmpty {
+                Section("Waiting for You") {
+                    ForEach(toSign) { c in
+                        ContractRow(contract: c) { signContract = c }
+                    }
+                }
+            }
+
+            if !waiting.isEmpty {
                 Section("Pending Signature") {
-                    ForEach(store.pending) { c in
+                    ForEach(waiting) { c in
                         ContractRow(contract: c) { viewContract = c }
                     }
                 }
@@ -119,10 +139,16 @@ private struct ContractRow: View {
     var onTap: () -> Void
 
     private var subtitle: String {
+        // On a recipient's phone the recipients are themselves; who it came
+        // from is the useful line.
+        if contract.isIncoming {
+            return contract.senderName.map { String(localized: "From \($0)") }
+                ?? String(localized: "Received")
+        }
         let names = contract.recipients
             .map(\.name)
             .filter { !$0.isEmpty }
-        return names.isEmpty ? "No recipients" : names.joined(separator: ", ")
+        return names.isEmpty ? String(localized: "No recipients") : names.formatted(.list(type: .and))
     }
 
     private var displayDate: Date {
@@ -154,7 +180,7 @@ private struct ContractRow: View {
 
                 Spacer(minLength: 8)
 
-                StatusBadge(status: contract.status)
+                StatusBadge(status: contract.status, incoming: contract.isIncoming)
             }
             .padding(.vertical, 4)
             .contentShape(Rectangle())
@@ -169,6 +195,12 @@ private struct ContractRow: View {
 
 struct StatusBadge: View {
     let status: ContractStatus
+    /// A contract that came in to be signed reads "To Sign", not "Pending".
+    var incoming: Bool = false
+
+    private var label: String {
+        incoming && status == .sent ? String(localized: "To Sign") : status.label
+    }
 
     private var color: Color {
         switch status {
@@ -180,7 +212,7 @@ struct StatusBadge: View {
     }
 
     var body: some View {
-        Text(status.label)
+        Text(label)
             .font(.caption.weight(.semibold))
             .foregroundStyle(color)
             .padding(.horizontal, 10)
@@ -201,11 +233,19 @@ struct ReadOnlyContractView: View {
 
     @State private var attributedBody: NSMutableAttributedString
     @State private var editorHeight:   CGFloat = 300
+    @State private var showShare = false
     @Environment(\.dismiss) private var dismiss
 
     init(contract: GeneratedContract) {
         self.contract = contract
         _attributedBody = State(initialValue: contract.displayBody())
+    }
+
+    /// A contract this phone signed for someone else. "Not now" on the
+    /// confirmation screen used to be the last chance to send the signed
+    /// copy back; now it's here for as long as the contract is.
+    private var canSendBack: Bool {
+        contract.isIncoming && contract.status == .signed
     }
 
     var body: some View {
@@ -219,7 +259,7 @@ struct ReadOnlyContractView: View {
                             .foregroundStyle(Color(.label))
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer()
-                        StatusBadge(status: contract.status)
+                        StatusBadge(status: contract.status, incoming: contract.isIncoming)
                             .padding(.top, 6)
                     }
 
@@ -244,11 +284,26 @@ struct ReadOnlyContractView: View {
             .background(Color.pageBackground.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                if canSendBack {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button {
+                            showShare = true
+                        } label: {
+                            Label("Send Signed Copy", systemImage: "square.and.arrow.up")
+                        }
+                    }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") { dismiss() }
                         .font(.body.weight(.semibold))
                 }
             }
+        }
+        .sheet(isPresented: $showShare) {
+            ActivityView(activityItems: [SigningConfirmationView.returnMessage(for: contract)]) { _ in
+                showShare = false
+            }
+            .presentationDetents([.medium, .large])
         }
     }
 }

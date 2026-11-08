@@ -201,32 +201,48 @@ struct SendFlowView: View {
         var c = ContractStore.shared.contract(id: contract.id) ?? contract
         c.recipients = validRecipients
         c.status     = .sent
+        c.senderName = senderName      // so the recipient sees who it's from
         return ContractTransfer.signingLink(for: c)
     }
 
-    private var smsBody: String {
-        "You've been invited to sign \"\(contract.title)\". Open in Handshake to review and sign with Face ID:\n\(signingLink)"
+    /// The sender's name when they're signed in with Apple. nil otherwise —
+    /// the messages then fall back to wording without a name.
+    private var senderName: String? {
+        let n = AccountStore.shared.name?.trimmingCharacters(in: .whitespaces) ?? ""
+        return n.isEmpty ? nil : n
     }
 
-    private var mailSubject: String { "Please sign: \(contract.title)" }
+    private var smsBody: String {
+        if let senderName {
+            return String(localized: "\(senderName) invited you to sign \"\(contract.title)\". Open it in the Handshake app to review and sign with Face ID:\n\(signingLink)")
+        }
+        return String(localized: "You've been invited to sign \"\(contract.title)\". Open it in the Handshake app to review and sign with Face ID:\n\(signingLink)")
+    }
+
+    private var mailSubject: String { String(localized: "Please sign: \(contract.title)") }
 
     /// Single payload for the share-sheet fallback — subject and body together,
     /// so the sheet has one item to describe and hand on.
     private var shareText: String { "\(mailSubject)\n\n\(mailBody)" }
 
+    // The old closing line said the link was "unique to you". It isn't —
+    // every recipient gets the same link — so it's gone. What a recipient
+    // actually needs to know is that the link opens in the app.
     private var mailBody: String {
-        """
-        Hi,
+        let intro = senderName.map { String(localized: "\($0) invited you to review and sign the following agreement:") }
+            ?? String(localized: "You've been invited to review and sign the following agreement:")
+        return String(localized: """
+            Hi,
 
-        You've been invited to review and sign the following agreement:
+            \(intro)
 
-        \(contract.title)
+            \(contract.title)
 
-        Tap the link below to open it in Handshake and sign with Face ID:
-        \(signingLink)
+            Tap the link below to open it in the Handshake app and sign with Face ID:
+            \(signingLink)
 
-        This link is unique to you — please do not forward it.
-        """
+            The link opens in Handshake, so you'll need the app installed on your iPhone or iPad.
+            """)
     }
 }
 

@@ -36,12 +36,20 @@ enum ContractTransfer {
         var signedAt: Date?
         var signedBy: String?
         var signatureHash: String?
+        // Added Nov 8 — optional, so links from older builds still decode.
+        /// The sender's name, when they're signed in.
+        var from: String?
+        /// Which signature slot the recipient signed, and the date they
+        /// entered, so the sender's copy can be stamped to match.
+        var signedSlot: Int?
+        var signedDate: Date?
 
         init(_ c: GeneratedContract) {
             id = c.id; title = c.title; content = c.content
             recipients = c.recipients; status = c.status
             createdAt = c.createdAt; sentAt = c.sentAt; signedAt = c.signedAt
             signedBy = c.signedBy; signatureHash = c.signatureHash
+            from = c.senderName; signedSlot = c.signedSlot; signedDate = c.signedDate
         }
 
         var contract: GeneratedContract {
@@ -49,6 +57,7 @@ enum ContractTransfer {
             c.recipients = recipients; c.status = status
             c.createdAt = createdAt; c.sentAt = sentAt; c.signedAt = signedAt
             c.signedBy = signedBy; c.signatureHash = signatureHash
+            c.senderName = from; c.signedSlot = signedSlot; c.signedDate = signedDate
             return c
         }
     }
@@ -75,6 +84,13 @@ enum ContractTransfer {
         guard let raw = unbase64url(d), let json = inflate(raw) else { return nil }
         let dec = JSONDecoder(); dec.dateDecodingStrategy = .iso8601
         return (try? dec.decode(Payload.self, from: json))?.contract
+    }
+
+    /// Is there a `d` payload at all? Separates "this link was cut short"
+    /// (payload present but unreadable) from "this link never had one".
+    static func hasPayload(in url: URL) -> Bool {
+        URLComponents(url: url, resolvingAgainstBaseURL: false)?
+            .queryItems?.contains { $0.name == "d" } ?? false
     }
 
     /// Pulls the `d` query item off a handshake:// URL, if present.

@@ -99,6 +99,8 @@ One detour worth knowing: restarting SpringBoard on a simulator (`launchctl kick
 
 **Verification tooling notes (environment, not app bugs):**
 
+- **`xcrun simctl openurl` truncates URLs at 2,047 characters.** Every real signing link is longer (5–10K), so opening one that way shows "This link is incomplete". It is the tool, not the app: the same link tapped in Safari arrives whole. To test links, put them in a page (`python3 -m http.server` on the Mac; the simulator reaches `localhost`) and tap them in Safari.
+
 - The Claude simulator MCP *build* server can't read `Handshake/Assets.xcassets` (`actool` permission error, though the same command works from a normal shell). Build with `xcodebuild` directly. Its `control`/`attach` action works once Xcode is properly selected.
 - The `#if DEBUG` launch-argument hooks (`-HandshakeOpenHistory`, `-HandshakeDumpPDF`, `-HandshakeOpenURL`, `-HandshakeAutoSign`) were **removed on November 6, 2026** as release prep. Drive the same flows without them:
   ```
@@ -108,6 +110,18 @@ One detour worth knowing: restarting SpringBoard on a simulator (`launchctl kick
   History is the menu button on Home. Take a second screenshot ~0.5 s after a gesture: one taken immediately can catch a spring animation mid-flight and look like the gesture did nothing.
 
 ---
+
+**Recipient flow pass (November 8, 2026):** sender iPhone 17 Pro → fresh-install recipient iPhone 17 → back. Fixed:
+
+- **The sender's "Signed" copy showed the signer's box still empty.** Only the status and hash came back; the stamp lived only on the recipient's phone. The signed-copy link now also carries which slot was signed (`signedSlot`) and the date entered (`signedDate`), and `RootView` re-draws the stamp into the sender's own document (their RTFD edits kept). Opening the same copy twice doesn't stamp twice (hash check).
+- **A recipient who closed the signing screen couldn't sign later** — the contract sat under "Pending Signature" and opened read-only. Copies that arrive by link are now `isIncoming`; History lists unsigned ones under **Waiting for You** (badge "To Sign") and opens the signing screen.
+- **A re-sent, edited contract didn't reach the recipient** — the old local copy always won. An unsigned incoming copy is now replaced by the newer link; the sender's own record is never touched.
+- **"Not now" after signing was the last chance to send the copy back.** The read-only viewer of an incoming signed contract has a share button that sends it.
+- **Share sheet "Copy" counted as sent** ("Copy sent ✓"). Copy now reads "Link copied. Paste it to the sender".
+- **The signing date was dropped from the copy sent back** — read after stamping had already filled the date box.
+- The confirmation showed a raw UTC ISO timestamp; now a local date and time.
+- **Recipients couldn't tell who sent it.** The link carries the sender's name when they're signed in with Apple (`from`); shown on the signing screen and in History ("From …"). The invite text names them too, and no longer claims the link is "unique to you" (every recipient gets the same link).
+- Link errors distinguish a cut-off link ("This link is incomplete…") from a link with no payload.
 
 ## 1. What Handshake Is
 

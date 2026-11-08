@@ -139,8 +139,17 @@ struct SigningView: View {
                         .foregroundStyle(Color(.label))
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 8)
-                    StatusBadge(status: status)
+                    StatusBadge(status: status, incoming: contract.isIncoming)
                         .padding(.top, 6)
+                }
+
+                // Who's asking. A recipient had no way to tell from the
+                // screen who sent this; the link now carries the sender's
+                // name when they were signed in.
+                if let from = contract.senderName {
+                    Label(String(localized: "From \(from)"), systemImage: "person.crop.circle")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.secondaryInk)
                 }
 
                 GeometryReader { geo in
@@ -316,6 +325,9 @@ struct SigningView: View {
 
     /// Stamp the document, persist, confirm — shared by all three paths.
     private func finishLocally(_ stamp: SignatureStamp, name: String) {
+        // Read before stamping: stamping fills the date box, after which
+        // slotHasDateField is false and the date never reached the sender.
+        let dateUsed: Date? = slotHasDateField ? signedDate : nil
         let stamped = NSMutableAttributedString(attributedString: attributedBody)
         let slot = slots.indices.contains(selectedSlot) ? slots[selectedSlot].range : nil
         stamped.stampSignature(stamp, width: bodyWidth, slot: slot, signedDate: signedDate)
@@ -331,7 +343,12 @@ struct SigningView: View {
             signedBy:      name,
             signatureHash: stamp.hash,
             bodyRTFD:      rtfd,
-            attachmentSizes: stamped.attachmentSizes
+            attachmentSizes: stamped.attachmentSizes,
+            // The stamp's own time, so the copy sent back re-stamps the
+            // sender's document with exactly what the signer saw.
+            signedAt:      stamp.signedAt,
+            signedSlot:    slots.isEmpty ? nil : selectedSlot,
+            signedDate:    dateUsed
         )
 
         status    = .signed
@@ -355,6 +372,8 @@ struct SigningConfirmationView: View {
     @State private var appeared  = false
     @State private var showShare = false
     @State private var sentBack  = false
+    /// "Copy" in the share sheet: the link is on the clipboard, not sent.
+    @State private var copied    = false
 
 
     var body: some View {
@@ -395,7 +414,7 @@ struct SigningConfirmationView: View {
                     .padding(.vertical, 5)
                     .background(Color.brand.opacity(0.10), in: Capsule())
 
-                    Text(stamp.isoTimestamp)
+                    Text(stamp.signedAt, format: .dateTime.year().month().day().hour().minute())
                     Text("Fingerprint \(stamp.fingerprint)")
                         .monospaced()
                 }
@@ -409,7 +428,9 @@ struct SigningConfirmationView: View {
                     if signedContract != nil {
                         // The other party has no way to know this was signed
                         // until the copy reaches them — this is that step.
-                        PurplePillButton(title: sentBack ? "Copy sent ✓" : "Send signed copy back",
+                        PurplePillButton(title: sentBack ? String(localized: "Signed copy sent ✓")
+                                                 : copied ? String(localized: "Link copied. Paste it to the sender")
+                                                 : String(localized: "Send signed copy back"),
                                          fullWidth: true) { showShare = true }
                             .opacity(sentBack ? 0.6 : 1)
 
@@ -431,10 +452,12 @@ struct SigningConfirmationView: View {
         }
         .sheet(isPresented: $showShare) {
             if let c = signedContract {
-                ActivityView(activityItems: [Self.returnMessage(for: c)]) { completed in
+                ActivityView(activityItems: [Self.returnMessage(for: c)],
+                             onFinishActivity: { completed, type in
                     showShare = false
-                    if completed { sentBack = true }
-                }
+                    guard completed else { return }
+                    if type == .copyToPasteboard { copied = true } else { sentBack = true }
+                })
                 .presentationDetents([.medium, .large])
             }
         }
@@ -444,12 +467,13 @@ struct SigningConfirmationView: View {
     /// carries the signed document (ContractTransfer). Opening it on the
     /// sender's phone moves their copy to Signed.
     static func returnMessage(for c: GeneratedContract) -> String {
-        """
-        \(c.signedBy ?? "The recipient") signed "\(c.title)" with Face ID.
+        let who = c.signedBy ?? String(localized: "The recipient")
+        return String(localized: """
+            \(who) signed "\(c.title)" with \(SignatureService.biometryName).
 
-        Open in Handshake to record the signature:
-        \(ContractTransfer.signedCopyLink(for: c))
-        """
+            Open in Handshake to record the signature:
+            \(ContractTransfer.signedCopyLink(for: c))
+            """)
     }
 }
 

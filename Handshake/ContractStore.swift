@@ -89,12 +89,17 @@ final class ContractStore {
                     signedBy: String? = nil,
                     signatureHash: String? = nil,
                     bodyRTFD: Data? = nil,
-                    attachmentSizes: [CGSize]? = nil) {
+                    attachmentSizes: [CGSize]? = nil,
+                    signedAt: Date = .now,
+                    signedSlot: Int? = nil,
+                    signedDate: Date? = nil) {
         guard let i = contracts.firstIndex(where: { $0.id == id }) else { return }
         contracts[i].status   = .signed
-        contracts[i].signedAt = .now
+        contracts[i].signedAt = signedAt
         if let signedBy      { contracts[i].signedBy      = signedBy }
         if let signatureHash { contracts[i].signatureHash = signatureHash }
+        if let signedSlot    { contracts[i].signedSlot    = signedSlot }
+        if let signedDate    { contracts[i].signedDate    = signedDate }
         if let bodyRTFD {
             contracts[i].bodyRTFD        = bodyRTFD
             contracts[i].attachmentSizes = attachmentSizes

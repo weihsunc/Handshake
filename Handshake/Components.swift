@@ -461,14 +461,18 @@ struct ActivityView: UIViewControllerRepresentable {
     /// share sheet is a dead end otherwise — the caller can't tell a real send
     /// from a dismissal.
     var onFinish: ((Bool) -> Void)? = nil
+    /// Same, with which activity it was — "Copy" completes too, but nothing
+    /// was sent, and a caller that says "Sent ✓" needs to tell them apart.
+    var onFinishActivity: ((Bool, UIActivity.ActivityType?) -> Void)? = nil
 
     func makeUIViewController(context: Context) -> UIActivityViewController {
         let vc = UIActivityViewController(
             activityItems: activityItems,
             applicationActivities: applicationActivities
         )
-        vc.completionWithItemsHandler = { _, completed, _, _ in
+        vc.completionWithItemsHandler = { type, completed, _, _ in
             onFinish?(completed)
+            onFinishActivity?(completed, type)
         }
         return vc
     }

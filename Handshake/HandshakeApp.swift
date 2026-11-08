@@ -89,35 +89,91 @@ struct RootView: View {
 
         // handshake://sign/<uuid>?d=…  — a recipient opening an invitation.
         case "sign":
+            let carried = ContractTransfer.payload(in: url).map { c -> GeneratedContract in
+                var c = c; c.isIncoming = true; return c
+            }
             if let local = store.contract(id: id) {
+                // A copy that came in by link and isn't signed yet is replaced
+                // by the newer one: a sender who edits and re-sends would
+                // otherwise leave the recipient looking at the old version.
+                // The sender's own record (not incoming) is never touched.
+                if local.isIncoming, local.status != .signed, let carried {
+                    store.upsert(carried)
+                    return .sign(carried)
+                }
                 return .sign(local)                       // same phone as the sender
             }
-            if let carried = ContractTransfer.payload(in: url) {
+            if let carried {
                 // Another phone: the link brought the document with it.
                 // Keep a local copy so History shows it and re-opens work.
                 store.upsert(carried)
                 return .sign(carried)
             }
-            return .failed("This link doesn't contain the contract. Ask the sender to send it again from the latest version of Handshake.")
+            return .failed(Self.unreadableMessage(url))
 
         // handshake://signed/<uuid>?d=…  — the signed copy coming back to the sender.
         case "signed":
             guard let carried = ContractTransfer.payload(in: url), carried.status == .signed else {
-                return .failed("That signed copy couldn't be read.")
+                return .failed(Self.unreadableMessage(url))
             }
             if let mine = store.contract(id: id) {
-                // Sender's own record: keep their edits, take the signature.
+                // Opening the same copy twice mustn't stamp twice.
+                if mine.status == .signed, mine.signatureHash == carried.signatureHash {
+                    return .view(mine)
+                }
+                // Sender's own record: keep their edits, and put the signer's
+                // stamp and date into it. Before, only the status changed —
+                // the sender's "Signed" copy still showed an empty box.
+                let stamped = Self.stamped(mine.displayBody(), with: carried)
                 store.markSigned(id: mine.id,
                                  signedBy: carried.signedBy,
-                                 signatureHash: carried.signatureHash)
+                                 signatureHash: carried.signatureHash,
+                                 bodyRTFD: stamped?.rtfd,
+                                 attachmentSizes: stamped?.sizes,
+                                 signedAt: carried.signedAt ?? .now,
+                                 signedSlot: carried.signedSlot,
+                                 signedDate: carried.signedDate)
                 if let updated = store.contract(id: id) { return .view(updated) }
             }
-            store.upsert(carried)                          // no local record — just show it
-            return .view(carried)
+            // No local record — show it, stamped the same way.
+            var copy = carried
+            if let stamped = Self.stamped(carried.displayBody(), with: carried) {
+                copy.bodyRTFD = stamped.rtfd
+                copy.attachmentSizes = stamped.sizes
+            }
+            store.upsert(copy)
+            return .view(copy)
 
         default:
             return .failed("That link isn't a signing link.")
         }
+    }
+
+    /// A link with a payload that won't decode was almost always cut short
+    /// on its way (a messaging app or a copy that dropped the tail).
+    private static func unreadableMessage(_ url: URL) -> String {
+        ContractTransfer.hasPayload(in: url)
+            ? String(localized: "This link is incomplete. It may have been cut off when it was copied or forwarded. Ask the sender to send it again.")
+            : String(localized: "This link doesn't contain the contract. Ask the sender to send it again from the latest version of Handshake.")
+    }
+
+    /// The signer's stamp and date, put into `body` in the slot they signed.
+    /// Returns nil (leave the document alone) when there's no signature to
+    /// draw — older links carry no slot, so the first slot is used then.
+    @MainActor
+    private static func stamped(_ body: NSMutableAttributedString,
+                                with signed: GeneratedContract) -> (rtfd: Data, sizes: [CGSize])? {
+        guard let name = signed.signedBy, let hash = signed.signatureHash else { return nil }
+        let stamp = SignatureStamp(signerName: name, signedAt: signed.signedAt ?? .now, hash: hash)
+        let slots = SignatureSlots.find(in: body)
+        let slot  = signed.signedSlot.flatMap { slots.indices.contains($0) ? slots[$0].range : nil }
+        // The signer's screen width isn't known here; 360 is a phone's text
+        // column, and the block clamps to 200…420 anyway.
+        body.stampSignature(stamp, width: 360, slot: slot, signedDate: signed.signedDate)
+        guard let rtfd = try? body.data(from: NSRange(location: 0, length: body.length),
+                                        documentAttributes: [.documentType: NSAttributedString.DocumentType.rtfd])
+        else { return nil }
+        return (rtfd, body.attachmentSizes)
     }
 
     private enum Route {
