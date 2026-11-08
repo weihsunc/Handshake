@@ -53,7 +53,7 @@ struct ThinkingIndicator: View {
         HStack(spacing: 10) {
             Image(systemName: "sparkle")
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color(red: 76/255, green: 0, blue: 255/255))
+                .foregroundStyle(Color.brand)
                 .symbolEffect(.breathe, isActive: !reduceMotion)
 
             ShimmerText(text: label, animated: !reduceMotion)

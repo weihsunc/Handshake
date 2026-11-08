@@ -79,7 +79,7 @@ struct SigningView: View {
         NavigationStack {
             ZStack {
 
-                Color(red: 0.98, green: 0.98, blue: 0.98)
+                Color.pageBackground
                     .ignoresSafeArea()
 
                 // The sign bar is a safe-area inset, not an overlay: the
@@ -161,6 +161,7 @@ struct SigningView: View {
             .padding(.horizontal, 16)
             .padding(.top, 24)
             .padding(.bottom, 24)
+            .readableColumn(Layout.readableWidth + 32)
         }
     }
 
@@ -172,8 +173,8 @@ struct SigningView: View {
         VStack(spacing: 0) {
             // Fade so document text doesn't collide with the pill as it scrolls
             LinearGradient(
-                colors: [Color(red: 0.98, green: 0.98, blue: 0.98).opacity(0),
-                         Color(red: 0.98, green: 0.98, blue: 0.98)],
+                colors: [Color.pageBackground.opacity(0),
+                         Color.pageBackground],
                 startPoint: .top,
                 endPoint:   .bottom
             )
@@ -198,7 +199,7 @@ struct SigningView: View {
                     HStack {
                         Text("Date")
                             .font(.footnote.weight(.semibold))
-                            .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
+                            .foregroundStyle(Color.secondaryInk)
                         Spacer()
                         DatePicker("", selection: $signedDate, displayedComponents: .date)
                             .labelsHidden()
@@ -207,7 +208,7 @@ struct SigningView: View {
                     .padding(.vertical, 6)
                     .background(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color(red: 244/255, green: 244/255, blue: 245/255))
+                            .fill(Color.cardFill)
                     )
                 }
 
@@ -215,7 +216,7 @@ struct SigningView: View {
                 HStack(spacing: 10) {
                     Text("Signing as")
                         .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
+                        .foregroundStyle(Color.secondaryInk)
                     TextField("Your full name", text: $signerName)
                         .font(.subheadline)
                         .textContentType(.name)
@@ -225,7 +226,7 @@ struct SigningView: View {
                 .padding(.vertical, 11)
                 .background(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color(red: 244/255, green: 244/255, blue: 245/255))
+                        .fill(Color.cardFill)
                 )
 
                 // A greyed button with no reason is a dead end; say why.
@@ -245,12 +246,13 @@ struct SigningView: View {
 
                 Text(Self.consentText)
                     .font(.footnote)
-                    .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
+                    .foregroundStyle(Color.secondaryInk)
                     .multilineTextAlignment(.center)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 12)
-            .background(Color(red: 0.98, green: 0.98, blue: 0.98).ignoresSafeArea(edges: .bottom))
+            .readableColumn(Layout.readableWidth + 32)
+            .background(Color.pageBackground.ignoresSafeArea(edges: .bottom))
         }
     }
 
@@ -354,18 +356,17 @@ struct SigningConfirmationView: View {
     @State private var showShare = false
     @State private var sentBack  = false
 
-    private static let purple = Color(red: 76/255, green: 0, blue: 255/255)
 
     var body: some View {
         ZStack {
-            Color(red: 0.98, green: 0.98, blue: 0.98).ignoresSafeArea()
+            Color.pageBackground.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 Spacer()
 
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 84, weight: .regular))
-                    .foregroundStyle(Self.purple)
+                    .foregroundStyle(Color.brand)
                     .scaleEffect(appeared ? 1 : 0.6)
                     .opacity(appeared ? 1 : 0)
                     .padding(.bottom, 28)
@@ -377,7 +378,7 @@ struct SigningConfirmationView: View {
 
                 Text(contractTitle)
                     .font(.body)
-                    .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
+                    .foregroundStyle(Color.secondaryInk)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
                     .padding(.bottom, 28)
@@ -389,17 +390,17 @@ struct SigningConfirmationView: View {
                         Text("Verified with \(SignatureService.biometryName)")
                             .font(.caption.weight(.semibold))
                     }
-                    .foregroundStyle(Self.purple)
+                    .foregroundStyle(Color.brand)
                     .padding(.horizontal, 9)
                     .padding(.vertical, 5)
-                    .background(Self.purple.opacity(0.10), in: Capsule())
+                    .background(Color.brand.opacity(0.10), in: Capsule())
 
                     Text(stamp.isoTimestamp)
                     Text("Fingerprint \(stamp.fingerprint)")
                         .monospaced()
                 }
                 .font(.caption2)
-                .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
+                .foregroundStyle(Color.secondaryInk)
                 .accessibilityElement(children: .combine)
 
                 Spacer()
@@ -414,7 +415,7 @@ struct SigningConfirmationView: View {
 
                         Button(sentBack ? "Done" : "Not now") { onDone() }
                             .font(.body.weight(.medium))
-                            .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
+                            .foregroundStyle(Color.secondaryInk)
                             .padding(.vertical, 6)
                     } else {
                         PurplePillButton(title: "Done", fullWidth: true) { onDone() }
@@ -422,6 +423,7 @@ struct SigningConfirmationView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 16)
+                .readableColumn(480)
             }
         }
         .onAppear {

@@ -53,12 +53,12 @@ struct SignatureBlockView: View {
                     .monospaced()
             }
             .font(.system(size: 11))
-            .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
+            .foregroundStyle(Color.secondaryInk)
         }
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color(red: 244/255, green: 244/255, blue: 245/255))   // #F4F4F5
+                .fill(Color.cardFill)   // #F4F4F5
         )
     }
 }
@@ -87,6 +87,7 @@ extension NSMutableAttributedString {
 
         let renderer = ImageRenderer(
             content: SignatureBlockView(stamp: stamp).frame(width: blockWidth)
+                .environment(\.colorScheme, .light)   // a paper card in both modes; it travels with the document
         )
         // Rendered at 3× so it's sharp on Retina. RTFD's importer sizes an
         // attachment by PIXELS and drops bounds, so on its own this would come

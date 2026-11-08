@@ -27,7 +27,7 @@ struct HistoryView: View {
                     contractList
                 }
             }
-            .background(Color(red: 0.98, green: 0.98, blue: 0.98))
+            .background(Color.pageBackground)
             .navigationTitle("Contracts")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -173,9 +173,9 @@ struct StatusBadge: View {
     private var color: Color {
         switch status {
         case .draft:    return Color(.secondaryLabel)
-        case .sent:     return Color(red: 76/255, green: 0, blue: 255/255)   // #4C00FF
-        case .signed:   return Color(red: 0.13, green: 0.60, blue: 0.28)
-        case .declined: return Color(red: 0.80, green: 0.16, blue: 0.16)
+        case .sent:     return Color.brand
+        case .signed:   return Color.statusSigned
+        case .declined: return Color.statusDeclined
         }
     }
 
@@ -239,8 +239,9 @@ struct ReadOnlyContractView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 24)
                 .padding(.bottom, 40)
+                .readableColumn(Layout.readableWidth + 32)
             }
-            .background(Color(red: 0.98, green: 0.98, blue: 0.98).ignoresSafeArea())
+            .background(Color.pageBackground.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -266,6 +267,8 @@ extension GeneratedContract {
                documentAttributes: nil
            ) {
             attr.applyAttachmentSizes(attachmentSizes)
+            attr.adaptTextColorsToAppearance()
+            attr.redrawSignatureFieldBoxes()
             return attr
         }
         return .fromHandshakeMarkdown(content)

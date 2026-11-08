@@ -67,7 +67,7 @@ struct SendFlowView: View {
                     } label: {
                         Label("Add Recipient", systemImage: "plus.circle.fill")
                             .font(.body.weight(.medium))
-                            .foregroundStyle(Color(red: 76/255, green: 0, blue: 255/255))
+                            .foregroundStyle(Color.brand)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, 4)
                     }
@@ -76,8 +76,9 @@ struct SendFlowView: View {
                 }
                 .padding(.top, 20)
                 .padding(.bottom, 40)
+                .readableColumn(Layout.readableWidth + 32)
             }
-            .background(Color(red: 0.98, green: 0.98, blue: 0.98).ignoresSafeArea())
+            .background(Color.pageBackground.ignoresSafeArea())
             .navigationTitle("Send for Signing")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -314,7 +315,7 @@ private struct RecipientCard: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
         }
-        .background(.white)
+        .background(Color.raisedSurface)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
         .padding(.horizontal, 16)

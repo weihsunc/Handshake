@@ -10,7 +10,10 @@ import UIKit
 // reason as the signed stamp (see SignatureBlockView).
 // ─────────────────────────────────────────────────────────────────────────────
 
-private let fieldPurple = Color(red: 76/255, green: 0, blue: 255/255)
+private let fieldPurple = Color.brandFill
+/// Opaque, so the box reads the same on a dark page. Matches what 6% purple
+/// over white looked like before.
+private let fieldWash   = Color(red: 0.958, green: 0.94, blue: 1)
 
 struct SignatureFieldBox: View {
     var body: some View {
@@ -26,7 +29,7 @@ struct SignatureFieldBox: View {
         .foregroundStyle(fieldPurple)
         .padding(.horizontal, 14)
         .frame(width: 300, height: 64)
-        .background(fieldPurple.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(fieldWash, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .strokeBorder(fieldPurple.opacity(0.55), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
@@ -45,7 +48,7 @@ struct DateFieldBox: View {
         .foregroundStyle(fieldPurple)
         .padding(.horizontal, 12)
         .frame(width: 170, height: 44)
-        .background(fieldPurple.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(fieldWash, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .strokeBorder(fieldPurple.opacity(0.55), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
@@ -60,8 +63,8 @@ extension SignatureField {
     static func makeAttachment(_ kind: SignatureField) -> NSTextAttachment {
         let renderer: ImageRenderer<AnyView>
         switch kind {
-        case .signature: renderer = ImageRenderer(content: AnyView(SignatureFieldBox()))
-        case .date:      renderer = ImageRenderer(content: AnyView(DateFieldBox()))
+        case .signature: renderer = ImageRenderer(content: AnyView(SignatureFieldBox().environment(\.colorScheme, .light)))
+        case .date:      renderer = ImageRenderer(content: AnyView(DateFieldBox().environment(\.colorScheme, .light)))
         }
         renderer.scale = renderScale          // sharp; size restored on load (attachmentSizes)
         let image = renderer.uiImage ?? UIImage()

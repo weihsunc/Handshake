@@ -128,8 +128,8 @@ struct ChatBar: View {
                     .font(.body.weight(.medium))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [Color(red: 76/255, green: 0,      blue: 255/255),
-                                     Color(red: 38/255, green: 6/255,  blue:  93/255)],
+                            colors: [Color.brand,
+                                     Color.brandTextDeep],
                             startPoint: .leading, endPoint: .trailing
                         )
                     )
@@ -199,7 +199,7 @@ struct ChatBar: View {
             Image(systemName: speech.isRecording ? "mic.fill" : "mic")
                 .font(.body.weight(.medium))
                 .foregroundStyle(speech.isRecording
-                                 ? Color(red: 76/255, green: 0, blue: 255/255)
+                                 ? Color.brand
                                  : Color(.label))
                 .frame(width: iconSize, height: iconSize)
                 .symbolEffect(.pulse, isActive: speech.isRecording)
@@ -217,8 +217,8 @@ struct ChatBar: View {
                 .frame(width: iconSize, height: iconSize)
                 .background(
                     LinearGradient(
-                        colors: [Color(red: 0.298, green: 0, blue: 1),
-                                 Color(red: 0.149, green: 0.024, blue: 0.365)],
+                        colors: [Color.brandFill,
+                                 Color.brandDeep],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -251,19 +251,19 @@ struct TemplateCard: View {
                 Text(verbatim: "\(emoji) \(title)")
                     .font(.body.weight(.semibold))
                     .tracking(-0.43)
-                    .foregroundStyle(Color(red: 30/255, green: 30/255, blue: 30/255))
+                    .foregroundStyle(Color.primaryInk)
                     .lineLimit(2)
 
                 Text(description)
                     .font(.body)
                     .tracking(-0.43)
-                    .foregroundStyle(Color(red: 117/255, green: 117/255, blue: 117/255))
+                    .foregroundStyle(Color.secondaryInk)
                     .multilineTextAlignment(.leading)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(16)
             .background(
-                Color(red: 245/255, green: 245/255, blue: 244/255),   // stone/100
+                Color.cardFill,   // stone/100
                 in: RoundedRectangle(cornerRadius: 24, style: .continuous)
             )
             .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
@@ -316,11 +316,14 @@ struct ToolbarPillButton: View {
         Button(action: action) {
             Text(title)
                 .font(.body.weight(.medium))
+                // Prominent glass picks a dark label on a tint in dark mode;
+                // the brand purple always wants white.
+                .foregroundStyle(.white)
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
         }
         .buttonStyle(.glassProminent)
-        .tint(Color(red: 76/255, green: 0, blue: 255/255))   // #4C00FF
+        .tint(Color.brandFill)
     }
 }
 
@@ -357,8 +360,8 @@ struct PurplePillButton: View {
                 .frame(height: fullWidth ? fullH : barH)
                 .background(
                     LinearGradient(
-                        colors: [Color(red: 76/255, green: 0/255,  blue: 255/255),   // #4C00FF
-                                 Color(red: 38/255, green: 6/255,  blue:  93/255)],  // #26065D
+                        colors: [Color.brandFill,   // #4C00FF
+                                 Color.brandDeep],  // #26065D
                         startPoint: UnitPoint(x: 0.08, y: 0),
                         endPoint:   UnitPoint(x: 1.47, y: 1)
                     ),
@@ -382,10 +385,10 @@ struct BlackPillButton: View {
         Button(action: action) {
             Text(title)
                 .font(.body.weight(.medium))
-                .foregroundStyle(.white)
+                .foregroundStyle(Color(.systemBackground))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
-                .background(Color.black)
+                .background(Color(.label))
                 .clipShape(Capsule())
                 .shadow(color: .black.opacity(0.12), radius: 10, x: 0, y: 4)
         }
@@ -432,8 +435,8 @@ struct PurpleCircleButton: View {
         .padding(.horizontal, 4)
         .background(
             LinearGradient(
-                colors: [Color(red: 76/255, green: 0,     blue: 255/255),
-                         Color(red: 38/255, green: 6/255, blue:  93/255)],
+                colors: [Color.brandFill,
+                         Color.brandDeep],
                 startPoint: UnitPoint(x: 0.08, y: 0),
                 endPoint:   UnitPoint(x: 1.47, y: 1)
             ),
@@ -582,14 +585,23 @@ struct FormattingToolbar: View {
 // ─────────────────────────────────────────────────────────────────────────────
 
 struct HandshakeIllustration: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         if UIImage(named: "oc-handshake") != nil {
             // ── Real Figma asset ─────────────────────────────────────
             // Floating icons are already part of the PNG — no overlay needed.
-            Image("oc-handshake")
+            let art = Image("oc-handshake")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 280)
+            // Black line art on transparent is invisible on a black page.
+            // Inverted, the hands draw in white and the grey icons stay grey.
+            if colorScheme == .dark {
+                art.colorInvert()
+            } else {
+                art
+            }
         } else {
             // ── SF Symbol fallback ───────────────────────────────────
             ZStack {
@@ -665,10 +677,10 @@ struct MessageBubble: View {
             }
             .font(.body)
             .lineSpacing(3)
-            .foregroundStyle(message.isUser ? .white : Color(.label))
+            .foregroundStyle(message.isUser ? Color.white : Color(.label))
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(message.isUser ? Color(.label) : Color.clear)
+            .background(message.isUser ? Color.userBubble : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: 18))
 
             if !message.isUser { Spacer(minLength: 60) }

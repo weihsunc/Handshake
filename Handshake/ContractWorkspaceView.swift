@@ -105,7 +105,7 @@ struct ContractWorkspaceView: View {
             ZStack(alignment: .bottom) {
 
                 // ── 0: Background ──────────────────────────────────────────────
-                Color(red: 0.98, green: 0.98, blue: 0.98)
+                Color.pageBackground
                     .ignoresSafeArea()
 
                 // ── 0: Contract document ───────────────────────────────────────
@@ -118,6 +118,7 @@ struct ContractWorkspaceView: View {
                     // the worst moment of the first-run flow. A document-shaped
                     // skeleton says "something is coming, here".
                     GeneratingSkeleton()
+                        .readableColumn(Layout.readableWidth + 32)
                         .transition(.opacity)
                         .zIndex(0)
                 }
@@ -253,6 +254,8 @@ struct ContractWorkspaceView: View {
             .padding(.horizontal, 16)
             .padding(.top, 24)
             .padding(.bottom, Self.chatBarH + 24)
+            // iPad / landscape: the document keeps a page-like measure.
+            .readableColumn(Layout.readableWidth + 32)
         }
         .scrollDismissesKeyboard(.interactively)
         .onChange(of: isEditing) { _, editing in
@@ -316,6 +319,7 @@ struct ContractWorkspaceView: View {
         // The ZStack already respects the bottom safe area; this is only the
         // gap above it — same 8 as Home, so the pill sits at the same height.
         .padding(.bottom, 8)
+        .readableColumn(Layout.readableWidth + 32)
         .animation(.easeInOut(duration: 0.22), value: isEditing)
         // No background — transparent outside the pill
     }
@@ -414,6 +418,9 @@ struct ContractWorkspaceView: View {
                 .frame(height: Self.chatBarH)
                 .ignoresSafeArea(edges: .bottom)
         }
+        // On a wide screen the panel is a centred sheet over the document's
+        // column, not a slab across the whole display.
+        .readableColumn(Layout.readableWidth + 32)
         // Simultaneous so it coexists with the list's own scrolling at large;
         // the gesture itself decides when to act.
         .simultaneousGesture(panelDragGesture)
@@ -846,7 +853,7 @@ struct ContractWorkspaceView: View {
 
 private struct GeneratingSkeleton: View {
     @State private var pulse = false
-    private let gray = Color(red: 244/255, green: 244/255, blue: 245/255)   // #F4F4F5
+    private let gray = Color.cardFill   // #F4F4F5
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {

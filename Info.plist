@@ -15,12 +15,6 @@
 	  CFBundleURLTypes registers handshake:// so signing links open the app:
 	      handshake://sign/<contract-uuid>
 	-->
-	<!-- Light appearance only. The Figma palette (#FAFAFA page, #F5F5F4 cards,
-	     #1E1E1E / #757575 text) has no dark counterpart yet; without this key
-	     iOS flips the label colours to white on the light backgrounds. -->
-	<key>UIUserInterfaceStyle</key>
-	<string>Light</string>
-
 	<!-- Shown in the system Face ID prompt when a recipient signs. -->
 	<key>NSFaceIDUsageDescription</key>
 	<string>Handshake uses Face ID to confirm it's you before you sign a contract.</string>

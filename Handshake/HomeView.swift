@@ -108,6 +108,7 @@ struct HomeView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, showHero ? 16 : 8)
                 .padding(.bottom, 16)
+                .readableColumn(Layout.readableWidth + 32)
             }
             .scrollDismissesKeyboard(.interactively)
             // Collapsing the hero removes ~400pt above the cards, but the scroll
@@ -119,7 +120,7 @@ struct HomeView: View {
                 }
             }
         }
-        .background(Color(red: 0.98, green: 0.98, blue: 0.976).ignoresSafeArea())   // stone/50 #FAFAF9
+        .background(Color.pageBackground.ignoresSafeArea())   // stone/50 #FAFAF9
         // The chat bar is a bottom safe-area inset, so the list scrolls under
         // it and it rides the keyboard automatically when focused.
         .safeAreaInset(edge: .bottom) {
@@ -132,6 +133,7 @@ struct HomeView: View {
             .padding(.horizontal, 16)
             .padding(.top, 8)
             .padding(.bottom, 8)
+            .readableColumn(Layout.readableWidth + 32)
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.85), value: showHero)
         .animation(.spring(response: 0.3,  dampingFraction: 0.85), value: hasText)
