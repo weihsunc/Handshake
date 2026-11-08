@@ -29,13 +29,13 @@ final class SpeechInput {
         SFSpeechRecognizer.requestAuthorization { status in
             Task { @MainActor in
                 guard status == .authorized else {
-                    self.errorText = "Speech recognition isn't allowed. You can enable it in Settings."
+                    self.errorText = String(localized: "Speech recognition isn't allowed. You can enable it in Settings.")
                     return
                 }
                 AVAudioApplication.requestRecordPermission { granted in
                     Task { @MainActor in
                         guard granted else {
-                            self.errorText = "Microphone access isn't allowed. You can enable it in Settings."
+                            self.errorText = String(localized: "Microphone access isn't allowed. You can enable it in Settings.")
                             return
                         }
                         self.begin(onText: onText)
@@ -47,7 +47,7 @@ final class SpeechInput {
 
     private func begin(onText: @escaping @MainActor (String) -> Void) {
         guard let recognizer, recognizer.isAvailable else {
-            errorText = "Speech recognition isn't available right now."
+            errorText = String(localized: "Speech recognition isn't available right now.")
             return
         }
         do {
@@ -55,7 +55,7 @@ final class SpeechInput {
             try session.setCategory(.record, mode: .measurement, options: .duckOthers)
             try session.setActive(true, options: .notifyOthersOnDeactivation)
         } catch {
-            errorText = "Couldn't start the microphone."
+            errorText = String(localized: "Couldn't start the microphone.")
             return
         }
 
@@ -71,7 +71,7 @@ final class SpeechInput {
         }
         engine.prepare()
         do { try engine.start() } catch {
-            errorText = "Couldn't start the microphone."
+            errorText = String(localized: "Couldn't start the microphone.")
             return
         }
         isRecording = true
@@ -100,9 +100,9 @@ final class SpeechInput {
         // kAFAssistantErrorDomain 1110 = no speech detected; 216/1101 = input
         // unavailable. All of them mean the same thing to the user.
         if ns.domain == "kAFAssistantErrorDomain" || ns.domain == "kLSRErrorDomain" {
-            return "Couldn't hear anything. Check the microphone and try again."
+            return String(localized: "Couldn't hear anything. Check the microphone and try again.")
         }
-        return "Dictation stopped: \(ns.localizedDescription)"
+        return String(localized: "Dictation stopped: \(ns.localizedDescription)")
     }
 
     func stop() {

@@ -68,23 +68,23 @@ enum SignatureService {
         let context = LAContext()
         _ = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
         switch context.biometryType {
-        case .touchID: return "Touch ID"
-        case .opticID: return "Optic ID"
-        default:       return "Face ID"
+        case .touchID: return String(localized: "Touch ID")
+        case .opticID: return String(localized: "Optic ID")
+        default:       return String(localized: "Face ID")
         }
     }
 
     /// Prompts for Face ID (or Touch ID) and returns only on success.
     static func authenticate(reason: String) async throws {
         let context = LAContext()
-        context.localizedCancelTitle = "Cancel"
+        context.localizedCancelTitle = String(localized: "Cancel")
 
         var probeError: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics,
                                         error: &probeError) else {
             throw SignatureError.biometricsUnavailable(
                 probeError?.localizedDescription
-                ?? "Face ID isn't set up on this device."
+                ?? String(localized: "Face ID isn't set up on this device.")
             )
         }
 
@@ -93,7 +93,7 @@ enum SignatureService {
                 .deviceOwnerAuthenticationWithBiometrics,
                 localizedReason: reason
             )
-            guard ok else { throw SignatureError.authenticationFailed("Face ID didn't match.") }
+            guard ok else { throw SignatureError.authenticationFailed(String(localized: "Face ID didn't match.")) }
         } catch let err as LAError {
             switch err.code {
             case .userCancel, .appCancel, .systemCancel:

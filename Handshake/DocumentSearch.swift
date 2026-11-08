@@ -186,7 +186,7 @@ struct DocumentSearchBar: View {
             .background(.regularMaterial, in: Capsule())
             .shadow(color: .black.opacity(0.10), radius: 20, x: 0, y: 8)
 
-            BarCircleButton(systemImage: "xmark", label: "Close search", size: height) {
+            BarCircleButton(systemImage: "xmark", label: String(localized: "Close search"), size: height) {
                 speech.stop()
                 onClose()
             }
@@ -203,8 +203,8 @@ struct DocumentSearchBar: View {
     @ViewBuilder
     private var trailing: some View {
         if hasQuery && !speech.isRecording {
-            Text(matchCount == 0 ? "No results"
-                                 : "\((current ?? 0) + 1) of \(matchCount)")
+            Text(matchCount == 0 ? String(localized: "No results")
+                                 : String(localized: "\((current ?? 0) + 1) of \(matchCount)"))
                 .font(.subheadline.monospacedDigit())
                 .foregroundStyle(Color(.secondaryLabel))
                 .lineLimit(1)
@@ -212,8 +212,8 @@ struct DocumentSearchBar: View {
                 .accessibilityAddTraits(.updatesFrequently)
 
             HStack(spacing: 0) {
-                stepButton("chevron.up",   label: "Previous match", action: onPrevious)
-                stepButton("chevron.down", label: "Next match",     action: onNext)
+                stepButton("chevron.up",   label: String(localized: "Previous match"), action: onPrevious)
+                stepButton("chevron.down", label: String(localized: "Next match"),     action: onNext)
             }
             .disabled(matchCount == 0)
         } else {

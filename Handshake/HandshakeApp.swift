@@ -81,7 +81,7 @@ struct RootView: View {
         guard url.scheme?.lowercased() == "handshake" else { return nil }
 
         guard let id = UUID(uuidString: url.lastPathComponent) else {
-            return .failed("That link is malformed.")
+            return .failed(String(localized: "That link is malformed."))
         }
         let store = ContractStore.shared
 
@@ -145,7 +145,7 @@ struct RootView: View {
             return .view(copy)
 
         default:
-            return .failed("That link isn't a signing link.")
+            return .failed(String(localized: "That link isn't a signing link."))
         }
     }
 

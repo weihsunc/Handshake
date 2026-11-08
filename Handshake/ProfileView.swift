@@ -26,7 +26,8 @@ enum LegalLinks {
 struct ProfileView: View {
 
     @State private var account = AccountStore.shared
-    @State private var plan: String = "Free"
+    @State private var plan: String = ProfileView.freePlan
+    private static let freePlan = String(localized: "Free")
     @State private var showManage   = false
     @State private var confirmLogout = false
     @State private var restoring    = false
@@ -92,7 +93,7 @@ struct ProfileView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(account.name ?? "Apple ID")
                             .font(.headline)
-                        Text(account.email ?? "Email hidden by Apple")
+                        Text(account.email ?? String(localized: "Email hidden by Apple"))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -158,7 +159,7 @@ struct ProfileView: View {
         do {
             try await AppStore.sync()
             await loadPlan()
-            message = plan == "Free" ? "No purchases to restore." : "Restored: \(plan)."
+            message = plan == Self.freePlan ? String(localized: "No purchases to restore.") : String(localized: "Restored: \(plan).")
         } catch {
             message = error.localizedDescription
         }
@@ -169,9 +170,9 @@ struct ProfileView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var signingProvider: String {
-        guard BackendClient.isConfigured else { return "On this device" }
+        guard BackendClient.isConfigured else { return String(localized: "On this device") }
         switch Secrets.signingBackend {
-        case .onDevice: return "On this device"
+        case .onDevice: return String(localized: "On this device")
         case .docuseal: return "DocuSeal"
         case .signwell: return "SignWell"
         }
@@ -181,9 +182,9 @@ struct ProfileView: View {
         let biometry = SignatureService.biometryName
         switch signingProvider {
         case "DocuSeal", "SignWell":
-            return "Signatures are confirmed with \(biometry) and completed through \(signingProvider)."
+            return String(localized: "Signatures are confirmed with \(biometry) and completed through \(signingProvider).")
         default:
-            return "Signatures are confirmed with \(biometry). Handshake keeps a fingerprint of each signature on this \(UIDevice.current.model); no third party holds a copy."
+            return String(localized: "Signatures are confirmed with \(biometry). Handshake keeps a fingerprint of each signature on this \(UIDevice.current.model); no third party holds a copy.")
         }
     }
 

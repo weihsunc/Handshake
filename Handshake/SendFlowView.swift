@@ -87,7 +87,7 @@ struct SendFlowView: View {
                         .foregroundStyle(Color(.label))
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    ToolbarPillButton(title: "Send") { startSend() }
+                    ToolbarPillButton(title: String(localized: "Send")) { startSend() }
                         .disabled(!canSend)
                 }
             }

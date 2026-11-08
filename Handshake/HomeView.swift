@@ -13,24 +13,24 @@ struct ContractTemplate: Identifiable {
 
 private let templates: [ContractTemplate] = [
     ContractTemplate(
-        emoji: "📄", title: "Consulting Agreement",
-        prompt: "Create a contract for a freelance web development project that includes project scope, timeline, payment terms, deliverables, and confidentiality agreements."
+        emoji: "📄", title: String(localized: "Consulting Agreement"),
+        prompt: String(localized: "Create a contract for a freelance web development project that includes project scope, timeline, payment terms, deliverables, and confidentiality agreements.")
     ),
     ContractTemplate(
-        emoji: "🔏", title: "Non-Disclosure Agreement",
-        prompt: "Generate a clear, professional Non-Disclosure Agreement (NDA) covering parties, confidential information, obligations, duration, exclusions, remedies, and jurisdiction."
+        emoji: "🔏", title: String(localized: "Non-Disclosure Agreement"),
+        prompt: String(localized: "Generate a clear, professional Non-Disclosure Agreement (NDA) covering parties, confidential information, obligations, duration, exclusions, remedies, and jurisdiction.")
     ),
     ContractTemplate(
-        emoji: "🏰", title: "Apartment Rental Agreement",
-        prompt: "Create a lease agreement for an apartment with monthly rent, security deposit, lease term, utilities included, maintenance responsibilities, and standard rights and obligations."
+        emoji: "🏰", title: String(localized: "Apartment Rental Agreement"),
+        prompt: String(localized: "Create a lease agreement for an apartment with monthly rent, security deposit, lease term, utilities included, maintenance responsibilities, and standard rights and obligations.")
     ),
     ContractTemplate(
-        emoji: "💼", title: "Employment Contract",
-        prompt: "Draft a comprehensive employment contract covering job title, compensation, benefits, working hours, confidentiality, non-compete clauses, and termination conditions."
+        emoji: "💼", title: String(localized: "Employment Contract"),
+        prompt: String(localized: "Draft a comprehensive employment contract covering job title, compensation, benefits, working hours, confidentiality, non-compete clauses, and termination conditions.")
     ),
     ContractTemplate(
-        emoji: "🤝", title: "Partnership Agreement",
-        prompt: "Create a partnership agreement outlining roles, profit sharing, decision-making authority, capital contributions, dispute resolution, and exit procedures."
+        emoji: "🤝", title: String(localized: "Partnership Agreement"),
+        prompt: String(localized: "Create a partnership agreement outlining roles, profit sharing, decision-making authority, capital contributions, dispute resolution, and exit procedures.")
     ),
 ]
 
@@ -144,12 +144,12 @@ struct HomeView: View {
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                GlassIconButton(systemName: "line.3.horizontal", label: "Contracts") {
+                GlassIconButton(systemName: "line.3.horizontal", label: String(localized: "Contracts")) {
                     showHistory = true
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                GlassIconButton(systemName: "person", label: "Profile") {
+                GlassIconButton(systemName: "person", label: String(localized: "Profile")) {
                     showProfile = true
                 }
             }

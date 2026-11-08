@@ -108,7 +108,7 @@ struct ContractWorkspaceView: View {
     /// Title shown before the contract exists. The prompt's first few words read
     /// as a sentence fragment in the nav bar ("Create a contract for a"), so use
     /// a neutral placeholder until the AI returns a real title.
-    private var sheetTitle: String { "New Agreement" }
+    private var sheetTitle: String { String(localized: "New Agreement") }
 
     /// Status as the store sees it. SendFlowView marks the contract sent while
     /// this workspace is still open, and the local `contract` copy doesn't
@@ -235,7 +235,7 @@ struct ContractWorkspaceView: View {
                     Button("Done") { isEditing = false }
                         .font(.body.weight(.semibold))
                 } else if contract != nil && liveStatus != .signed {
-                    ToolbarPillButton(title: "Send") { showSendFlow = true }
+                    ToolbarPillButton(title: String(localized: "Send")) { showSendFlow = true }
                 } else if contract != nil {
                     StatusBadge(status: .signed)
                 } else {
@@ -361,7 +361,7 @@ struct ContractWorkspaceView: View {
                         HStack(alignment: .bottom, spacing: 10) {
                             if contract != nil {
                                 BarCircleButton(systemImage: "magnifyingglass",
-                                                label: "Search the contract",
+                                                label: String(localized: "Search the contract"),
                                                 size: barHeight,
                                                 action: openSearch)
                                     .transition(.scale.combined(with: .opacity))
@@ -397,7 +397,7 @@ struct ContractWorkspaceView: View {
         // Once there's a document the bar edits it; "Start with" only
         // makes sense before the first draft exists.
         ChatBar(prompt: $aiChatPrompt,
-                placeholder: contract == nil ? "Start with HandShake" : "Edit with HandShake",
+                placeholder: contract == nil ? String(localized: "Start with HandShake") : String(localized: "Edit with HandShake"),
                 onSend: {
             // Re-open panel when user sends a message after dismissing it
             if !inSidePanel && !showAIPanel {
@@ -659,7 +659,7 @@ struct ContractWorkspaceView: View {
                 messages = saved.messages
                 if messages.isEmpty {
                     messages.append(ChatMessage(
-                        content: "Welcome back! Keep editing directly on the contract, or ask me to update it for you.",
+                        content: String(localized: "Welcome back! Keep editing directly on the contract, or ask me to update it for you."),
                         isUser: false
                     ))
                     // Nothing to catch up on: document front and center, the
@@ -686,7 +686,7 @@ struct ContractWorkspaceView: View {
                 contract       = result
                 attributedBody = .fromHandshakeMarkdown(result.content)
                 messages.append(ChatMessage(
-                    content: "Created! Feel free to edit directly on the contract or ask me to update it for you!",
+                    content: String(localized: "Created! Feel free to edit directly on the contract or ask me to update it for you!"),
                     isUser: false
                 ))
                 persist()   // save immediately — a generated contract is a draft (and its reply)
@@ -771,6 +771,7 @@ struct ContractWorkspaceView: View {
             CONVERSATION:
             \(transcript)
 
+            Keep the contract in the language it is written in.
             Apply the user's latest request to the current contract. Return the COMPLETE \
             updated contract in the required format — a TITLE: line, then ---, then the \
             entire body with the change incorporated. Never return only the changed \
@@ -795,7 +796,7 @@ struct ContractWorkspaceView: View {
                     }
                     attributedBody = .fromHandshakeMarkdown(result.content)
                     messages.append(ChatMessage(
-                        content: "Updated! Feel free to keep editing or ask me for more changes.",
+                        content: String(localized: "Updated! Feel free to keep editing or ask me for more changes."),
                         isUser: false
                     ))
                     persist()          // after the append, so the reply is saved too

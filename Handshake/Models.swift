@@ -12,10 +12,10 @@ enum ContractStatus: String, Codable {
 
     var label: String {
         switch self {
-        case .draft:    return "Draft"
-        case .sent:     return "Pending"
-        case .signed:   return "Signed"
-        case .declined: return "Declined"
+        case .draft:    return String(localized: "Draft")
+        case .sent:     return String(localized: "Pending")
+        case .signed:   return String(localized: "Signed")
+        case .declined: return String(localized: "Declined")
         }
     }
 }

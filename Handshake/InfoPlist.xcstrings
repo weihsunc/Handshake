@@ -1,0 +1,144 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSFaceIDUsageDescription": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 使用 Face ID 在你簽署合約前確認是你本人。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 使用 面容 ID 在你签署合同前确认是你本人。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshakeは、契約書に署名する前にFace IDで本人確認を行うために使用します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake는 계약서에 서명하기 전에 Face ID로 본인임을 확인하는 데 사용해요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake usa Face ID para confirmar que eres tú antes de que firmes un contrato."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake utilise Face ID pour confirmer votre identité avant que vous ne signiez un contrat."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake verwendet Face ID, um zu bestätigen, dass du es bist, bevor du einen Vertrag signierst."
+          }
+        }
+      }
+    },
+    "NSSpeechRecognitionUsageDescription": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 會將你說的話轉成你想要的合約描述。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 会将你说的话转成你想要的合同描述。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshakeは、話した内容を希望する契約の説明に変換するために使用します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake는 말씀하신 내용을 원하는 계약의 설명으로 바꾸는 데 사용해요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake convierte lo que dices en la descripción del contrato que quieres."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake transforme ce que vous dites en description du contrat souhaité."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake wandelt deine gesprochenen Worte in die Beschreibung des gewünschten Vertrags um."
+          }
+        }
+      }
+    },
+    "NSMicrophoneUsageDescription": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 會聆聽你的聲音，讓你可以用說的來描述合約，不必打字。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 会聆听你的声音，让你可以用说的来描述合同，不用打字。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshakeは、契約の内容を入力せずに声で伝えられるよう、音声を聞き取ります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake는 계약 내용을 입력하는 대신 말로 설명할 수 있도록 음성을 들어요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake escucha para que puedas describir un contrato en voz alta en lugar de escribirlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake écoute pour que vous puissiez décrire un contrat à voix haute au lieu de le saisir."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake hört zu, damit du einen Vertrag laut beschreiben kannst, statt zu tippen."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

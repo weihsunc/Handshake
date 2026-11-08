@@ -27,15 +27,15 @@ struct ThinkingIndicator: View {
         var stages: [String] {
             switch self {
             case .drafting:
-                return ["Reading your request",
-                        "Looking for similar templates",
-                        "Drafting the clauses",
-                        "Adding signature and date fields",
-                        "Checking the wording"]
+                return [String(localized: "Reading your request"),
+                        String(localized: "Looking for similar templates"),
+                        String(localized: "Drafting the clauses"),
+                        String(localized: "Adding signature and date fields"),
+                        String(localized: "Checking the wording")]
             case .editing:
-                return ["Reading the contract",
-                        "Working on your changes",
-                        "Updating the document"]
+                return [String(localized: "Reading the contract"),
+                        String(localized: "Working on your changes"),
+                        String(localized: "Updating the document")]
             }
         }
     }

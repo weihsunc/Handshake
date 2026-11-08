@@ -14,11 +14,11 @@ enum AIError: Error, LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidResponse:    return "Unexpected response from AI."
-        case .apiError(let c):    return "API error (status \(c)). Check your key in Secrets.swift."
-        case .missingAPIKey:      return "Add your Anthropic API key to Secrets.swift."
-        case .malformedContract:  return "The AI didn't return a usable contract. Try rephrasing your request or sending it again."
-        case .refused:            return "The AI declined this request. Try describing the agreement differently."
+        case .invalidResponse:    return String(localized: "Unexpected response from AI.")
+        case .apiError(let c):    return String(localized: "API error (status \(c)). Check your key in Secrets.swift.")
+        case .missingAPIKey:      return String(localized: "Add your Anthropic API key to Secrets.swift.")
+        case .malformedContract:  return String(localized: "The AI didn't return a usable contract. Try rephrasing your request or sending it again.")
+        case .refused:            return String(localized: "The AI declined this request. Try describing the agreement differently.")
         }
     }
 }
@@ -63,6 +63,7 @@ enum AIService {
             - PROMPT: one sentence, 15-30 words, written as an instruction that could be sent as-is \
               (e.g. "Create a non-disclosure agreement between an employer and a new employee covering \
               confidential information, duration, and exclusions.")
+            - Write TITLE and PROMPT in the same language the user is typing in.
             """,
             message: text,
             maxTokens: 1024,       // Haiku 5.5 thinks by default and thinking counts here
@@ -105,8 +106,19 @@ enum AIService {
               [PARTY ROLE, e.g. LANDLORD]: [FULL NAME]
               [Signature]
               [Date]
+              (In a contract that isn't in English, translate the heading, the role and \
+              the [FULL NAME] placeholder; only [Signature] and [Date] stay in English.)
             - The contract body is the ENTIRE output. Do not add notes, disclaimers, \
               advice, or commentary before or after it.
+
+            Language:
+            - Write the title and the whole contract in the language of the user's request \
+              (a request in Japanese gets a contract in Japanese, and so on).
+            - These markers stay exactly as shown, untranslated, because the app reads them: \
+              "TITLE:", "---", "[Signature]", "[Date]". Everything else, including the \
+              SIGNATURES heading, the role labels and the [bracketed] fill-in fields, is \
+              written in the contract's language. Write role labels in capitals where the \
+              script has capitals, followed by a colon.
 
             Be thorough, professional, and complete.
             """,

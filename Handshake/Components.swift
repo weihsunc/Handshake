@@ -26,7 +26,7 @@ enum ChatAttachment { case photo, file }
 
 struct ChatBar: View {
     @Binding var prompt: String
-    var placeholder: String = "Start with HandShake"
+    var placeholder: String = String(localized: "Start with HandShake")
     var onSend: () -> Void
     /// Reflects whether the text field is focused — drives template visibility in HomeView
     var onFocusChange: ((Bool) -> Void)? = nil
@@ -502,40 +502,40 @@ struct FormattingToolbar: View {
                 HStack(spacing: 2) {
 
                     // ── eSignature — first per design ─────────────────────────
-                    toolBtn("signature", "Add signature box") { onAction(.insertSignature) }
-                    toolBtn("calendar",  "Add date box")      { onAction(.insertDate) }
+                    toolBtn("signature", String(localized: "Add signature box")) { onAction(.insertSignature) }
+                    toolBtn("calendar",  String(localized: "Add date box"))      { onAction(.insertDate) }
 
                     sep
 
                     // ── Text style ────────────────────────────────────────────
-                    toolBtn("bold",      "Bold")      { onAction(.bold) }
-                    toolBtn("italic",    "Italic")    { onAction(.italic) }
-                    toolBtn("underline", "Underline") { onAction(.underline) }
+                    toolBtn("bold",      String(localized: "Bold"))      { onAction(.bold) }
+                    toolBtn("italic",    String(localized: "Italic"))    { onAction(.italic) }
+                    toolBtn("underline", String(localized: "Underline")) { onAction(.underline) }
 
                     sep
 
                     // ── Headings ──────────────────────────────────────────────
-                    labelBtn("H1", "Heading 1") { onAction(.heading1) }
-                    labelBtn("H2", "Heading 2") { onAction(.heading2) }
+                    labelBtn("H1", String(localized: "Heading 1")) { onAction(.heading1) }
+                    labelBtn("H2", String(localized: "Heading 2")) { onAction(.heading2) }
 
                     sep
 
                     // ── Lists ─────────────────────────────────────────────────
-                    toolBtn("list.bullet", "Bulleted list") { onAction(.bulletList) }
-                    toolBtn("list.number", "Numbered list") { onAction(.numberedList) }
+                    toolBtn("list.bullet", String(localized: "Bulleted list")) { onAction(.bulletList) }
+                    toolBtn("list.number", String(localized: "Numbered list")) { onAction(.numberedList) }
 
                     sep
 
                     // ── Alignment ─────────────────────────────────────────────
-                    toolBtn("text.alignleft",   "Align left")   { onAction(.alignLeft) }
-                    toolBtn("text.aligncenter", "Align center") { onAction(.alignCenter) }
-                    toolBtn("text.alignright",  "Align right")  { onAction(.alignRight) }
+                    toolBtn("text.alignleft",   String(localized: "Align left"))   { onAction(.alignLeft) }
+                    toolBtn("text.aligncenter", String(localized: "Align center")) { onAction(.alignCenter) }
+                    toolBtn("text.alignright",  String(localized: "Align right"))  { onAction(.alignRight) }
 
                     sep
 
                     // ── Insert ────────────────────────────────────────────────
-                    toolBtn("photo",     "Insert photo") { onAction(.insertImage) }
-                    toolBtn("paperclip", "Attach file")  { onAction(.insertAttachment) }
+                    toolBtn("photo",     String(localized: "Insert photo")) { onAction(.insertImage) }
+                    toolBtn("paperclip", String(localized: "Attach file"))  { onAction(.insertAttachment) }
                 }
                 .padding(.horizontal, 10)   // Figma: px-[10] inside the pill
             }

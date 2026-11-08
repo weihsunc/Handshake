@@ -54,7 +54,7 @@ final class AccountStore {
             return error.localizedDescription
         case .success(let auth):
             guard let cred = auth.credential as? ASAuthorizationAppleIDCredential else {
-                return "Sign in didn't return an Apple ID."
+                return String(localized: "Sign in didn't return an Apple ID.")
             }
             userID = cred.user
             let full = [cred.fullName?.givenName, cred.fullName?.familyName]

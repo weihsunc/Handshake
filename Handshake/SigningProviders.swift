@@ -38,9 +38,9 @@ enum BackendError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .notConfigured:   return "No backend URL in Secrets.swift."
-        case .http(let c, let m): return "Backend error \(c): \(m)"
-        case .badResponse:     return "Unexpected response from the backend."
+        case .notConfigured:   return String(localized: "No backend URL in Secrets.swift.")
+        case .http(let c, let m): return String(localized: "Backend error \(c): \(m)")
+        case .badResponse:     return String(localized: "Unexpected response from the backend.")
         }
     }
 }

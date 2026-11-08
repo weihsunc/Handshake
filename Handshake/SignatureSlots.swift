@@ -47,7 +47,7 @@ enum SignatureSlots {
             }
         }
         return ranges.enumerated().map { i, r in
-            Slot(role: roleLabel(above: r.location, in: ns) ?? "Party \(i + 1)", range: r)
+            Slot(role: roleLabel(above: r.location, in: ns) ?? String(localized: "Party \(i + 1)"), range: r)
         }
     }
 
@@ -74,11 +74,14 @@ enum SignatureSlots {
     /// 2–40 chars before the first colon; "Signature:" / "Date:" don't match
     /// because they aren't all caps.
     private static func parseRole(_ line: String) -> String? {
-        guard let colon = line.firstIndex(of: ":") else { return nil }
+        // ":" or the full-width "：" Chinese and Japanese contracts use.
+        guard let colon = line.firstIndex(where: { $0 == ":" || $0 == "：" }) else { return nil }
         let head = line[..<colon].trimmingCharacters(in: .whitespaces)
         guard (2...40).contains(head.count),
               head.first?.isLetter == true,
-              head.allSatisfy({ $0.isUppercase || $0.isNumber || " /&'-".contains($0) }),
+              // All caps — or, for scripts without case (CJK), any letters.
+              head.allSatisfy({ $0.isUppercase || ($0.isLetter && !$0.isCased)
+                                || $0.isNumber || " /&'-()（）".contains($0) }),
               head.contains(where: \.isLetter)
         else { return nil }
         // Title-case for display: "SERVICE PROVIDER" → "Service Provider"

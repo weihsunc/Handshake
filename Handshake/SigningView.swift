@@ -246,7 +246,7 @@ struct SigningView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
-                PurplePillButton(title: isSigning ? "Verifying…" : "Sign with \(SignatureService.biometryName)",
+                PurplePillButton(title: isSigning ? String(localized: "Verifying…") : String(localized: "Sign with \(SignatureService.biometryName)"),
                                  fullWidth: true) {
                     Task { await sign() }
                 }
@@ -278,7 +278,7 @@ struct SigningView: View {
 
         do {
             try await SignatureService.authenticate(
-                reason: "Confirm your identity to sign \"\(contract.title)\"."
+                reason: String(localized: "Confirm your identity to sign \"\(contract.title)\".")
             )
         } catch SignatureError.cancelled {
             return                                   // user backed out — no error UI
@@ -308,7 +308,7 @@ struct SigningView: View {
         case .signwell:
             // Path B: Face ID was the unlock. The provider's page does the signing.
             guard let s = contract.providerRef?.signingURLs.first, let url = URL(string: s) else {
-                signError = "No signing link from the provider."
+                signError = String(localized: "No signing link from the provider.")
                 return
             }
             pendingStamp       = stamp
@@ -321,7 +321,7 @@ struct SigningView: View {
 
     /// Copy shown above the button. Under Path A this is what establishes
     /// intent + consent, so it's also sent to the provider as evidence.
-    static let consentText = "By signing you agree to this contract and to doing business electronically."
+    static var consentText: String { String(localized: "By signing you agree to this contract and to doing business electronically.") }
 
     /// Stamp the document, persist, confirm — shared by all three paths.
     private func finishLocally(_ stamp: SignatureStamp, name: String) {
@@ -439,7 +439,7 @@ struct SigningConfirmationView: View {
                             .foregroundStyle(Color.secondaryInk)
                             .padding(.vertical, 6)
                     } else {
-                        PurplePillButton(title: "Done", fullWidth: true) { onDone() }
+                        PurplePillButton(title: String(localized: "Done"), fullWidth: true) { onDone() }
                     }
                 }
                 .padding(.horizontal, 16)
