@@ -77,6 +77,16 @@ struct ContractWorkspaceView: View {
     @State private var isEditing:      Bool                    = false
     @State private var textViewRef:    UITextView?             = nil
 
+    // ── Find in document (phone bottom bar; see DocumentSearch.swift) ─────────
+    @State private var isSearching:    Bool      = false
+    @State private var searchQuery:    String    = ""
+    @State private var searchMatches:  [NSRange] = []
+    @State private var searchIndex:    Int       = 0
+    @FocusState private var searchFocused: Bool
+    /// Height of the compact chat pill (14 + 36 + 14), so the magnifier circle
+    /// and the search bar line up with it at any text size.
+    @ScaledMetric(relativeTo: .body) private var barHeight: CGFloat = 64
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var hSizeClass
 
@@ -140,6 +150,27 @@ struct ContractWorkspaceView: View {
                     aiPanel
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                         .zIndex(1)
+                }
+
+                // ── 1.5: Fade under the bar when no panel is behind it ─────────
+                // Without it the document's text ran straight through the
+                // translucent pill (and the search bar), and both read as
+                // overprinted. The panel's own cover does this job when it's up.
+                if !usesSidePanel && !showAIPanel && contract != nil {
+                    LinearGradient(colors: [Color.pageBackground.opacity(0),
+                                            Color.pageBackground.opacity(0.92),
+                                            Color.pageBackground],
+                                   startPoint: .top, endPoint: .bottom)
+                        .frame(height: Self.chatBarH + 36)
+                        // Solid below the gradient, so the home-indicator strip
+                        // is covered too (drawn past the frame; it doesn't
+                        // move with the keyboard the way ignoresSafeArea does).
+                        .background(alignment: .bottom) {
+                            Color.pageBackground.frame(height: 80).offset(y: 80)
+                        }
+                        .allowsHitTesting(false)
+                        .transition(.opacity)
+                        .zIndex(1.5)
                 }
 
                 // ── 2: Hero ChatBar — always on top, never moves ───────────────
@@ -289,6 +320,8 @@ struct ContractWorkspaceView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .onChange(of: isEditing) { _, editing in
+            // Tapping into the document to type ends the search.
+            if editing && isSearching { closeSearch() }
             if !editing {
                 textViewRef?.resignFirstResponder()
                 persist()   // auto-save manual edits when leaving edit mode
@@ -312,8 +345,33 @@ struct ContractWorkspaceView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if !usesSidePanel {
                 // iPad keeps its chat bar in the side panel.
-                chatBar(inSidePanel: false)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                Group {
+                    if isSearching {
+                        DocumentSearchBar(query: $searchQuery,
+                                          focus: $searchFocused,
+                                          matchCount: searchMatches.count,
+                                          current: searchMatches.isEmpty ? nil : searchIndex,
+                                          height: barHeight,
+                                          onPrevious: { stepSearch(-1) },
+                                          onNext: { stepSearch(1) },
+                                          onClose: closeSearch)
+                    } else {
+                        // Bottom-aligned so the circle stays level with the
+                        // pill's bottom row when the prompt grows into a card.
+                        HStack(alignment: .bottom, spacing: 10) {
+                            if contract != nil {
+                                BarCircleButton(systemImage: "magnifyingglass",
+                                                label: "Search the contract",
+                                                size: barHeight,
+                                                action: openSearch)
+                                    .transition(.scale.combined(with: .opacity))
+                            }
+                            chatBar(inSidePanel: false)
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         // The ZStack already respects the bottom safe area; this is only the
@@ -321,6 +379,14 @@ struct ContractWorkspaceView: View {
         .padding(.bottom, 8)
         .readableColumn(Layout.readableWidth + 32)
         .animation(.easeInOut(duration: 0.22), value: isEditing)
+        .animation(.spring(response: 0.34, dampingFraction: 0.86), value: isSearching)
+        .onChange(of: searchQuery) { _, _ in runSearch() }
+        // An AI revision swaps the text out from under the highlights; redo
+        // them once the editor has the new text.
+        .onChange(of: contract?.content) { _, _ in
+            guard isSearching else { return }
+            DispatchQueue.main.async { runSearch(reveal: false) }
+        }
         // No background — transparent outside the pill
     }
 
@@ -359,7 +425,46 @@ struct ContractWorkspaceView: View {
             case .file:  showDocumentPicker = true
             }
         })
-        .padding(.horizontal, 16)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Find in document
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private func openSearch() {
+        isSearching = true
+        // The conversation covers half the page; searching is about the page.
+        withAnimation(.spring(response: 0.38, dampingFraction: 0.8)) { showAIPanel = false }
+        searchFocused = true
+    }
+
+    private func closeSearch() {
+        searchFocused = false
+        isSearching   = false
+        searchQuery   = ""
+        searchMatches = []
+        searchIndex   = 0
+        if let tv = textViewRef { DocumentSearch.clear(tv) }
+    }
+
+    private func runSearch(reveal: Bool = true) {
+        guard isSearching else { return }
+        searchMatches = DocumentSearch.matches(for: searchQuery, in: attributedBody)
+        searchIndex   = 0
+        applySearch(reveal: reveal)
+    }
+
+    private func stepSearch(_ delta: Int) {
+        guard !searchMatches.isEmpty else { return }
+        searchIndex = (searchIndex + delta + searchMatches.count) % searchMatches.count
+        applySearch(reveal: true)
+    }
+
+    private func applySearch(reveal: Bool) {
+        guard let tv = textViewRef else { return }
+        let current = searchMatches.isEmpty ? nil : searchIndex
+        DocumentSearch.decorate(tv, matches: searchMatches, current: current)
+        if reveal, let c = current { DocumentSearch.reveal(searchMatches[c], in: tv) }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -370,6 +475,7 @@ struct ContractWorkspaceView: View {
         VStack(spacing: 0) {
             messageList(asSheet: false)
             chatBar(inSidePanel: true)
+                .padding(.horizontal, 16)
                 .padding(.top, 4)
                 .padding(.bottom, 8)
         }
