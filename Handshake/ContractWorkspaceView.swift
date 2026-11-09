@@ -262,7 +262,11 @@ struct ContractWorkspaceView: View {
         // save this screen's older text over it.
         .navigationDestination(isPresented: $showSendFlow) {
             if let c = contract {
-                SendFlowView(contract: c, onClose: reloadFromStore)
+                // Done on the Sent page closes the contract altogether. The
+                // stored copy is picked up first, so the persist() on the way
+                // out can't write older text over what was just sent.
+                SendFlowView(contract: c, onClose: reloadFromStore,
+                             onDone: { reloadFromStore(); dismiss() })
             }
         }
         // System pickers, owned by SwiftUI. The old UIKit bridges sat inside a

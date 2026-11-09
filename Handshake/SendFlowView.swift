@@ -28,6 +28,9 @@ struct SendFlowView: View {
     let contract: GeneratedContract
     /// Called when the page goes away, after any typed blanks are saved.
     var onClose: () -> Void = {}
+    /// Done on the Sent page: finished with this contract, close it.
+    var onDone: () -> Void = {}
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
 
     /// Signature boxes on the unsigned document, and whose they are.
@@ -72,13 +75,17 @@ struct SendFlowView: View {
     /// Shared this round, unconfirmed: "Not yet" on "Did you send it?" puts
     /// these back to not sent.
     @State private var roundShared: [UUID] = []
+    /// How many timeline steps have come in on the Sent page.
+    @State private var revealedSteps = 0
 
     private static let replyToKey = "send.replyTo"
     private static let myNameKey  = "send.myName"
 
-    init(contract: GeneratedContract, onClose: @escaping () -> Void = {}) {
+    init(contract: GeneratedContract, onClose: @escaping () -> Void = {},
+         onDone: @escaping () -> Void = {}) {
         self.contract = contract
         self.onClose  = onClose
+        self.onDone   = onDone
         let stored = ContractStore.shared.contract(id: contract.id) ?? contract
         let base   = stored.baseBody()
         let found  = SignatureSlots.find(in: base)
@@ -497,16 +504,17 @@ struct SendFlowView: View {
     // MARK: - Sent
     // ─────────────────────────────────────────────────────────────────────────
 
-    /// The step after sending: it went out, to whom and how, and what
-    /// happens next. Anyone whose message was cancelled can be sent again
-    /// from here.
+    /// The step after sending, told as one timeline: you signed, the link
+    /// went to each person, they sign, the copy comes back. Done closes the
+    /// contract; View Contract goes back to it. Anyone whose message was
+    /// cancelled can be sent again from their step.
     private var sentPage: some View {
-        let rs = finalRecipients
+        let steps = sentSteps
         return ScrollView {
-            VStack(spacing: 12) {
-                VStack(spacing: 10) {
-                    CheckDoodle(size: 96)
-                        .padding(.bottom, 4)
+            VStack(spacing: 0) {
+                VStack(spacing: 8) {
+                    PaperPlaneDoodle(size: 84)
+                        .padding(.bottom, 6)
                     Text("Sent for Signing")
                         .font(.title2.weight(.bold))
                         .foregroundStyle(Color.primaryInk)
@@ -517,109 +525,167 @@ struct SendFlowView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 32)
-                .padding(.vertical, 20)
+                .padding(.top, 24)
+                .padding(.bottom, 32)
 
-                SendCard(header: rs.count == 1 ? String(localized: "Recipient")
-                                               : String(localized: "Recipients")) {
-                    ForEach(Array(rs.enumerated()), id: \.element.id) { i, r in
-                        if i > 0 { Divider().padding(.leading, 48) }
-                        sentRow(r)
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(steps.enumerated()), id: \.offset) { i, step in
+                        timelineRow(step, isLast: i == steps.count - 1)
+                            .opacity(revealedSteps > i ? 1 : 0)
+                            .offset(y: revealedSteps > i ? 0 : 6)
                     }
-                } footer: { EmptyView() }
-
-                if let own = ownSignature {
-                    SendCard(header: String(localized: "You")) {
-                        CardRow(icon: "signature") {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text((own.role ?? "").isEmpty ? String(localized: "Signed")
-                                                              : String(localized: "Signed as \(own.role ?? "")"))
-                                Text(verbatim: "\(own.method ?? SignatureService.biometryName) · \(own.signedAt.formatted(date: .omitted, time: .shortened))")
-                                    .font(.footnote)
-                                    .foregroundStyle(Color.secondaryInk)
-                            }
-                            Spacer(minLength: 0)
-                            Image(systemName: "checkmark.seal.fill")
-                                .foregroundStyle(Color.accent)
-                        }
-                    } footer: { EmptyView() }
                 }
+                .padding(.horizontal, 28)
 
-                SendCard(header: String(localized: "What happens next")) {
-                    VStack(alignment: .leading, spacing: 14) {
-                        nextStep(1, String(localized: "Each recipient opens their link in Handshake and signs."))
-                        nextStep(2, replyAddress.map { String(localized: "Their signed copy comes back to \($0). Opening it updates this contract.") }
-                                    ?? String(localized: "They send their signed copy back to you. Opening it updates this contract."))
-                        nextStep(3, String(localized: "Until everyone has signed, it's under Pending Signature in Contracts."))
-                    }
-                    .padding(16)
-                } footer: { EmptyView() }
-            }
-            .padding(.bottom, 40)
-            .readableColumn(Layout.readableWidth + 32)
-        }
-        .background(Color.pageBackground.ignoresSafeArea())
-        .navigationTitle(Text(verbatim: ""))
-        .navigationBarTitleDisplayMode(.inline)
-        // Sent is sent: no way back into the form, only on to the document.
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                ToolbarPillButton(title: String(localized: "Done")) { dismiss() }
-            }
-        }
-    }
-
-    private var replyAddress: String? {
-        let r = replyTo.trimmingCharacters(in: .whitespaces)
-        return r.isEmpty ? nil : r
-    }
-
-    private func sentRow(_ r: Recipient) -> some View {
-        let outcome = outcomes[r.id] ?? .notSent
-        let how: String
-        switch outcome {
-        case .messages(let phone): how = String(localized: "Sent by Messages to \(phone)")
-        case .mail(let email):     how = String(localized: "Sent by Mail to \(email)")
-        case .shared:              how = String(localized: "Link shared")
-        case .notSent:             how = String(localized: "Not sent")
-        }
-        let detail = [r.partyRole, how].compactMap { $0 }.joined(separator: " · ")
-        return HStack(spacing: 12) {
-            Image(systemName: outcome == .notSent ? "exclamationmark.circle" : "checkmark.circle")
-                .font(.subheadline)
-                .foregroundStyle(outcome == .notSent ? Color.orange : Color.statusSigned)
-                .frame(width: 20)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(r.name)
-                    .foregroundStyle(Color.primaryInk)
-                Text(detail)
+                Text("It's under Pending Signature in Contracts until everyone has signed.")
                     .font(.footnote)
-                    .foregroundStyle(outcome == .notSent ? Color.orange : Color.secondaryInk)
+                    .foregroundStyle(Color.secondaryInk)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    // In line with the steps' text, past the markers.
+                    .padding(.leading, 28 + 20 + 14)
+                    .padding(.trailing, 28)
+                    .padding(.top, 20)
+                    .opacity(revealedSteps >= steps.count ? 1 : 0)
             }
+            .padding(.bottom, 24)
+            .readableColumn()
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .background(Color.pageBackground.ignoresSafeArea())
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 4) {
+                PrimaryPillButton(title: String(localized: "Done"), fullWidth: true) { onDone() }
+                Button(String(localized: "View Contract")) { dismiss() }
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(Color.accent)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 8)
+            .readableColumn()
+            .background(Color.pageBackground)
+        }
+        .toolbar(.hidden, for: .navigationBar)
+        // Sent is sent: no way back into the form, only on.
+        .navigationBarBackButtonHidden(true)
+        .onAppear { revealSteps(steps.count) }
+    }
+
+    private enum StepState { case done, waiting, problem }
+    private struct SentStep {
+        var state: StepState
+        var title: String
+        var detail: String?
+        /// A recipient whose message didn't go: their step offers Send.
+        var resend: Recipient? = nil
+    }
+
+    private var sentSteps: [SentStep] {
+        let rs = finalRecipients
+        var steps: [SentStep] = []
+        if let own = ownSignature {
+            let role = own.role ?? ""
+            steps.append(SentStep(
+                state: .done,
+                title: role.isEmpty ? String(localized: "You signed") : String(localized: "You signed as \(role)"),
+                detail: "\(own.method ?? SignatureService.biometryName) · \(own.signedAt.formatted(date: .omitted, time: .shortened))"))
+        }
+        for r in rs {
+            let outcome = outcomes[r.id] ?? .notSent
+            let how: String
+            switch outcome {
+            case .messages: how = String(localized: "Messages")
+            case .mail:     how = String(localized: "Mail")
+            case .shared:   how = String(localized: "Link shared")
+            case .notSent:  how = String(localized: "Not sent")
+            }
+            let detail = [r.partyRole, how].compactMap { $0 }.joined(separator: " · ")
+            steps.append(outcome == .notSent
+                ? SentStep(state: .problem, title: String(localized: "Not sent to \(r.name)"), detail: detail, resend: r)
+                : SentStep(state: .done,    title: String(localized: "Sent to \(r.name)"),     detail: detail))
+        }
+        let delivered = rs.filter { (outcomes[$0.id] ?? .notSent) != .notSent }
+        if delivered.count == 1 {
+            steps.append(SentStep(state: .waiting, title: String(localized: "\(delivered[0].name) signs"),
+                                  detail: String(localized: "Waiting")))
+        } else if delivered.count > 1 {
+            steps.append(SentStep(state: .waiting, title: String(localized: "Everyone signs"),
+                                  detail: delivered.map(\.name).formatted(.list(type: .and))))
+        }
+        steps.append(SentStep(state: .waiting, title: String(localized: "Signed copy comes back"),
+                              detail: replyAddress.map { String(localized: "To \($0)") } ?? String(localized: "To you")))
+        return steps
+    }
+
+    private func timelineRow(_ step: SentStep, isLast: Bool) -> some View {
+        HStack(alignment: .top, spacing: 14) {
+            VStack(spacing: 0) {
+                stepMarker(step.state)
+                if !isLast {
+                    Rectangle()
+                        .fill(Color(.separator))
+                        .frame(width: 1.5)
+                        .frame(maxHeight: .infinity)
+                        .padding(.vertical, 3)
+                }
+            }
+            .frame(width: 20)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(step.title)
+                    .font(.body)
+                    .foregroundStyle(step.state == .waiting ? Color.secondaryInk : Color.primaryInk)
+                if let d = step.detail {
+                    Text(d)
+                        .font(.footnote)
+                        .foregroundStyle(step.state == .problem ? Color.orange : Color.secondaryInk)
+                }
+            }
+            .padding(.bottom, isLast ? 0 : 22)
             Spacer(minLength: 8)
-            if outcome == .notSent {
+            if let r = step.resend {
                 Button(String(localized: "Send")) { deliver([r]) }
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.accent)
                     .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .fixedSize(horizontal: false, vertical: true)
     }
 
-    private func nextStep(_ n: Int, _ text: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text(verbatim: "\(n)")
-                .font(.footnote.weight(.semibold).monospacedDigit())
-                .foregroundStyle(Color.secondaryInk)
+    @ViewBuilder
+    private func stepMarker(_ state: StepState) -> some View {
+        switch state {
+        case .done:
+            Image(systemName: "checkmark")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(Color.onInk)
                 .frame(width: 20, height: 20)
-                .background(Color.cardFill, in: Circle())
-            Text(text)
-                .font(.subheadline)
-                .foregroundStyle(Color.primaryInk)
-                .fixedSize(horizontal: false, vertical: true)
+                .background(Color.ink, in: Circle())
+        case .waiting:
+            Circle()
+                .strokeBorder(Color(.tertiaryLabel), lineWidth: 1.5)
+                .frame(width: 20, height: 20)
+        case .problem:
+            Image(systemName: "exclamationmark")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(width: 20, height: 20)
+                .background(Color.orange, in: Circle())
         }
+    }
+
+    /// The steps come in one after another once the plane is drawn.
+    private func revealSteps(_ n: Int) {
+        guard revealedSteps == 0 else { return }
+        if reduceMotion { revealedSteps = n; return }
+        for i in 1...n {
+            withAnimation(.easeOut(duration: 0.3).delay(0.9 + Double(i) * 0.12)) { revealedSteps = i }
+        }
+    }
+
+    private var replyAddress: String? {
+        let r = replyTo.trimmingCharacters(in: .whitespaces)
+        return r.isEmpty ? nil : r
     }
 
     private var replyCard: some View {
