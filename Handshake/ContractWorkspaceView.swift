@@ -43,6 +43,8 @@ struct ContractWorkspaceView: View {
     /// phone sheet's state (editing hides it; that shouldn't close the side).
     @State private var showSidePanel:     Bool  = true
     @State private var showSendFlow:      Bool  = false
+    /// The phone's chat bar has focus: it opens full width (search steps aside).
+    @State private var chatBarFocused:    Bool  = false
     @State private var showImagePicker:   Bool  = false
     @State private var pickedPhoto: PhotosPickerItem? = nil
     @State private var showDocumentPicker: Bool = false
@@ -149,9 +151,16 @@ struct ContractWorkspaceView: View {
                 }
 
                 // ── 1: Custom draggable AI panel ───────────────────────────────
-                if showAIPanel && !usesSidePanel {
+                // Always in the tree, slid below the screen when closed. As an
+                // inserted view its .move transition never ran on open — the
+                // panel popped in at full height (closing animated fine) — so
+                // tapping the bar didn't read as "this is where that goes".
+                // An offset animates both ways, rising out from behind the bar.
+                if !usesSidePanel {
                     aiPanel
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .offset(y: showAIPanel ? 0 : clampedPanelHeight + Self.chatBarH + 120)
+                        .allowsHitTesting(showAIPanel)
+                        .accessibilityHidden(!showAIPanel)
                         .zIndex(1)
                 }
 
@@ -367,7 +376,7 @@ struct ContractWorkspaceView: View {
                         // The circle steps aside once there's a prompt, so
                         // the text gets the full width while it's written.
                         HStack(alignment: .bottom, spacing: 10) {
-                            if contract != nil && aiChatPrompt.isEmpty {
+                            if contract != nil && aiChatPrompt.isEmpty && !chatBarFocused {
                                 BarCircleButton(systemImage: "magnifyingglass",
                                                 label: String(localized: "Search the contract"),
                                                 size: barHeight,
@@ -389,6 +398,7 @@ struct ContractWorkspaceView: View {
         .animation(.easeInOut(duration: 0.22), value: isEditing)
         .animation(.spring(response: 0.34, dampingFraction: 0.86), value: isSearching)
         .animation(.spring(response: 0.34, dampingFraction: 0.86), value: aiChatPrompt.isEmpty)
+        .animation(.spring(response: 0.34, dampingFraction: 0.86), value: chatBarFocused)
         .onChange(of: searchQuery) { _, _ in runSearch() }
         // An AI revision swaps the text out from under the highlights; redo
         // them once the editor has the new text.
@@ -419,11 +429,19 @@ struct ContractWorkspaceView: View {
         }, onFocusChange: inSidePanel ? nil : { focused in
             // Tapping into the bar is the ask to talk — bring the
             // conversation up at medium, over the keyboard, instead of
-            // waiting for the first message to be sent.
-            if focused && !showAIPanel && contract != nil {
-                withAnimation(.spring(response: 0.38, dampingFraction: 0.8)) {
-                    detent      = .medium
-                    showAIPanel = true
+            // waiting for the first message to be sent. It slides up out of
+            // the bar while the bar opens to full width, so the two read as
+            // one thing. Next run loop: the focus change arrives inside
+            // UIKit's own update, which swallowed the animation and made the
+            // panel pop in.
+            let opensPanel = focused && !showAIPanel && contract != nil
+            DispatchQueue.main.async {
+                withAnimation(.spring(response: 0.42, dampingFraction: 0.86)) {
+                    chatBarFocused = focused
+                    if opensPanel {
+                        detent      = .medium
+                        showAIPanel = true
+                    }
                 }
             }
         }, onAttach: contract == nil ? nil : { kind in
@@ -433,7 +451,7 @@ struct ContractWorkspaceView: View {
             case .photo: showImagePicker    = true
             case .file:  showDocumentPicker = true
             }
-        })
+        }, expandsOnFocus: !inSidePanel && contract != nil)
     }
 
     // ─────────────────────────────────────────────────────────────────────────

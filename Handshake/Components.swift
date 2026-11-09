@@ -33,6 +33,10 @@ struct ChatBar: View {
     /// nil hides "+". Both icons were inert images before; a new user taps
     /// the mic first and expects something to happen.
     var onAttach: ((ChatAttachment) -> Void)? = nil
+    /// Open into the card (text on top, buttons below) as soon as it's
+    /// tapped, not only once the text wraps. The contract screen uses it:
+    /// tapping the bar there is the start of a message.
+    var expandsOnFocus: Bool = false
 
     @FocusState private var isFocused: Bool
     @State private var speech = SpeechInput()
@@ -51,7 +55,7 @@ struct ChatBar: View {
 
     /// Expand the moment the text no longer fits on one line (or has a
     /// newline). The card then grows line by line with the text.
-    private var isExpanded: Bool { wraps || prompt.contains("\n") }
+    private var isExpanded: Bool { wraps || prompt.contains("\n") || (expandsOnFocus && isFocused) }
 
     @Namespace private var ns
 
@@ -226,8 +230,13 @@ struct ChatBar: View {
                 .clipShape(Circle())
         }
         .buttonStyle(.plain)
+        // The card can be open with nothing typed yet (expandsOnFocus).
+        .disabled(isEmpty)
+        .opacity(isEmpty ? 0.35 : 1)
         .accessibilityLabel("Send")
     }
+
+    private var isEmpty: Bool { prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
