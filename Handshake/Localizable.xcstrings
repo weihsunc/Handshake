@@ -921,6 +921,52 @@
         }
       }
     },
+    "Add a name, and an email or phone number, for each recipient.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請為每位收件人填寫姓名，以及電子郵件或電話號碼。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请为每位收件人填写姓名，以及电子邮件或电话号码。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "各受信者の氏名と、メールアドレスまたは電話番号を入力してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "각 수신자의 이름과 이메일 또는 전화번호를 입력하세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añade un nombre y un correo o teléfono para cada destinatario."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indiquez un nom et une adresse e-mail ou un numéro de téléphone pour chaque destinataire."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib für jeden Empfänger einen Namen und eine E-Mail-Adresse oder Telefonnummer an."
+          }
+        }
+      }
+    },
     "Add date box": {
       "localizations": {
         "zh-Hant": {
@@ -3815,6 +3861,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Arbeitsvertrag"
+          }
+        }
+      }
+    },
+    "Enter your full name to sign.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請輸入你的全名以簽署。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请输入你的全名以签署。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名するにはフルネームを入力してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명하려면 전체 이름을 입력하세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe tu nombre completo para firmar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez votre nom complet pour signer."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib deinen vollständigen Namen ein, um zu signieren."
           }
         }
       }

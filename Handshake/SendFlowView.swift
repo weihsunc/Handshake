@@ -45,6 +45,9 @@ struct SendFlowView: View {
     @State private var sharedSomething = false
     @State private var askedAboutShare = false
     @State private var askedAboutBlanks = false
+    /// Problems stay hidden until the sender taps Send; from then on they
+    /// update live and disappear as each is fixed.
+    @State private var triedToSend = false
     @State private var providerError: String? = nil
     @State private var signError: String? = nil
     @State private var isSigning = false
@@ -184,9 +187,15 @@ struct SendFlowView: View {
          !r.phone.trimmingCharacters(in: .whitespaces).isEmpty)
     }
 
-    /// Why Send is off, when it's something the sender has to change.
+    /// What has to change before it can go out. Shown after a Send tap.
     private var problems: [String] {
         var out: [String] = []
+        if !recipients.allSatisfy(Self.isComplete) {
+            out.append(String(localized: "Add a name, and an email or phone number, for each recipient."))
+        }
+        if mySlot != nil && myName.trimmingCharacters(in: .whitespaces).isEmpty {
+            out.append(String(localized: "Enter your full name to sign."))
+        }
         if !slots.isEmpty && recipients.count > slots.count {
             out.append(String(localized: "This contract has \(slots.count) signature boxes, one per signer. Remove a recipient, or add a box for them."))
         }
@@ -200,11 +209,7 @@ struct SendFlowView: View {
         return out
     }
 
-    private var canSend: Bool {
-        !recipients.isEmpty && recipients.allSatisfy(Self.isComplete) && problems.isEmpty
-            && (mySlot == nil || !myName.trimmingCharacters(in: .whitespaces).isEmpty)
-            && !isSigning
-    }
+    private var canSend: Bool { !recipients.isEmpty && problems.isEmpty }
 
     // ─────────────────────────────────────────────────────────────────────────
     // MARK: - Body
@@ -212,13 +217,10 @@ struct SendFlowView: View {
 
     var body: some View {
         NavigationStack {
+          ScrollViewReader { scroller in
             ScrollView {
                 VStack(spacing: 12) {
                     if !blanks.isEmpty { blanksCard }
-
-                    // The sender's own party first: who they are decides
-                    // what's left for everyone else.
-                    if !slots.isEmpty { youCard }
 
                     ForEach($recipients) { $recipient in
                         RecipientCard(
@@ -240,13 +242,21 @@ struct SendFlowView: View {
                     .buttonStyle(.plain)
                     .padding(.horizontal, 16)
 
-                    ForEach(problems, id: \.self) { p in
-                        Label(p, systemImage: "exclamationmark.circle")
-                            .font(.footnote)
-                            .foregroundStyle(Color.statusDeclined)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 16)
+                    if triedToSend && !problems.isEmpty {
+                        VStack(spacing: 6) {
+                            ForEach(problems, id: \.self) { p in
+                                Label(p, systemImage: "exclamationmark.circle")
+                                    .font(.footnote)
+                                    .foregroundStyle(Color.statusDeclined)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .id("problems")
+                        .transition(.opacity)
                     }
+
+                    if !slots.isEmpty { youCard }
 
                     replyCard
                 }
@@ -263,13 +273,24 @@ struct SendFlowView: View {
                         .foregroundStyle(Color(.label))
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
+                    // Not disabled for missing details: tapping says what's
+                    // missing instead of leaving a grey button to puzzle over.
                     ToolbarPillButton(title: mySlot == nil ? String(localized: "Send")
                                                            : String(localized: "Sign & Send")) {
+                        guard canSend else {
+                            withAnimation(.easeOut(duration: 0.2)) { triedToSend = true }
+                            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                            DispatchQueue.main.async {
+                                withAnimation { scroller.scrollTo("problems", anchor: .center) }
+                            }
+                            return
+                        }
                         startSend()
                     }
-                    .disabled(!canSend)
+                    .disabled(isSigning)
                 }
             }
+          }
         }
         .sheet(item: $activeSheet) { d in deliverySheet(d) }
         .alert("Couldn't register with the signing provider",
