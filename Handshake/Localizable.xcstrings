@@ -599,6 +599,52 @@
         }
       }
     },
+    "%lld blanks filled in, highlighted below": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已填寫 %lld 個空格，已在下方標示"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已填写 %lld 个空格，已在下方标示"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 件の空欄を記入しました（下でハイライト）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빈칸 %lld개를 채웠습니다. 아래에 강조 표시됨"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld espacios rellenados, resaltados abajo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld blancs remplis, surlignés ci-dessous"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Lücken ausgefüllt, unten markiert"
+          }
+        }
+      }
+    },
     "%lld blanks to fill in": {
       "localizations": {
         "zh-Hant": {
@@ -733,6 +779,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld von %lld signiert"
+          }
+        }
+      }
+    },
+    "1 blank filled in, highlighted below": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已填寫 1 個空格，已在下方標示"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已填写 1 个空格，已在下方标示"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 件の空欄を記入しました（下でハイライト）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빈칸 1개를 채웠습니다. 아래에 강조 표시됨"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 espacio rellenado, resaltado abajo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 blanc rempli, surligné ci-dessous"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Lücke ausgefüllt, unten markiert"
           }
         }
       }
@@ -2803,6 +2895,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Beratungsvertrag"
+          }
+        }
+      }
+    },
+    "Contract updated": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合約已更新"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合同已更新"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "契約書を更新しました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "계약이 업데이트됨"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contrato actualizado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contrat mis à jour"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertrag aktualisiert"
           }
         }
       }

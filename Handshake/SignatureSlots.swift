@@ -106,6 +106,37 @@ enum SignatureSlots {
         return changed
     }
 
+    /// Like `fill`, but returns where each value ended up — in the finished
+    /// text, document order — so the workspace can highlight what changed.
+    /// Every appearance is collected first and replaced from the end, so no
+    /// replacement moves one still to come.
+    static func fillTracking(_ values: [String: String], in doc: NSMutableAttributedString) -> [NSRange] {
+        let ns = doc.string as NSString
+        var hits: [(range: NSRange, value: String)] = []
+        for (blank, value) in values {
+            let v = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !v.isEmpty, v != blank else { continue }
+            var r = ns.range(of: blank)
+            while r.location != NSNotFound {
+                hits.append((r, v))
+                let from = r.location + r.length
+                r = ns.range(of: blank, options: [], range: NSRange(location: from, length: ns.length - from))
+            }
+        }
+        hits.sort { $0.range.location < $1.range.location }
+        for h in hits.reversed() {
+            let attrs = doc.attributes(at: h.range.location, effectiveRange: nil)
+            doc.replaceCharacters(in: h.range, with: NSAttributedString(string: h.value, attributes: attrs))
+        }
+        var shift = 0, out: [NSRange] = []
+        for h in hits {
+            let len = (h.value as NSString).length
+            out.append(NSRange(location: h.range.location + shift, length: len))
+            shift += len - h.range.length
+        }
+        return out
+    }
+
     /// Which party a name blank belongs to: "[FREELANCER FULL NAME]",
     /// "[CLIENT NAME]", "[客戶姓名]" → that party's box. Only blanks asking
     /// for a person's name — not "[CLIENT ADDRESS]" or "[CLIENT COMPANY NAME]".

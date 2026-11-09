@@ -30,6 +30,9 @@ struct SendFlowView: View {
     var onClose: () -> Void = {}
     /// Done on the Sent page: finished with this contract, close it.
     var onDone: () -> Void = {}
+    /// Blanks were filled in from the form: where the new text sits, and how
+    /// many blanks. The workspace takes the sender back to show them.
+    var onBlanksFilled: (_ ranges: [NSRange], _ count: Int) -> Void = { _, _ in }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
 
@@ -90,10 +93,12 @@ struct SendFlowView: View {
     private static let myNameKey  = "send.myName"
 
     init(contract: GeneratedContract, onClose: @escaping () -> Void = {},
-         onDone: @escaping () -> Void = {}) {
+         onDone: @escaping () -> Void = {},
+         onBlanksFilled: @escaping ([NSRange], Int) -> Void = { _, _ in }) {
         self.contract = contract
         self.onClose  = onClose
         self.onDone   = onDone
+        self.onBlanksFilled = onBlanksFilled
         let stored = ContractStore.shared.contract(id: contract.id) ?? contract
         let base   = stored.baseBody()
         let found  = SignatureSlots.find(in: base)
@@ -443,7 +448,7 @@ struct SendFlowView: View {
         } message: {
             Text("Recipients will see \(blanksSummary) as they are.")
         }
-        .sheet(isPresented: $showFillBlanks) {
+        .sheet(isPresented: $showFillBlanks, onDismiss: blanksFormClosed) {
             FillBlanksSheet(blanks: blanks, context: blankContext,
                             auto: autoValues, values: $blankValues)
         }
@@ -452,6 +457,7 @@ struct SendFlowView: View {
         // After a send this is a no-op: send() already applied them.
         .onDisappear {
             applyBlanks(includeAuto: false)
+            saveDraftSigners()
             onClose()
         }
     }
@@ -483,18 +489,49 @@ struct SendFlowView: View {
     /// Writes the filled blanks into the stored document. `includeAuto`:
     /// also the names taken from this screen (only when actually sending —
     /// on leaving the page they may not be final).
-    private func applyBlanks(includeAuto: Bool) {
+    /// Returns where the values went (empty: nothing changed) and how many
+    /// blanks were filled.
+    @discardableResult
+    private func applyBlanks(includeAuto: Bool) -> (ranges: [NSRange], count: Int) {
         var fills: [String: String] = [:]
         for b in blanks {
             let v = (blankValues[b] ?? (includeAuto ? autoValues[b] : nil) ?? "")
             if !v.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { fills[b] = v }
         }
-        guard !fills.isEmpty, let stored = ContractStore.shared.contract(id: contract.id) else { return }
+        guard !fills.isEmpty, let stored = ContractStore.shared.contract(id: contract.id) else { return ([], 0) }
         let body = stored.baseBody()
-        guard SignatureSlots.fill(fills, in: body) else { return }
+        let ranges = SignatureSlots.fillTracking(fills, in: body)
+        guard !ranges.isEmpty else { return ([], 0) }
         ContractStore.shared.update(id: contract.id) { $0.setBody(body) }
         blanks = SignatureSlots.blanks(in: body)
+        blankContext = Self.contexts(of: blanks, in: body)
         blankValues = blankValues.filter { blanks.contains($0.key) }
+        return (ranges, fills.count)
+    }
+
+    /// The fill-in form closed. Anything typed goes into the contract now,
+    /// and the sender is taken back to it to see the changes.
+    private func blanksFormClosed() {
+        let (ranges, count) = applyBlanks(includeAuto: false)
+        guard !ranges.isEmpty else { return }
+        onBlanksFilled(ranges, count)
+    }
+
+    /// Who signs what, kept with the draft when the page is left without
+    /// sending — so coming back (after filling blanks, say) starts from it.
+    private func saveDraftSigners() {
+        guard !showSent else { return }
+        let rs = finalRecipients
+        let role: String? = slots.isEmpty ? nil : (mySlot.map { slots[$0].role } ?? "")
+        ContractStore.shared.update(id: contract.id) { c in
+            guard c.status == .draft else { return }
+            c.recipients = rs
+            if let role { c.senderRole = role }
+        }
+        let name = myName.trimmingCharacters(in: .whitespaces)
+        if !name.isEmpty { UserDefaults.standard.set(name, forKey: Self.myNameKey) }
+        let reply = replyTo.trimmingCharacters(in: .whitespaces)
+        UserDefaults.standard.set(reply.isEmpty ? nil : reply, forKey: Self.replyToKey)
     }
 
     // ─────────────────────────────────────────────────────────────────────────

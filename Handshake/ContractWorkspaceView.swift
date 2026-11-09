@@ -81,6 +81,12 @@ struct ContractWorkspaceView: View {
     @State private var attributedBody: NSMutableAttributedString = NSMutableAttributedString()
     @State private var editorHeight:   CGFloat                 = 300
     @State private var isEditing:      Bool                    = false
+    /// Blanks just filled on the send page: where the new text sits, waiting
+    /// to be highlighted once the document is back on screen.
+    @State private var filledRanges:   [NSRange]               = []
+    /// "Contract updated · N blanks filled in", shown after that.
+    @State private var filledToast:    Int?                    = nil
+    @State private var toastGeneration                         = 0
     @State private var textViewRef:    UITextView?             = nil
 
     // ── Find in document (phone bottom bar; see DocumentSearch.swift) ─────────
@@ -256,6 +262,12 @@ struct ContractWorkspaceView: View {
                 }
             }
         }
+        .overlay(alignment: .top) {
+            if let n = filledToast, !showSendFlow, filledRanges.isEmpty == false {
+                filledToastView(n)
+            }
+        }
+        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: filledToast)
         // Sending is its own step, pushed as a full page (back / Sign & Send).
         // It can write into the document (blanks filled in), so pick up the
         // stored copy when it closes — otherwise the next persist() would
@@ -265,8 +277,20 @@ struct ContractWorkspaceView: View {
                 // Done on the Sent page closes the contract altogether. The
                 // stored copy is picked up first, so the persist() on the way
                 // out can't write older text over what was just sent.
-                SendFlowView(contract: c, onClose: reloadFromStore,
-                             onDone: { reloadFromStore(); dismiss() })
+                SendFlowView(contract: c,
+                             onClose: reloadFromStore,
+                             onDone: { reloadFromStore(); dismiss() },
+                             onBlanksFilled: { ranges, count in
+                                 // Back to the document to see what changed:
+                                 // the new text loads now, so it's already
+                                 // there as the page slides back; the
+                                 // highlights go on once it has landed.
+                                 reloadFromStore()
+                                 filledRanges = ranges
+                                 filledToast  = count
+                                 showSendFlow = false
+                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { showFilledBlanks() }
+                             })
             }
         }
         // System pickers, owned by SwiftUI. The old UIKit bridges sat inside a
@@ -341,8 +365,10 @@ struct ContractWorkspaceView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .onChange(of: isEditing) { _, editing in
-            // Tapping into the document to type ends the search.
+            // Tapping into the document to type ends the search, and the
+            // filled-blank highlights — they've been seen.
             if editing && isSearching { closeSearch() }
+            if editing { clearFilledHighlights() }
             if !editing {
                 textViewRef?.resignFirstResponder()
                 persist()   // auto-save manual edits when leaving edit mode
@@ -465,10 +491,90 @@ struct ContractWorkspaceView: View {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Filled blanks
+    //
+    // After the fill-in form on the send page, the sender lands back on the
+    // document: each filled spot gets the search highlight (draw-only, never
+    // saved — DocumentSearch.decorate), the first is scrolled into view, and
+    // a toast says what happened, with Send to go straight back. The
+    // highlights stay until the sender edits, searches, or sends.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private func showFilledBlanks(attempt: Int = 0) {
+        guard let tv = textViewRef, !filledRanges.isEmpty else { return }
+        // Setting the editor's text wipes its highlights, so wait until it
+        // holds the filled-in text before drawing them.
+        guard tv.attributedText.string == attributedBody.string else {
+            if attempt < 20 {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { showFilledBlanks(attempt: attempt + 1) }
+            }
+            return
+        }
+        let len = attributedBody.length
+        let ranges = filledRanges.filter { $0.location + $0.length <= len }
+        guard !ranges.isEmpty else { filledRanges = []; return }
+        withAnimation(.spring(response: 0.38, dampingFraction: 0.8)) { showAIPanel = false }
+        DocumentSearch.decorate(tv, matches: ranges, current: nil)
+        DocumentSearch.reveal(ranges[0], in: tv)
+        Haptics.success()
+        toastGeneration += 1
+        let gen = toastGeneration
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            guard gen == toastGeneration else { return }
+            withAnimation(.easeInOut(duration: 0.3)) { filledToast = nil }
+        }
+    }
+
+    private func clearFilledHighlights() {
+        guard !filledRanges.isEmpty else { return }
+        filledRanges = []
+        if let tv = textViewRef { DocumentSearch.clear(tv) }
+        withAnimation(.easeInOut(duration: 0.2)) { filledToast = nil }
+    }
+
+    /// "Contract updated · 3 blanks filled in"  [Send]
+    private func filledToastView(_ n: Int) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.title3)
+                .foregroundStyle(Color.statusSigned)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Contract updated")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.primaryInk)
+                Text(n == 1 ? String(localized: "1 blank filled in, highlighted below")
+                            : String(localized: "\(n) blanks filled in, highlighted below"))
+                    .font(.footnote)
+                    .foregroundStyle(Color.secondaryInk)
+            }
+            Spacer(minLength: 8)
+            Button(String(localized: "Send")) {
+                clearFilledHighlights()
+                showSendFlow = true
+            }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Color.onAction)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
+            .background(Color.action, in: Capsule())
+            .buttonStyle(.plain)
+        }
+        .padding(.leading, 14)
+        .padding(.trailing, 10)
+        .padding(.vertical, 10)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .padding(.horizontal, 16)
+        .padding(.top, 4)
+        .transition(.move(edge: .top).combined(with: .opacity))
+        .accessibilityElement(children: .combine)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // MARK: - Find in document
     // ─────────────────────────────────────────────────────────────────────────
 
     private func openSearch() {
+        clearFilledHighlights()
         isSearching = true
         // The conversation covers half the page; searching is about the page.
         withAnimation(.spring(response: 0.38, dampingFraction: 0.8)) { showAIPanel = false }
@@ -810,6 +916,8 @@ struct ContractWorkspaceView: View {
         // While the first draft is still being written there's nothing to
         // revise yet; the text stays in the bar to send once it arrives.
         guard !text.isEmpty, !isLoading else { return }
+        // A revision rewrites the text under the highlights.
+        clearFilledHighlights()
         aiChatPrompt = ""
 
         messages.append(ChatMessage(content: text, isUser: true))
