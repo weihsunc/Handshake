@@ -7,8 +7,8 @@ import UIKit
 // The stamp that replaces the [Signature] placeholder once a contract is
 // signed, in the app's doodle style: an ink ✕, the signer's name in a script
 // face over a hand-drawn line, the local time and a short fingerprint of the
-// SHA256 hash, and a small tilted seal ("SIGNED · FACE ID · date" around the
-// owner's check doodle).
+// SHA256 hash, and a small tilted rubber-stamp seal ("SIGNED · FACE ID ·
+// date" around a doodled Face ID face).
 //
 // Says what confirmed it (Face ID), never "legally binding" — this is
 // authentication and tamper-evidence, not certification (HANDOFF §8).
@@ -54,7 +54,7 @@ struct SignatureBlockView: View {
                     .foregroundStyle(Color.secondaryInk)
             }
             DoodleSeal(method: stamp.method ?? "Face ID", date: stamp.signedAt)
-                .frame(width: 64, height: 64)
+                .frame(width: 70, height: 70)
                 .rotationEffect(.degrees(-10))
                 .accessibilityHidden(true)
         }
@@ -93,28 +93,10 @@ private struct InkLine: Shape {
     }
 }
 
-/// A circle drawn freehand: a little out of round, the ends overlapping.
-private struct WobblyCircle: Shape {
-    var wobble: CGFloat = 0.04
-    func path(in r: CGRect) -> Path {
-        let c = CGPoint(x: r.midX, y: r.midY), rad = min(r.width, r.height) / 2
-        func pt(_ deg: Double, _ k: CGFloat) -> CGPoint {
-            let a = deg * .pi / 180
-            return CGPoint(x: c.x + cos(a) * rad * k, y: c.y + sin(a) * rad * k)
-        }
-        let w = wobble
-        var p = Path()
-        p.move(to: pt(-95, 1))
-        p.addCurve(to: pt(0, 1 + w),   control1: pt(-60, 1.06 + w), control2: pt(-25, 1.05))
-        p.addCurve(to: pt(92, 1 - w),  control1: pt(28, 1.06 + w),  control2: pt(62, 1.03 - w))
-        p.addCurve(to: pt(182, 1 + w), control1: pt(120, 1.04),     control2: pt(152, 1.05 + w))
-        p.addCurve(to: pt(275, 1.02),  control1: pt(212, 1.04 - w), control2: pt(244, 1.06))
-        return p
-    }
-}
-
-/// A small notary-style seal, doodled: two freehand rings, the owner's check
-/// in the middle, and "SIGNED · FACE ID · NOV 9 2026" around the edge.
+/// A small rubber-stamp seal: a heavy outer ring and a fine inner one, true
+/// circles like a real seal, "SIGNED · FACE ID · NOV 9 2026" around the edge,
+/// a doodled Face ID face in the middle, and speckled ink so it reads as
+/// pressed rather than drawn.
 private struct DoodleSeal: View {
     let method: String
     let date: Date
@@ -123,23 +105,96 @@ private struct DoodleSeal: View {
         GeometryReader { geo in
             let s = min(geo.size.width, geo.size.height)
             ZStack {
-                WobblyCircle(wobble: 0.04)
-                    .stroke(Color.accent, style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
-                WobblyCircle(wobble: 0.03)
-                    .stroke(Color.accent.opacity(0.8), style: StrokeStyle(lineWidth: 1, lineCap: .round))
-                    .padding(s * 0.15)
-                RingText(text: ringText, radius: s * 0.415, fontSize: s * 0.085)
-                CheckDoodleShape()
-                    .stroke(Color.accent, style: StrokeStyle(lineWidth: s * 0.028, lineCap: .round, lineJoin: .round))
-                    .frame(width: s * 0.38, height: s * 0.38)
+                Circle()
+                    .strokeBorder(Color.accent, lineWidth: s * 0.05)
+                Circle()
+                    .strokeBorder(Color.accent, lineWidth: s * 0.016)
+                    .padding(s * 0.175)
+                RingText(text: ringText, radius: s * 0.385, fontSize: s * 0.082)
+                FaceIDDoodle()
+                    .stroke(Color.accent, style: StrokeStyle(lineWidth: s * 0.03, lineCap: .round, lineJoin: .round))
+                    .frame(width: s * 0.32, height: s * 0.32)
             }
             .frame(width: s, height: s)
+            .mask(StampTexture(seed: 7))
         }
     }
 
     private var ringText: String {
         let d = date.formatted(.dateTime.month(.abbreviated).day().year())
         return "\(String(localized: "Signed")) · \(method) · \(d) · ".uppercased()
+    }
+}
+
+/// The Face ID glyph, drawn by hand: four rounded corner brackets, two eyes,
+/// a nose, a smile — the strokes a little off-true, like the other doodles.
+private struct FaceIDDoodle: Shape {
+    func path(in r: CGRect) -> Path {
+        let w = r.width, h = r.height
+        func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: r.minX + x * w, y: r.minY + y * h) }
+        var path = Path()
+        // Corners: down the side, round the corner, along the edge.
+        path.move(to: p(0.02, 0.30)); path.addLine(to: p(0.01, 0.12))
+        path.addQuadCurve(to: p(0.13, 0.01), control: p(0.0, 0.0)); path.addLine(to: p(0.31, 0.02))
+        path.move(to: p(0.69, 0.01)); path.addLine(to: p(0.87, 0.02))
+        path.addQuadCurve(to: p(0.99, 0.13), control: p(1.0, 0.0)); path.addLine(to: p(0.98, 0.31))
+        path.move(to: p(0.99, 0.70)); path.addLine(to: p(0.98, 0.87))
+        path.addQuadCurve(to: p(0.86, 0.99), control: p(1.0, 1.0)); path.addLine(to: p(0.69, 0.98))
+        path.move(to: p(0.30, 0.99)); path.addLine(to: p(0.13, 0.98))
+        path.addQuadCurve(to: p(0.01, 0.86), control: p(0.0, 1.0)); path.addLine(to: p(0.02, 0.69))
+        // Eyes.
+        path.move(to: p(0.33, 0.33)); path.addLine(to: p(0.335, 0.43))
+        path.move(to: p(0.67, 0.33)); path.addLine(to: p(0.665, 0.43))
+        // Nose.
+        path.move(to: p(0.51, 0.34)); path.addLine(to: p(0.50, 0.57))
+        path.addQuadCurve(to: p(0.43, 0.59), control: p(0.49, 0.60))
+        // Smile.
+        path.move(to: p(0.32, 0.70))
+        path.addQuadCurve(to: p(0.68, 0.69), control: p(0.50, 0.84))
+        return path
+    }
+}
+
+/// Uneven ink for the seal: the mask is solid with small specks knocked out,
+/// the way a rubber stamp never inks perfectly. Seeded, so it's the same
+/// pattern every time the stamp is drawn.
+private struct StampTexture: View {
+    let seed: UInt64
+
+    var body: some View {
+        Canvas { ctx, size in
+            ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.white))
+            ctx.blendMode = .destinationOut
+            var rng = SeededRandom(seed: seed)
+            let area = size.width * size.height
+            for _ in 0..<Int(area / 9) {
+                let x = rng.next() * size.width, y = rng.next() * size.height
+                let r = 0.25 + rng.next() * 0.9
+                let a = 0.35 + rng.next() * 0.6
+                ctx.fill(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)),
+                         with: .color(.white.opacity(a)))
+            }
+            // A couple of worn arcs where the ink didn't take.
+            for _ in 0..<3 {
+                let cx = size.width / 2, cy = size.height / 2
+                let rad = min(size.width, size.height) * (0.42 + rng.next() * 0.08)
+                let start = Angle.degrees(rng.next() * 360)
+                var arc = Path()
+                arc.addArc(center: CGPoint(x: cx, y: cy), radius: rad, startAngle: start,
+                           endAngle: start + .degrees(14 + rng.next() * 20), clockwise: false)
+                ctx.stroke(arc, with: .color(.white.opacity(0.55)), lineWidth: 1.2)
+            }
+        }
+    }
+}
+
+/// A tiny deterministic generator (values in 0..<1).
+private struct SeededRandom {
+    private var state: UInt64
+    init(seed: UInt64) { state = seed &* 6364136223846793005 &+ 1442695040888963407 }
+    mutating func next() -> CGFloat {
+        state = state &* 6364136223846793005 &+ 1442695040888963407
+        return CGFloat((state >> 33) & 0xFFFFFF) / CGFloat(0x1000000)
     }
 }
 
