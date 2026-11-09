@@ -45,7 +45,12 @@ struct HistoryView: View {
         // Draft → reopen the full workspace (editable, AI panel available)
         .fullScreenCover(item: $openDraft) { draft in
             NavigationStack {
-                ContractWorkspaceView(initialPrompt: draft.title, existing: draft)
+                // A revision that hasn't gone back out yet keeps what was
+                // asked for in the chat bar, so it isn't lost on reopening.
+                ContractWorkspaceView(initialPrompt: draft.title, existing: draft,
+                                      prefillPrompt: draft.changeRequest.map {
+                                          String(localized: "\($0.by) asked for these changes: \($0.text)")
+                                      })
             }
         }
         // Sent / signed → read-only viewer

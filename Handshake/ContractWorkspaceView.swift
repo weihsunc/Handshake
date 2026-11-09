@@ -361,8 +361,10 @@ struct ContractWorkspaceView: View {
                     } else {
                         // Bottom-aligned so the circle stays level with the
                         // pill's bottom row when the prompt grows into a card.
+                        // The circle steps aside once there's a prompt, so
+                        // the text gets the full width while it's written.
                         HStack(alignment: .bottom, spacing: 10) {
-                            if contract != nil {
+                            if contract != nil && aiChatPrompt.isEmpty {
                                 BarCircleButton(systemImage: "magnifyingglass",
                                                 label: String(localized: "Search the contract"),
                                                 size: barHeight,
@@ -383,6 +385,7 @@ struct ContractWorkspaceView: View {
         .readableColumn(Layout.readableWidth + 32)
         .animation(.easeInOut(duration: 0.22), value: isEditing)
         .animation(.spring(response: 0.34, dampingFraction: 0.86), value: isSearching)
+        .animation(.spring(response: 0.34, dampingFraction: 0.86), value: aiChatPrompt.isEmpty)
         .onChange(of: searchQuery) { _, _ in runSearch() }
         // An AI revision swaps the text out from under the highlights; redo
         // them once the editor has the new text.
