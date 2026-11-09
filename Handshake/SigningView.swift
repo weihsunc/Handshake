@@ -767,22 +767,14 @@ struct SigningConfirmationView: View {
                     .padding(.horizontal, 32)
                     .padding(.bottom, 28)
 
-                VStack(spacing: 6) {
-                    // The same rubber-stamp seal as on the contract's
-                    // signature, in place of the old "Verified" pill.
-                    DoodleSeal(method: stamp.method ?? SignatureService.biometryName, date: stamp.signedAt)
-                        .frame(width: 64, height: 64)
-                        .rotationEffect(.degrees(-10))
-                        .padding(.bottom, 6)
-                        .accessibilityLabel(Text("Verified with \(SignatureService.biometryName)"))
-
-                    Text(stamp.signedAt, format: .dateTime.year().month().day().hour().minute())
-                    Text("Fingerprint \(stamp.fingerprint)")
-                        .monospaced()
-                }
-                .font(.caption2)
-                .foregroundStyle(Color.secondaryInk)
-                .accessibilityElement(children: .combine)
+                // The signature exactly as it now sits in the contract: the
+                // same card (signature, line, time, fingerprint, seal).
+                SignatureBlockView(stamp: stamp)
+                    .frame(maxWidth: 360)
+                    .padding(.horizontal, 24)
+                    .environment(\.colorScheme, .light)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(Text("Verified with \(SignatureService.biometryName)"))
 
                 Spacer()
 

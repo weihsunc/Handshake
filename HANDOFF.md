@@ -1,7 +1,32 @@
 # Handshake — Project Handoff
 
-**Last updated:** November 2, 2026
-**Status:** Full loop works end to end **across two devices** with no server — send → recipient opens on their own phone → signs with Face ID → signed copy returns to the sender (§0). Provider-backed signing scaffolded, awaiting accounts (§7 Feature 4). Remaining: the §9 list.
+**Last updated:** November 9, 2026
+**Status:** The full loop works on-device with no server: AI draft → edit (blanks, AI suggestions) → send page (parties first) → Sent page → recipient signs with Face ID → signed copy back. Provider-backed signing (Supabase + DocuSeal) is scaffolded and **parked until the owner's accounts exist** — see "Pick up here" below and §7 Feature 4.
+
+## ▶ Pick up here (Nov 9, 2026 — handing over to another agent)
+
+**Build & run:** open `Handshake.xcodeproj`, scheme `Handshake`, iOS 26 simulator (iPhone 17 Pro). `Handshake/Secrets.swift` is gitignored and holds the Anthropic key — never commit it; before any push: `git log origin/main..HEAD -p | grep -c sk-ant-api03` must be 0 and `git ls-files Handshake/Secrets.swift` empty. UI copy must never say "legally binding" (any language). Strings live in `Localizable.xcstrings` (7 languages: zh-Hant, zh-Hans, ja, ko, es, fr, de) — add every new UI string there.
+
+**Next up, in order:**
+1. **Backend (parked, owner first).** Owner: DocuSeal sign-up (wei@studiolofi.com, test key ending `+test`); new Supabase project "handshake" in the existing account; `supabase login`; from `backend/`: `supabase secrets set ANTHROPIC_API_KEY=… DOCUSEAL_API_KEY=…`. Then: `supabase link`, `supabase functions deploy handshake --no-verify-jwt`, set `backendURL` + `signingBackend = .docuseal` in Secrets.swift, run the first end-to-end test (never run against real accounts — expect fixes). Setting `backendURL` routes ALL AI calls through the server, so the Anthropic key must be there first. Supabase CLI 3.1.0 is installed.
+2. **AI tables.** The AI sometimes writes markdown tables ("| Milestone | Date |"), which the editor shows as raw pipes. Either tell the AI not to (numbered lists) or render simple tables.
+3. **Formatting through AI edits.** Only **bold** survives a revision (the request is sent as markdown); italic, underline, heading sizes, alignment and photos are reset.
+4. **Signature card width.** `SignatureBlockView` renders at a fixed 360pt (`applySignatures` in Parties.swift); on narrow phones (iPhone SE, ~343pt column) it may overflow. Consider the real column width.
+5. **CJK signatures.** Mrs Saint Delafield is Latin-only; Chinese/Japanese names fall back to the system font. Optional: a handwriting CJK font.
+6. **Copy-only (CC) recipients** don't exist — every recipient signs and needs a box (Add Signer adds one).
+
+**Built but not yet verified on screen/device:** real Messages/Mail delivery (simulator only has the share sheet); the Contacts picker; "Me" in the party sheet; several AI suggestion chips wrapping onto two lines; the new strings in the other six languages; iPad layouts and dark mode for the Nov 9 screens (Send page, Sent page, signing bar, signature card).
+
+**Test data on the owner's simulator** (iPhone 17 Pro): an incoming test contract "Freelance Web Development Agreement" (id `5E5D0000-…-AA05`, from Wei-Hsun Chen, signed as Dana Whitfield) — reset it to unsigned by rewriting its record in `contracts.json` (status `sent`, keep only the slot-0 signature). The owner's own drafts are theirs; don't delete them.
+
+**Nov 9 changes, by area** (details in §4 / §6 / the commit log):
+- *Send:* its own pushed page (not a sheet); parties first — one row per signature box, a sheet to pick Me / someone / a past recipient / a contact; Add Signer adds a box (Remove takes an added box out); compact blanks alert; reply address as one line; signers kept with the draft.
+- *Sent page:* paper-plane doodle that draws itself in, a timeline (you signed → sent to each → they sign → copy back), Done (closes the contract) and View Contract.
+- *Blanks:* Fill In Blanks from the send page or the chat chip writes straight into the contract, then highlights the changes with a "Contract updated" toast.
+- *Chat:* AI suggested next steps (a `NEXT:` line in every draft/revision) as chips wrapping under the reply, plus "Fill in N blanks"; AI edits keep bold and the [Signature]/[Date] boxes.
+- *Recipient signing:* bar with search (left) and Sign (right) floating over the text; contextual "Jump to signature" / "Back to top" while scrolling; status under the title; ✕ instead of Close; Name/Date aligned in the sign sheet; Signed screen with the check doodle and the signature card.
+- *Signature stamp:* "Signed electronically with Handshake" card — ink ✕, Mrs Saint Delafield (bundled, OFL) over a hand-drawn line, time + fingerprint, and a rubber-stamp seal with a Face ID doodle.
+- *Visual system:* ink #1F1E1C, Apple default blue as the only accent, handshake drawing as app icon.
 
 ---
 
