@@ -171,7 +171,7 @@ struct DocumentSearchBar: View {
 
                 TextField("Search keywords or fields", text: $query)
                     .font(.body)
-                    .tint(Color(.label))
+                    .tint(Color.ink)
                     .focused(focus)
                     .submitLabel(.search)
                     .autocorrectionDisabled()

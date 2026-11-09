@@ -142,7 +142,7 @@ struct ChatBar: View {
             TextField("", text: $prompt, axis: .vertical)
                 .font(.body)
                 .foregroundStyle(Color(.label))
-                .tint(Color(.label))
+                .tint(Color.ink)
                 .lineLimit(1...8)
                 .focused($isFocused)
                 .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { w in
@@ -394,10 +394,10 @@ struct BlackPillButton: View {
         Button(action: action) {
             Text(title)
                 .font(.body.weight(.medium))
-                .foregroundStyle(Color(.systemBackground))
+                .foregroundStyle(Color.onAction)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
-                .background(Color(.label))
+                .background(Color.action)
                 .clipShape(Capsule())
                 .shadow(color: .black.opacity(0.12), radius: 10, x: 0, y: 4)
         }
@@ -682,7 +682,7 @@ struct MessageBubble: View {
             }
             .font(.body)
             .lineSpacing(3)
-            .foregroundStyle(message.isUser ? Color.white : Color(.label))
+            .foregroundStyle(message.isUser ? Color.onUserBubble : Color(.label))
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background(message.isUser ? Color.userBubble : Color.clear)

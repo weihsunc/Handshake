@@ -138,7 +138,7 @@ One detour worth knowing: restarting SpringBoard on a simulator (`launchctl kick
 - **Recipient screen:** one-row bar — "jump to your box" + **Sign as Tenant**; name / date / consent / Face ID live in a sheet. The bar fades out under any sheet (iOS 26 glass sheets let the purple pill glow through). ⋯ menu: **Ask for Changes** (free text) and **Decline to Sign** (optional reason) — both go back as `handshake://reply/<id>?d=…`. Sender side: "Changes Asked" / "Declined" badges, a banner, and **Revise Contract** (back to draft, signatures cleared, the request pre-filled in the chat bar for the AI).
 - **Replies come back addressed.** "Signed copies come back to" (email or phone, remembered) rides in the link as `reply`; the recipient's Send-back / decline / changes open Mail or Messages already addressed (`ReplyComposeSheet`), share sheet as fallback. Apple private-relay addresses are skipped (they bounce non-registered senders).
 - **Blanks.** The AI is told to put "[BRACKETS]" around anything the user must fill in; the app finds them with plain rules (`SignatureSlots.blanks`: any "[…]" up to 48 characters, not the field tokens, not the name on a party line). The send screen's card opens **Fill In Blanks** — one field per blank with the sentence it sits in (`SignatureSlots.context`). Name blanks fill themselves from the send screen: "[FREELANCER FULL NAME]" → whoever signs as Freelancer (`SignatureSlots.party(forNameBlank:)`; skips company/business names). Values are written into the document (`GeneratedContract.setBody`, RTFD + markdown) at send — before the links and the sender's signature — and typed values also on Cancel (swipe-to-dismiss is off while there are any, so they can't be lost). The workspace reloads from the store when the send sheet closes, so its next `persist()` can't write the old text back. Anything still unfilled is confirmed before sending ("Send Anyway" / "Fill In").
-- Stamp shows local time with zone (was ISO UTC). App icon: the owner's handshake drawing (`Documents/All Doodles/Special Characters/handshake.svg`, view box cropped to the strokes) in #141414 on #FAFAFA, plus dark (#F2F2F2 strokes) and tinted (white) variants on transparent. The same drawing is the `handshake-glyph` vector template asset, shown at the left of the chat bar at rest; "+" replaces it once the bar is tapped.
+- Stamp shows local time with zone (was ISO UTC). App icon: the owner's handshake drawing (`Documents/All Doodles/Special Characters/handshake.svg`, view box cropped to the strokes) in ink #1F1E1C on #FAFAF9, plus dark (#EDECE9 strokes) and tinted (white) variants on transparent. The same drawing is the `handshake-glyph` vector template asset, shown at the left of the chat bar at rest; "+" replaces it once the bar is tapped.
 - Not done (needs a domain/backend, owner decision): web / universal links and short links; per-recipient tracking beyond what links carry; signing order.
 
 ## 1. What Handshake Is
@@ -387,16 +387,16 @@ On iOS 26 a principal `Text` with `lineLimit(1)` is laid out at its full width w
 ### Design tokens
 
 ```
-Primary action    Theme `action` #141414 / dark #F2F2F2, text `onAction` (Send pills, send circle,
-                  chat placeholder, PurplePillButton / PurpleCircleButton fills, iPad Edit toggle).
-                  Stand-in until the owner picks an accent — change the two tokens.
+Ink               #1F1E1C / dark #EDECE9 (`ink`, `onInk` #FFFFFF / #1F1E1C) — warm, Notion-like.
+Primary action    `action` = ink for now (Send pills, send circle, chat placeholder, filled pill /
+                  circle buttons, iPad Edit toggle, text cursors). Swap `action` for the accent later.
+User chat bubble  #1F1E1C, white text / dark: #3A3936, #EDECE9 text
+Secondary text    #787774 / dark #9B9A97
+Page / card       #FAFAF9 (stone/50) / #F5F5F4 (stone/100); system colours in dark
 Purple            `brand` #4C00FF still on text/menus ("Signs as", Fill In, Add Recipient),
                   signature-field boxes, the profile avatar. Gradient #4C00FF → #26065D no longer on buttons.
-Background        #FAFAFA  (stone/50 in Figma is #FAFAF9)
-Card background   #F4F4F5
 Body text         SF Pro Regular 17 / 22, tracking -0.43  → `.body` (scales with Dynamic Type)
 Title             SF Pro Bold 28 / 34, tracking 0.38      → `.title.weight(.bold)`
-Secondary text    #757575
 Pill radius       Capsule / 296px in Figma
 Toolbar pill      h-48, px-10, shadow 0 8px 40px rgba(0,0,0,0.12)
 ```

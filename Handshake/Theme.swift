@@ -5,53 +5,63 @@ import UIKit
 // MARK: - Theme
 //
 // The few colours Handshake picks itself. Everything else is a system colour
-// (label, secondaryLabel, separator, materials), which already adapts.
-// Light values are the Figma tokens; dark values follow the system's own
-// dark palette so the app sits next to Settings / Notes without looking off.
+// (label, separator, materials), which already adapts.
 //
-// Two purples, on purpose:
-//   brandFill  #4C00FF in both modes — behind white text (buttons, the send
-//              circle, the Send pill). White on it is ~7:1 either way.
-//   brand      #4C00FF in light, #9D80FF in dark — purple used AS text or an
-//              icon on the page. #4C00FF on black is ~2.3:1, unreadable.
+// One warm neutral scale (Notion-like), built around ink #1F1E1C:
+//
+//   token          light     dark      used for
+//   ink            #1F1E1C   #EDECE9   primary actions (Send pills, send
+//                                      circle, filled buttons), the chat
+//                                      placeholder, the user's chat bubble,
+//                                      headings drawn in our own colour
+//   onInk          #FFFFFF   #1F1E1C   text / icons on ink
+//   secondaryInk   #787774   #9B9A97   captions, footnotes
+//   pageBackground #FAFAF9   system    screen ground (stone/50)
+//   cardFill       #F5F5F4   system    cards, wells (stone/100)
+//
+// The handshake drawing (app icon, chat-bar mark) uses the same ink.
+// The accent colour isn't decided yet: `action` is ink for now, so swapping
+// it later moves every primary action at once. Purple (`brand`) remains
+// only on text/menus and the signature boxes until then.
 // ─────────────────────────────────────────────────────────────────────────────
 
 extension Color {
-    /// Purple text / icons on the page background.
-    static let brand          = Color(light: 0x4C00FF, dark: 0x9D80FF)
-    /// Purple behind white text. Same in both modes.
-    static let brandFill      = Color(hex: 0x4C00FF)
-    /// Far end of the brand gradient (#26065D), for filled buttons.
-    static let brandDeep      = Color(hex: 0x26065D)
-    /// Far end of the placeholder text gradient — must stay readable on the bar.
-    static let brandTextDeep  = Color(light: 0x26065D, dark: 0xC9B8FF)
+    // ── Neutrals ─────────────────────────────────────────────────────────
+    static let ink            = Color(light: 0x1F1E1C, dark: 0xEDECE9)
+    static let onInk          = Color(light: 0xFFFFFF, dark: 0x1F1E1C)
 
-    /// Primary actions — the Send pills, the send circle, the chat bar's
-    /// placeholder. Near-black until the accent colour is decided: swap these
-    /// two and every primary action follows. #141414 is the handshake
-    /// drawing's own stroke colour (softer than #000 on the #FAFAFA page).
-    static let action         = Color(light: 0x141414, dark: 0xF2F2F2)
-    /// Text / icons on `action`.
-    static let onAction       = Color(light: 0xFFFFFF, dark: 0x141414)
+    /// Primary actions. Ink until the accent colour is chosen.
+    static let action         = ink
+    static let onAction       = onInk
 
-    /// Screen background: stone/50 #FAFAFA, system black in dark.
+    /// The user's chat bubble: ink with white text in light. In dark a raised
+    /// warm grey with light text — an off-white slab in the conversation
+    /// would outshine the document behind it.
+    static let userBubble     = Color(light: 0x1F1E1C, dark: 0x3A3936)
+    static let onUserBubble   = Color(light: 0xFFFFFF, dark: 0xEDECE9)
+
+    /// Body ink where we draw our own (not the editor, which uses label).
+    static let primaryInk     = Color(UIColor { $0.userInterfaceStyle == .dark ? .label
+                                                                               : UIColor(hex: 0x1F1E1C) })
+    static let secondaryInk   = Color(light: 0x787774, dark: 0x9B9A97)
+
+    /// Screen background: stone/50 #FAFAF9, system black in dark.
     static let pageBackground = Color(UIColor { $0.userInterfaceStyle == .dark ? .systemBackground
-                                                                               : UIColor(hex: 0xFAFAFA) })
-    /// Cards and input wells: stone/100 #F5F5F4 / zinc #F4F4F5, system grey 6 in dark.
+                                                                               : UIColor(hex: 0xFAFAF9) })
+    /// Cards and input wells: stone/100 #F5F5F4, system grey 6 in dark.
     static let cardFill       = Color(UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground
                                                                                : UIColor(hex: 0xF5F5F4) })
     /// White panels that sit on the page (recipient rows).
     static let raisedSurface  = Color(.secondarySystemGroupedBackground)
 
-    /// Figma #1E1E1E body ink.
-    static let primaryInk     = Color(UIColor { $0.userInterfaceStyle == .dark ? .label
-                                                                               : UIColor(hex: 0x1E1E1E) })
-    /// Figma #757575 secondary ink.
-    static let secondaryInk   = Color(light: 0x757575, dark: 0x9C9CA1)
-
-    /// The user's chat bubble: black in light, a raised grey in dark (a black
-    /// bubble on a black sheet would vanish).
-    static let userBubble     = Color(UIColor { $0.userInterfaceStyle == .dark ? .systemGray4 : .black })
+    // ── Purple: text / menus / signature boxes, until the accent is set ──
+    /// Purple text / icons on the page background (#4C00FF on black is
+    /// ~2.3:1, so it lightens in dark).
+    static let brand          = Color(light: 0x4C00FF, dark: 0x9D80FF)
+    /// Purple behind white text. Same in both modes.
+    static let brandFill      = Color(hex: 0x4C00FF)
+    /// Far end of the old brand gradient (#26065D) — profile avatar only.
+    static let brandDeep      = Color(hex: 0x26065D)
 
     static let statusSigned   = Color(UIColor { $0.userInterfaceStyle == .dark ? .systemGreen
                                                                                : UIColor(red: 0.13, green: 0.60, blue: 0.28, alpha: 1) })
