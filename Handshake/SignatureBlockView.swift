@@ -5,8 +5,8 @@ import UIKit
 // MARK: - SignatureBlockView
 //
 // The stamp that replaces the [Signature] placeholder once a contract is
-// signed, in the app's doodle style: an ink ✕, the signer's name in a script
-// face over a hand-drawn line, the local time and a short fingerprint of the
+// signed, in the app's doodle style: an ink ✕, the signer's name in Momo
+// Signature over a hand-drawn line, the local time and a short fingerprint of the
 // SHA256 hash, and a small tilted rubber-stamp seal ("SIGNED · FACE ID ·
 // date" around a doodled Face ID face).
 //
@@ -32,8 +32,9 @@ struct SignatureBlockView: View {
                     InkCross()
                         .stroke(ink, style: StrokeStyle(lineWidth: 1.8, lineCap: .round))
                         .frame(width: 11, height: 11)
+                    // Momo Signature (bundled, SIL OFL — Handshake/Fonts).
                     Text(stamp.signerName)
-                        .font(.custom("SnellRoundhand-Bold", size: 30))
+                        .font(.custom("MomoSignature-Regular", size: 28))
                         .foregroundStyle(ink)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
@@ -167,22 +168,22 @@ private struct StampTexture: View {
             ctx.blendMode = .destinationOut
             var rng = SeededRandom(seed: seed)
             let area = size.width * size.height
-            for _ in 0..<Int(area / 9) {
+            for _ in 0..<Int(area / 18) {
                 let x = rng.next() * size.width, y = rng.next() * size.height
-                let r = 0.25 + rng.next() * 0.9
-                let a = 0.35 + rng.next() * 0.6
+                let r = 0.2 + rng.next() * 0.6
+                let a = 0.2 + rng.next() * 0.4
                 ctx.fill(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)),
                          with: .color(.white.opacity(a)))
             }
             // A couple of worn arcs where the ink didn't take.
-            for _ in 0..<3 {
+            for _ in 0..<2 {
                 let cx = size.width / 2, cy = size.height / 2
                 let rad = min(size.width, size.height) * (0.42 + rng.next() * 0.08)
                 let start = Angle.degrees(rng.next() * 360)
                 var arc = Path()
                 arc.addArc(center: CGPoint(x: cx, y: cy), radius: rad, startAngle: start,
                            endAngle: start + .degrees(14 + rng.next() * 20), clockwise: false)
-                ctx.stroke(arc, with: .color(.white.opacity(0.55)), lineWidth: 1.2)
+                ctx.stroke(arc, with: .color(.white.opacity(0.35)), lineWidth: 1)
             }
         }
     }

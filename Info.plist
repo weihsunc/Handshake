@@ -25,6 +25,14 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Handshake listens so you can describe a contract out loud instead of typing.</string>
 
+	<!-- Bundled fonts (Handshake/Fonts, copied to the bundle root by the
+	     synchronized group). Momo Signature draws signatures; SIL OFL 1.1,
+	     licence in Fonts/OFL-MomoSignature.txt. -->
+	<key>UIAppFonts</key>
+	<array>
+		<string>MomoSignature-Regular.ttf</string>
+	</array>
+
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
