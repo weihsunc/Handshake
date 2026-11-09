@@ -79,3 +79,13 @@ private struct DoodlePath: Shape {
         .padding(40)
         .background(Color.pageBackground)
 }
+
+/// Loop and tick together, as one shape — for small static uses (the seal on
+/// the signature stamp).
+struct CheckDoodleShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = DoodlePath(part: .loop).path(in: rect)
+        p.addPath(DoodlePath(part: .tick).path(in: rect))
+        return p
+    }
+}
