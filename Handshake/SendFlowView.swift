@@ -81,6 +81,9 @@ struct SendFlowView: View {
     /// The party being chosen in the sheet (or a signer being added).
     @State private var editing: PartyEdit? = nil
     @State private var editingReply = false
+    /// Boxes added on this page (by role, lowercased). Removing their
+    /// signer removes the box too; boxes the contract came with stay.
+    @State private var addedRoles: Set<String> = []
     @State private var replyDraft = ""
 
     private static let replyToKey = "send.replyTo"
@@ -202,6 +205,7 @@ struct SendFlowView: View {
             if let p {
                 if myParty == p { myParty = nil }
                 recipients.removeAll { $0.party == p }
+                if addedRoles.contains(slots[p].role.lowercased()) { removeSignatureBox(p) }
             } else if let recipientID {
                 recipients.removeAll { $0.id == recipientID }
             }
@@ -238,12 +242,42 @@ struct SendFlowView: View {
             body.deleteCharacters(in: NSRange(location: body.length - 1, length: 1))
         }
         body.append(block)
+        saveBody(body)
+        guard !slots.isEmpty else { return nil }
+        addedRoles.insert(slots[slots.count - 1].role.lowercased())
+        return slots.count - 1
+    }
+
+    /// Takes out a box added here: its role line, the box and its date, up
+    /// to the next party (or the end). Parties after it move up one.
+    private func removeSignatureBox(_ p: Int) {
+        guard slots.indices.contains(p),
+              let stored = ContractStore.shared.contract(id: contract.id) else { return }
+        let body = stored.baseBody()
+        let found = SignatureSlots.find(in: body)
+        guard found.indices.contains(p) else { return }
+        let start = found[p].roleLine?.location ?? found[p].range.location
+        let end = p + 1 < found.count
+            ? (found[p + 1].roleLine?.location ?? found[p + 1].range.location)
+            : body.length
+        guard end > start else { return }
+        addedRoles.remove(found[p].role.lowercased())
+        body.deleteCharacters(in: NSRange(location: start, length: end - start))
+        while body.length > 0, let last = body.string.last, last.isNewline {
+            body.deleteCharacters(in: NSRange(location: body.length - 1, length: 1))
+        }
+        for i in recipients.indices { if let q = recipients[i].party, q > p { recipients[i].party = q - 1 } }
+        if let m = myParty, m > p { myParty = m - 1 }
+        saveBody(body)
+    }
+
+    /// Writes the document back and re-reads its boxes and blanks.
+    private func saveBody(_ body: NSMutableAttributedString) {
         ContractStore.shared.update(id: contract.id) { $0.setBody(body) }
         slots = SignatureSlots.find(in: body)
         let b = SignatureSlots.blanks(in: body)
         blanks = b
         blankContext = Self.contexts(of: b, in: body)
-        return slots.isEmpty ? nil : slots.count - 1
     }
 
     private static func contexts(of blanks: [String], in body: NSAttributedString) -> [String: String] {
@@ -596,7 +630,8 @@ struct SendFlowView: View {
             startsAsMe: p != nil && myParty == p,
             name: person?.name ?? "",
             contact: person.map(Self.contact(of:)) ?? "",
-            canRemove: !e.adding && (person != nil || (p != nil && myParty == p)),
+            canRemove: !e.adding && (person != nil || (p != nil && myParty == p)
+                                     || p.map { addedRoles.contains(slots[$0].role.lowercased()) } == true),
             myName: $myName,
             suggestions: pastRecipients.filter { !taken.contains(($0.name + "|" + Self.contact(of: $0)).lowercased()) }
         ) { choice, newRole in
@@ -615,9 +650,9 @@ struct SendFlowView: View {
 
     // ── Blanks ───────────────────────────────────────────────────────────
 
-    /// Must-fix before it goes out, so it says which: the first few blanks
-    /// with the sentence each sits in, and the button to fill them in.
-    /// Once they're all filled, a quiet green line to review them.
+    /// Must-fix before it goes out: how many, the first two by name, and a
+    /// small Fill In on the right. Once they're all filled, a quiet green
+    /// line to review them.
     @ViewBuilder
     private var blanksAlert: some View {
         let pending = pendingBlanks
@@ -638,47 +673,45 @@ struct SendFlowView: View {
             .buttonStyle(.plain)
             .padding(.horizontal, 16)
         } else {
-            VStack(alignment: .leading, spacing: 12) {
-                Label(pending.count == 1 ? String(localized: "1 blank to fill in before sending")
-                                         : String(localized: "\(pending.count) blanks to fill in before sending"),
-                      systemImage: "exclamationmark.triangle.fill")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.orange)
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(pending.prefix(3), id: \.self) { b in
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(blankLabel(b))
-                                .font(.footnote.weight(.semibold))
-                                .foregroundStyle(Color.primaryInk)
-                            if let line = blankContext[b] {
-                                Text(line)
-                                    .font(.footnote)
-                                    .foregroundStyle(Color.secondaryInk)
-                                    .lineLimit(2)
-                            }
-                        }
-                    }
-                    if pending.count > 3 {
-                        Text("and \(pending.count - 3) more")
+            Button { showFillBlanks = true } label: {
+                HStack(alignment: .center, spacing: 12) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.orange)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(pending.count == 1 ? String(localized: "1 blank to fill in")
+                                                : String(localized: "\(pending.count) blanks to fill in"))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.orange)
+                        Text(blanksNamed(pending))
                             .font(.footnote)
                             .foregroundStyle(Color.secondaryInk)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
                     }
-                }
-                .padding(.leading, 28)
-                Button { showFillBlanks = true } label: {
-                    Text("Fill In Blanks")
+                    Spacer(minLength: 4)
+                    Text("Fill In")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color.orange)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 7)
                         .background(Color.orange.opacity(0.14), in: Capsule())
                 }
-                .buttonStyle(.plain)
+                .padding(14)
+                .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .contentShape(Rectangle())
             }
-            .padding(16)
-            .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .buttonStyle(.plain)
             .padding(.horizontal, 16)
         }
+    }
+
+    /// "Effective Date, State/Country and 19 more" — the blanks by name.
+    private func blanksNamed(_ pending: [String]) -> String {
+        let shown = pending.prefix(2).map(blankLabel)
+        return pending.count > 2
+            ? String(localized: "\(shown.joined(separator: ", ")) and \(pending.count - 2) more")
+            : shown.formatted(.list(type: .and))
     }
 
     // ── Reply address ────────────────────────────────────────────────────

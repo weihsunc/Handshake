@@ -599,48 +599,48 @@
         }
       }
     },
-    "%lld blanks to fill in before sending": {
+    "%lld blanks to fill in": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "傳送前還有 %lld 個空格要填寫"
+            "value": "還有 %lld 個空格要填寫"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "发送前还有 %lld 个空格要填写"
+            "value": "还有 %lld 个空格要填写"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "送信前に埋める空欄が %lld 件あります"
+            "value": "埋める空欄が %lld 件あります"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "보내기 전에 채울 빈칸 %lld개"
+            "value": "채울 빈칸 %lld개"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld espacios por rellenar antes de enviar"
+            "value": "%lld espacios por rellenar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld blancs à remplir avant l’envoi"
+            "value": "%lld blancs à remplir"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld Lücken vor dem Senden ausfüllen"
+            "value": "%lld Lücken ausfüllen"
           }
         }
       }
@@ -737,48 +737,48 @@
         }
       }
     },
-    "1 blank to fill in before sending": {
+    "1 blank to fill in": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "傳送前還有 1 個空格要填寫"
+            "value": "還有 1 個空格要填寫"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "发送前还有 1 个空格要填写"
+            "value": "还有 1 个空格要填写"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "送信前に埋める空欄が 1 件あります"
+            "value": "埋める空欄が 1 件あります"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "보내기 전에 채울 빈칸 1개"
+            "value": "채울 빈칸 1개"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "1 espacio por rellenar antes de enviar"
+            "value": "1 espacio por rellenar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "1 blanc à remplir avant l’envoi"
+            "value": "1 blanc à remplir"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "1 Lücke vor dem Senden ausfüllen"
+            "value": "1 Lücke ausfüllen"
           }
         }
       }
@@ -12233,52 +12233,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deine Eingaben und der Vertragstext werden an Anthropic gesendet, um Verträge zu entwerfen und zu überarbeiten. %@ Entwürfe werden von KI erstellt und sind keine Rechtsberatung."
-          }
-        }
-      }
-    },
-    "and %lld more": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "還有 %lld 個"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "还有 %lld 个"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ほか %lld 件"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "외 %lld개"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "y %lld más"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "et %lld autres"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "und %lld weitere"
           }
         }
       }
