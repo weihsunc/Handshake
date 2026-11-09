@@ -63,6 +63,16 @@ struct SendFlowView: View {
     /// the contract only once something was actually sent.
     @State private var ownSignature: PartySignature? = nil
 
+    /// After sending: the confirmation replaces the form (who it went to,
+    /// how, what happens next). Back is gone from then on; Done returns to
+    /// the document.
+    @State private var showSent = false
+    /// What happened to each recipient's link, by recipient id.
+    @State private var outcomes: [UUID: Outcome] = [:]
+    /// Shared this round, unconfirmed: "Not yet" on "Did you send it?" puts
+    /// these back to not sent.
+    @State private var roundShared: [UUID] = []
+
     private static let replyToKey = "send.replyTo"
     private static let myNameKey  = "send.myName"
 
@@ -228,7 +238,7 @@ struct SendFlowView: View {
     // MARK: - Body
     // ─────────────────────────────────────────────────────────────────────────
 
-    var body: some View {
+    private var form: some View {
           ScrollViewReader { scroller in
             ScrollView {
                 VStack(spacing: 12) {
@@ -302,6 +312,12 @@ struct SendFlowView: View {
                 }
             }
           }
+    }
+
+    var body: some View {
+        Group {
+            if showSent { sentPage.transition(.opacity) } else { form }
+        }
         .sheet(item: $activeSheet) { d in deliverySheet(d) }
         .alert("Couldn't register with the signing provider",
                isPresented: Binding(get: { providerError != nil }, set: { if !$0 { providerError = nil } })) {
@@ -313,7 +329,9 @@ struct SendFlowView: View {
         } message: { Text(signError ?? "") }
         .alert("Did you send it?", isPresented: $askedAboutShare) {
             Button("Yes, mark as sent") { didSend = true; finalize() }
-            Button("Not yet", role: .cancel) { }
+            Button("Not yet", role: .cancel) {
+                for id in roundShared { outcomes[id] = .notSent }
+            }
         } message: {
             Text("Handshake can't confirm delivery through the share sheet. Marking it sent moves it to Pending Signature.")
         }
@@ -475,6 +493,137 @@ struct SendFlowView: View {
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Sent
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// The step after sending: it went out, to whom and how, and what
+    /// happens next. Anyone whose message was cancelled can be sent again
+    /// from here.
+    private var sentPage: some View {
+        let rs = finalRecipients
+        return ScrollView {
+            VStack(spacing: 12) {
+                VStack(spacing: 10) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 56))
+                        .foregroundStyle(Color.statusSigned)
+                        .symbolEffect(.bounce, value: showSent)
+                    Text("Sent for Signing")
+                        .font(.title2.weight(.bold))
+                        .foregroundStyle(Color.primaryInk)
+                    Text(contract.title)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.secondaryInk)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 32)
+                .padding(.vertical, 20)
+
+                SendCard(header: rs.count == 1 ? String(localized: "Recipient")
+                                               : String(localized: "Recipients")) {
+                    ForEach(Array(rs.enumerated()), id: \.element.id) { i, r in
+                        if i > 0 { Divider().padding(.leading, 48) }
+                        sentRow(r)
+                    }
+                } footer: { EmptyView() }
+
+                if let own = ownSignature {
+                    SendCard(header: String(localized: "You")) {
+                        CardRow(icon: "signature") {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text((own.role ?? "").isEmpty ? String(localized: "Signed")
+                                                              : String(localized: "Signed as \(own.role ?? "")"))
+                                Text(verbatim: "\(own.method ?? SignatureService.biometryName) · \(own.signedAt.formatted(date: .omitted, time: .shortened))")
+                                    .font(.footnote)
+                                    .foregroundStyle(Color.secondaryInk)
+                            }
+                            Spacer(minLength: 0)
+                            Image(systemName: "checkmark.seal.fill")
+                                .foregroundStyle(Color.accent)
+                        }
+                    } footer: { EmptyView() }
+                }
+
+                SendCard(header: String(localized: "What happens next")) {
+                    VStack(alignment: .leading, spacing: 14) {
+                        nextStep(1, String(localized: "Each recipient opens their link in Handshake and signs."))
+                        nextStep(2, replyAddress.map { String(localized: "Their signed copy comes back to \($0). Opening it updates this contract.") }
+                                    ?? String(localized: "They send their signed copy back to you. Opening it updates this contract."))
+                        nextStep(3, String(localized: "Until everyone has signed, it's under Pending Signature in Contracts."))
+                    }
+                    .padding(16)
+                } footer: { EmptyView() }
+            }
+            .padding(.bottom, 40)
+            .readableColumn(Layout.readableWidth + 32)
+        }
+        .background(Color.pageBackground.ignoresSafeArea())
+        .navigationTitle(Text(verbatim: ""))
+        .navigationBarTitleDisplayMode(.inline)
+        // Sent is sent: no way back into the form, only on to the document.
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarPillButton(title: String(localized: "Done")) { dismiss() }
+            }
+        }
+    }
+
+    private var replyAddress: String? {
+        let r = replyTo.trimmingCharacters(in: .whitespaces)
+        return r.isEmpty ? nil : r
+    }
+
+    private func sentRow(_ r: Recipient) -> some View {
+        let outcome = outcomes[r.id] ?? .notSent
+        let how: String
+        switch outcome {
+        case .messages(let phone): how = String(localized: "Sent by Messages to \(phone)")
+        case .mail(let email):     how = String(localized: "Sent by Mail to \(email)")
+        case .shared:              how = String(localized: "Link shared")
+        case .notSent:             how = String(localized: "Not sent")
+        }
+        let detail = [r.partyRole, how].compactMap { $0 }.joined(separator: " · ")
+        return HStack(spacing: 12) {
+            Image(systemName: outcome == .notSent ? "exclamationmark.circle" : "checkmark.circle")
+                .font(.subheadline)
+                .foregroundStyle(outcome == .notSent ? Color.orange : Color.statusSigned)
+                .frame(width: 20)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(r.name)
+                    .foregroundStyle(Color.primaryInk)
+                Text(detail)
+                    .font(.footnote)
+                    .foregroundStyle(outcome == .notSent ? Color.orange : Color.secondaryInk)
+            }
+            Spacer(minLength: 8)
+            if outcome == .notSent {
+                Button(String(localized: "Send")) { deliver([r]) }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.accent)
+                    .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
+
+    private func nextStep(_ n: Int, _ text: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Text(verbatim: "\(n)")
+                .font(.footnote.weight(.semibold).monospacedDigit())
+                .foregroundStyle(Color.secondaryInk)
+                .frame(width: 20, height: 20)
+                .background(Color.cardFill, in: Circle())
+            Text(text)
+                .font(.subheadline)
+                .foregroundStyle(Color.primaryInk)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
     private var replyCard: some View {
         SendCard(header: String(localized: "Signed copies come back to")) {
             CardRow(icon: "arrowshape.turn.up.left") {
@@ -536,9 +685,16 @@ struct SendFlowView: View {
         let name = myName.trimmingCharacters(in: .whitespaces)
         if !name.isEmpty { UserDefaults.standard.set(name, forKey: Self.myNameKey) }
 
+        outcomes = [:]
+        deliver(finalRecipients)
+    }
+
+    /// Opens a compose sheet for each of these, one after another.
+    private func deliver(_ rs: [Recipient]) {
         didSend = false
         sharedSomething = false
-        queue = finalRecipients.map(Delivery.init)
+        roundShared = []
+        queue = rs.map(Delivery.init)
         next()
     }
 
@@ -548,9 +704,16 @@ struct SendFlowView: View {
         activeSheet = queue.removeFirst()
     }
 
-    private func delivered(sent: Bool, shared: Bool = false) {
+    private func delivered(_ d: Delivery, sent: Bool, shared: Bool = false) {
         if sent   { didSend = true }
         if shared { sharedSomething = true }
+        let id = d.recipient.id
+        switch d.channel {
+        case .sms(let phone)  where sent:   outcomes[id] = .messages(phone)
+        case .mail(let email) where sent:   outcomes[id] = .mail(email)
+        case .share           where shared: outcomes[id] = .shared; roundShared.append(id)
+        default: if outcomes[id] == nil || outcomes[id] == .notSent { outcomes[id] = .notSent }
+        }
         activeSheet = nil
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { next() }
     }
@@ -568,12 +731,12 @@ struct SendFlowView: View {
         switch d.channel {
         case .sms(let phone):
             MessageComposeView(recipients: [phone], body: smsBody(for: d.recipient)) { r in
-                delivered(sent: r == .sent)
+                delivered(d, sent: r == .sent)
             }
             .ignoresSafeArea()
         case .mail(let email):
             MailComposeView(toRecipients: [email], subject: mailSubject, body: mailBody(for: d.recipient)) { r in
-                delivered(sent: r == .sent || r == .saved)
+                delivered(d, sent: r == .sent || r == .saved)
             }
             .ignoresSafeArea()
         case .share:
@@ -581,7 +744,7 @@ struct SendFlowView: View {
             // unavailable. One combined string, not [subject, body] — two
             // items makes the share sheet describe them as "2 Images".
             ActivityView(activityItems: ["\(mailSubject)\n\n\(mailBody(for: d.recipient))"]) { completed in
-                delivered(sent: false, shared: completed)
+                delivered(d, sent: false, shared: completed)
             }
             .presentationDetents([.medium, .large])
         }
@@ -602,7 +765,7 @@ struct SendFlowView: View {
                                           senderRole: slots.isEmpty ? nil : (mySlot.map { slots[$0].role } ?? ""),
                                           ownSignature: ownSignature)
             Haptics.success()
-            dismiss()
+            withAnimation(.easeInOut(duration: 0.25)) { showSent = true }
         }
 
         let backend = Secrets.signingBackend
@@ -752,6 +915,11 @@ private struct FillBlanksSheet: View {
 // ─────────────────────────────────────────────────────────────────────────────
 // MARK: - Delivery
 // ─────────────────────────────────────────────────────────────────────────────
+
+/// What became of one recipient's link.
+private enum Outcome: Equatable {
+    case messages(String), mail(String), shared, notSent
+}
 
 private struct Delivery: Identifiable {
     enum Channel { case sms(String), mail(String), share }

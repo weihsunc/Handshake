@@ -3681,6 +3681,52 @@
         }
       }
     },
+    "Each recipient opens their link in Handshake and signs.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每位收件人在 Handshake 中開啟自己的連結並簽署。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每位收件人在 Handshake 中打开自己的链接并签署。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "各受信者が Handshake で自分のリンクを開いて署名します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "각 수신자가 Handshake에서 자신의 링크를 열고 서명합니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada destinatario abre su enlace en Handshake y firma."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque destinataire ouvre son lien dans Handshake et signe."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Empfänger öffnen ihren Link in Handshake und signieren."
+          }
+        }
+      }
+    },
     "Edit": {
       "localizations": {
         "zh-Hant": {
@@ -5153,6 +5199,52 @@
         }
       }
     },
+    "Link shared": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已分享連結"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已分享链接"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リンクを共有済み"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "링크 공유됨"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlace compartido"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lien partagé"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link geteilt"
+          }
+        }
+      }
+    },
     "Log Out": {
       "localizations": {
         "zh-Hant": {
@@ -5977,6 +6069,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nicht jetzt"
+          }
+        }
+      }
+    },
+    "Not sent": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未傳送"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未发送"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未送信"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보내지 않음"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No enviado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non envoyé"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht gesendet"
           }
         }
       }
@@ -7039,6 +7177,52 @@
         }
       }
     },
+    "Recipients": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收件人"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收件人"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "受信者"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "수신자"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destinatarios"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destinataires"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empfänger"
+          }
+        }
+      }
+    },
     "Recipients will see %@ as they are.": {
       "localizations": {
         "zh-Hant": {
@@ -7775,6 +7959,144 @@
         }
       }
     },
+    "Sent by Mail to %@": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已透過「郵件」傳送至 %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已通过“邮件”发送至 %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メールで %@ に送信済み"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "메일로 %@에게 보냄"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviado por Mail a %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyé par Mail à %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per Mail an %@ gesendet"
+          }
+        }
+      }
+    },
+    "Sent by Messages to %@": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已透過「訊息」傳送至 %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已通过“信息”发送至 %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メッセージで %@ に送信済み"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "메시지로 %@에게 보냄"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviado por Mensajes a %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyé par Messages à %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per Nachrichten an %@ gesendet"
+          }
+        }
+      }
+    },
+    "Sent for Signing": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已送出簽署"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已发送签署"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名依頼を送信しました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명 요청을 보냈습니다"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviado para firmar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyé pour signature"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zur Signatur gesendet"
+          }
+        }
+      }
+    },
     "Shows or hides the conversation with HandShake": {
       "localizations": {
         "zh-Hant": {
@@ -8369,6 +8691,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Signiert"
+          }
+        }
+      }
+    },
+    "Signed as %@": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已以 %@ 身分簽署"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已以 %@ 身份签署"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ として署名済み"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@(으)로 서명함"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firmado como %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signé en tant que %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signiert als %@"
           }
         }
       }
@@ -9201,6 +9569,52 @@
         }
       }
     },
+    "Their signed copy comes back to %@. Opening it updates this contract.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "簽署後的副本會寄回 %@，開啟後即會更新這份合約。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "签署后的副本会发回 %@，打开后即会更新这份合同。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名済みのコピーは %@ に届きます。開くとこの契約書が更新されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명된 사본은 %@(으)로 돌아옵니다. 열면 이 계약서가 업데이트됩니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Su copia firmada vuelve a %@. Al abrirla, este contrato se actualiza."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leur copie signée revient à %@. L’ouvrir met ce contrat à jour."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die signierte Kopie kommt an %@ zurück. Beim Öffnen wird dieser Vertrag aktualisiert."
+          }
+        }
+      }
+    },
     "They go into the contract when you send it.": {
       "localizations": {
         "zh-Hant": {
@@ -9243,6 +9657,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sie werden beim Senden in den Vertrag übernommen."
+          }
+        }
+      }
+    },
+    "They send their signed copy back to you. Opening it updates this contract.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "他們會把簽署後的副本傳回給你，開啟後即會更新這份合約。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "他们会把签署后的副本发回给你，打开后即会更新这份合同。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名済みのコピーが相手から届きます。開くとこの契約書が更新されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "상대방이 서명된 사본을 보내 줍니다. 열면 이 계약서가 업데이트됩니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te devolverán su copia firmada. Al abrirla, este contrato se actualiza."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ils vous renvoient leur copie signée. L’ouvrir met ce contrat à jour."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie schicken dir ihre signierte Kopie zurück. Beim Öffnen wird dieser Vertrag aktualisiert."
           }
         }
       }
@@ -9707,6 +10167,52 @@
         }
       }
     },
+    "Until everyone has signed, it's under Pending Signature in Contracts.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在所有人簽署前，它會列在「合約」的「待簽署」中。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在所有人签署前，它会列在“合同”的“待签署”中。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全員が署名するまで、「契約書」の「署名待ち」に表示されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모두 서명할 때까지 '계약'의 '서명 대기 중'에 표시됩니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hasta que todos firmen, aparece en Firma pendiente, en Contratos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tant que tout le monde n’a pas signé, il figure dans Signature en attente, dans Contrats."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bis alle signiert haben, steht er unter „Signatur ausstehend“ in „Verträge“."
+          }
+        }
+      }
+    },
     "Updated! Feel free to keep editing or ask me for more changes.": {
       "localizations": {
         "zh-Hant": {
@@ -10163,6 +10669,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Willkommen bei Handshake!"
+          }
+        }
+      }
+    },
+    "What happens next": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接下來"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接下来"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この後の流れ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다음 단계"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qué pasa ahora"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Et ensuite"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie es weitergeht"
           }
         }
       }
