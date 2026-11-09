@@ -357,6 +357,9 @@ struct PrimaryPillButton: View {
     /// Stretches the pill to fill its container — used for the primary action on
     /// the signing screen. Toolbar usages keep the default hug-to-content width.
     var fullWidth: Bool = false
+    /// A set height for a hugging pill that sits beside other bar buttons
+    /// (the signing screen's Sign, 52pt like its search circle).
+    var height: CGFloat? = nil
     var action: () -> Void
     /// 44 matches the glass toolbar button height at the default text size;
     /// both scale with Dynamic Type so the label never clips.
@@ -373,9 +376,9 @@ struct PrimaryPillButton: View {
                 // lines. fixedSize makes the text refuse to be compressed.
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
-                .padding(.horizontal, 14)
+                .padding(.horizontal, height == nil ? 14 : 22)
                 .frame(maxWidth: fullWidth ? .infinity : nil)
-                .frame(height: fullWidth ? fullH : barH)
+                .frame(height: height ?? (fullWidth ? fullH : barH))
                 // The primary-action colour (Theme `action`).
                 .background(Color.action, in: Capsule())
                 .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 8)

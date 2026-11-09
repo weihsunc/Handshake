@@ -50,6 +50,20 @@ struct SigningView: View {
     @State private var declineReason = ""
     @State private var changesText = ""
 
+    // ── Find in the contract (the bar's search button) ──
+    @State private var isSearching  = false
+    @State private var searchQuery  = ""
+    @FocusState private var searchFocused: Bool
+    @State private var searchMatches: [NSRange] = []
+    @State private var searchIndex  = 0
+
+    // ── "Jump to signature": only while scrolling, and only when their box
+    //    is off screen. Which way it points says where the box is. ──
+    @State private var scrolledRecently = false
+    @State private var boxDirection: BoxDirection? = nil   // nil: on screen
+    @State private var scrollGeneration = 0
+    private enum BoxDirection { case above, below }
+
     private enum SignSheet: Identifiable {
         case sign, changes, reply(subject: String, message: String)
         var id: String {
@@ -254,6 +268,96 @@ struct SigningView: View {
             .padding(.bottom, 24)
             .readableColumn(Layout.readableWidth + 32)
         }
+        .onScrollPhaseChange { _, phase in
+            if phase.isScrolling {
+                scrollGeneration += 1
+                withAnimation(.easeOut(duration: 0.2)) { scrolledRecently = true }
+            } else {
+                // Lingers a moment after the scroll settles, then goes.
+                scrollGeneration += 1
+                let gen = scrollGeneration
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    guard gen == scrollGeneration else { return }
+                    withAnimation(.easeOut(duration: 0.3)) { scrolledRecently = false }
+                }
+            }
+        }
+        .onScrollGeometryChange(for: CGFloat.self, of: { $0.contentOffset.y }) { _, _ in
+            updateBoxDirection()
+        }
+    }
+
+    /// Where their box is relative to the screen: above, below, or on it.
+    private func updateBoxDirection() {
+        guard let tv = textView, let r = myBoxRange,
+              let start = tv.position(from: tv.beginningOfDocument, offset: r.location),
+              let end = tv.position(from: start, offset: r.length),
+              let range = tv.textRange(from: start, to: end) else { boxDirection = nil; return }
+        var v = tv.superview
+        while let x = v, !(x is UIScrollView) { v = x.superview }
+        guard let scroll = v as? UIScrollView else { boxDirection = nil; return }
+        let box = tv.convert(tv.firstRect(for: range), to: scroll)
+        let visible = scroll.bounds.inset(by: scroll.adjustedContentInset)
+        let dir: BoxDirection? = box.maxY < visible.minY ? .above : box.minY > visible.maxY ? .below : nil
+        if dir != boxDirection { withAnimation(.easeOut(duration: 0.2)) { boxDirection = dir } }
+    }
+
+    private var showsJump: Bool {
+        scrolledRecently && boxDirection != nil && !isSearching && sheet == nil
+    }
+
+    /// "Jump to signature", floating above the bar while it's useful.
+    private var jumpButton: some View {
+        Button {
+            jumpToMyBox()
+            withAnimation(.easeOut(duration: 0.2)) { scrolledRecently = false }
+        } label: {
+            Label("Jump to signature",
+                  systemImage: boxDirection == .above ? "arrow.up" : "arrow.down")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color.primaryInk)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .glassEffect(.regular.interactive(), in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+
+    // ── Search ──
+
+    private func openSearch() {
+        withAnimation(.spring(response: 0.34, dampingFraction: 0.86)) { isSearching = true }
+        searchFocused = true
+    }
+
+    private func closeSearch() {
+        searchFocused = false
+        withAnimation(.spring(response: 0.34, dampingFraction: 0.86)) { isSearching = false }
+        searchQuery = ""
+        searchMatches = []
+        searchIndex = 0
+        if let tv = textView { DocumentSearch.clear(tv) }
+    }
+
+    private func runSearch() {
+        guard isSearching else { return }
+        searchMatches = DocumentSearch.matches(for: searchQuery, in: attributedBody)
+        searchIndex = 0
+        applySearch()
+    }
+
+    private func stepSearch(_ delta: Int) {
+        guard !searchMatches.isEmpty else { return }
+        searchIndex = (searchIndex + delta + searchMatches.count) % searchMatches.count
+        applySearch()
+    }
+
+    private func applySearch() {
+        guard let tv = textView else { return }
+        let current = searchMatches.isEmpty ? nil : searchIndex
+        DocumentSearch.decorate(tv, matches: searchMatches, current: current)
+        if let c = current { DocumentSearch.reveal(searchMatches[c], in: tv) }
     }
 
     /// Scrolls to their box, like DocuSign's "Start" tab. (A highlight was
@@ -266,7 +370,8 @@ struct SigningView: View {
     // ─────────────────────────────────────────────────────────────────────────
     // MARK: - Sign bar
     //
-    // One row: jump to your box, and the button that opens the sign sheet.
+    // One row: search on the left, the button that opens the sign sheet on
+    // the right. "Jump to signature" floats above it only while scrolling.
     // It used to hold the party picker, the date, the name, the button and
     // the consent line — about 40% of a phone screen, with the contract
     // squeezed into what was left.
@@ -276,20 +381,37 @@ struct SigningView: View {
 
     private var signBar: some View {
         VStack(spacing: 0) {
+            if showsJump { jumpButton.padding(.bottom, 10) }
+
             LinearGradient(colors: [Color.pageBackground.opacity(0), Color.pageBackground],
                            startPoint: .top, endPoint: .bottom)
                 .frame(height: 28)
                 .allowsHitTesting(false)
 
-            HStack(spacing: 10) {
-                if myBoxRange != nil {
-                    BarCircleButton(systemImage: "arrow.down.to.line",
-                                    label: String(localized: "Go to your signature box"),
-                                    size: barH, action: jumpToMyBox)
-                }
-                PrimaryPillButton(title: role.map { String(localized: "Sign as \($0)") } ?? String(localized: "Sign"),
-                                 fullWidth: true) {
-                    sheet = .sign
+            Group {
+                if isSearching {
+                    DocumentSearchBar(query: $searchQuery,
+                                      focus: $searchFocused,
+                                      matchCount: searchMatches.count,
+                                      current: searchMatches.isEmpty ? nil : searchIndex,
+                                      height: barH,
+                                      onPrevious: { stepSearch(-1) },
+                                      onNext: { stepSearch(1) },
+                                      onClose: closeSearch)
+                        .transition(.opacity)
+                } else {
+                    // Search on the left, Sign on the right (Figma 2011:54312).
+                    HStack(spacing: 10) {
+                        BarCircleButton(systemImage: "magnifyingglass",
+                                        label: String(localized: "Search the contract"),
+                                        size: barH, action: openSearch)
+                        Spacer(minLength: 0)
+                        PrimaryPillButton(title: role.map { String(localized: "Sign as \($0)") } ?? String(localized: "Sign"),
+                                          height: barH) {
+                            sheet = .sign
+                        }
+                    }
+                    .transition(.opacity)
                 }
             }
             .padding(.horizontal, 16)
@@ -297,6 +419,8 @@ struct SigningView: View {
             .readableColumn(Layout.readableWidth + 32)
             .background(Color.pageBackground.ignoresSafeArea(edges: .bottom))
         }
+        .animation(.spring(response: 0.34, dampingFraction: 0.86), value: showsJump)
+        .onChange(of: searchQuery) { _, _ in runSearch() }
         // iOS 26 sheets are glass: the filled pill glowed through the bottom
         // of every sheet opened over it. It steps back while one is up.
         .opacity(sheet == nil ? 1 : 0)

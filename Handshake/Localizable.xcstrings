@@ -5383,52 +5383,6 @@
         }
       }
     },
-    "Go to your signature box": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "前往你的簽名欄"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "前往你的签名框"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "署名ボックスへ移動"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "내 서명란으로 이동"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ir a tu cuadro de firma"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aller à votre champ de signature"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zu deinem Signaturfeld"
-          }
-        }
-      }
-    },
     "Handshake can't confirm delivery through the share sheet. Marking it sent moves it to Pending Signature.": {
       "localizations": {
         "zh-Hant": {
@@ -5793,6 +5747,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kursiv"
+          }
+        }
+      }
+    },
+    "Jump to signature": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跳到簽名處"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跳到签名处"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名欄へ移動"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명란으로 이동"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ir a la firma"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aller à la signature"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zur Unterschrift springen"
           }
         }
       }
