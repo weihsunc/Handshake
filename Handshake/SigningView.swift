@@ -768,16 +768,13 @@ struct SigningConfirmationView: View {
                     .padding(.bottom, 28)
 
                 VStack(spacing: 6) {
-                    HStack(spacing: 5) {
-                        Image(systemName: "checkmark.seal.fill")
-                            .font(.caption.weight(.semibold))
-                        Text("Verified with \(SignatureService.biometryName)")
-                            .font(.caption.weight(.semibold))
-                    }
-                    .foregroundStyle(Color.accent)
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 5)
-                    .background(Color.accent.opacity(0.10), in: Capsule())
+                    // The same rubber-stamp seal as on the contract's
+                    // signature, in place of the old "Verified" pill.
+                    DoodleSeal(method: stamp.method ?? SignatureService.biometryName, date: stamp.signedAt)
+                        .frame(width: 64, height: 64)
+                        .rotationEffect(.degrees(-10))
+                        .padding(.bottom, 6)
+                        .accessibilityLabel(Text("Verified with \(SignatureService.biometryName)"))
 
                     Text(stamp.signedAt, format: .dateTime.year().month().day().hour().minute())
                     Text("Fingerprint \(stamp.fingerprint)")

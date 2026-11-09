@@ -117,7 +117,7 @@ private struct InkLine: Shape {
 /// circles like a real seal, "SIGNED · FACE ID · NOV 9 2026" around the edge,
 /// a doodled Face ID face in the middle, and speckled ink so it reads as
 /// pressed rather than drawn.
-private struct DoodleSeal: View {
+struct DoodleSeal: View {
     let method: String
     let date: Date
 
