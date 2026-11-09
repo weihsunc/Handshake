@@ -9845,6 +9845,52 @@
         }
       }
     },
+    "Signed electronically with Handshake": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已透過 Handshake 電子簽署"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已通过 Handshake 电子签署"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake で電子署名済み"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake로 전자 서명됨"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firmado electrónicamente con Handshake"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signé électroniquement avec Handshake"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elektronisch signiert mit Handshake"
+          }
+        }
+      }
+    },
     "Signed in with": {
       "localizations": {
         "zh-Hant": {
