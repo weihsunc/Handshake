@@ -37,6 +37,21 @@ extension GeneratedContract {
         return .fromHandshakeMarkdown(content)
     }
 
+    /// Saves an edited document: RTFD (formatting, images) plus the markdown
+    /// that travels in links. Signatures are on the words they were given —
+    /// if the words change, they're dropped.
+    mutating func setBody(_ body: NSAttributedString) {
+        guard body.length > 0 else { return }
+        bodyRTFD = try? body.data(
+            from: NSRange(location: 0, length: body.length),
+            documentAttributes: [.documentType: NSAttributedString.DocumentType.rtfd]
+        )
+        attachmentSizes = body.attachmentSizes
+        let markdown = body.handshakeMarkdown()
+        if markdown != content { signatures = [] }
+        content = markdown
+    }
+
     /// The document as everyone sees it: each party's stamp in its box.
     func displayBody() -> NSMutableAttributedString {
         let body = baseBody()

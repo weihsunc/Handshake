@@ -63,6 +63,63 @@ enum SignatureSlots {
         }
     }
 
+    /// A few words either side of a blank's first appearance, the blank
+    /// shown as "____" — "[DATE]" alone doesn't say which date.
+    static func context(of blank: String, in doc: NSAttributedString) -> String? {
+        let ns = doc.string as NSString
+        let r = ns.range(of: blank)
+        guard r.location != NSNotFound else { return nil }
+        let para = ns.paragraphRange(for: r)
+        let start = max(para.location, r.location - 40)
+        let end   = min(para.location + para.length, r.location + r.length + 40)
+        var before = ns.substring(with: NSRange(location: start, length: r.location - start))
+        var after  = ns.substring(with: NSRange(location: r.location + r.length,
+                                                length: end - r.location - r.length))
+        // Cut at word boundaries, and mark what was cut.
+        if start > para.location, let sp = before.firstIndex(of: " ") { before = "…" + String(before[before.index(after: sp)...]) }
+        if end < para.location + para.length, let sp = after.lastIndex(of: " ") { after = String(after[..<sp]) + "…" }
+        let line = (before + "____" + after)
+            .replacingOccurrences(of: "\u{FFFC}", with: "")
+            .replacingOccurrences(of: "**", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return line == "____" ? nil : line
+    }
+
+    /// Writes each value over every appearance of its blank, in the blank's
+    /// own font. Empty values are skipped. Returns whether anything changed.
+    @discardableResult
+    static func fill(_ values: [String: String], in doc: NSMutableAttributedString) -> Bool {
+        var changed = false
+        for (blank, value) in values {
+            let v = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !v.isEmpty, v != blank else { continue }
+            var r = (doc.string as NSString).range(of: blank)
+            while r.location != NSNotFound {
+                let attrs = doc.attributes(at: r.location, effectiveRange: nil)
+                doc.replaceCharacters(in: r, with: NSAttributedString(string: v, attributes: attrs))
+                changed = true
+                let from = r.location + (v as NSString).length
+                r = (doc.string as NSString).range(of: blank, options: [],
+                                                   range: NSRange(location: from, length: doc.length - from))
+            }
+        }
+        return changed
+    }
+
+    /// Which party a name blank belongs to: "[FREELANCER FULL NAME]",
+    /// "[CLIENT NAME]", "[客戶姓名]" → that party's box. Only blanks asking
+    /// for a person's name — not "[CLIENT ADDRESS]" or "[CLIENT COMPANY NAME]".
+    static func party(forNameBlank blank: String, in slots: [Slot]) -> Int? {
+        let key = blank.uppercased()
+        let nameWords = ["NAME", "姓名", "名字", "氏名", "名前", "이름", "NOMBRE", "NOM ", "NOM]", "NOM DU", "NOM DE"]
+        let notAPerson = ["BUSINESS", "COMPANY", "ENTITY", "公司", "會社", "会社", "회사", "EMPRESA",
+                          "SOCIÉTÉ", "ENTREPRISE", "FIRMA", "UNTERNEHMEN", "PROJECT", "PRODUCT"]
+        guard nameWords.contains(where: key.contains), !notAPerson.contains(where: key.contains) else { return nil }
+        // The longest role named in it ("SERVICE PROVIDER" over "PROVIDER").
+        let hits = slots.indices.filter { key.contains(slots[$0].role.uppercased()) }
+        return hits.max { slots[$0].role.count < slots[$1].role.count }
+    }
+
     /// The box for a party named `role`, matched loosely: "FREELANCER",
     /// "Freelancer" and "freelancer:" are the same party. nil when no box
     /// has that name, or more than one does (then the name doesn't decide).

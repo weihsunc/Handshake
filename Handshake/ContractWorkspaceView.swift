@@ -246,7 +246,10 @@ struct ContractWorkspaceView: View {
                 }
             }
         }
-        .sheet(isPresented: $showSendFlow) {
+        // The send screen can write into the document (blanks filled in), so
+        // pick up the stored copy when it closes — otherwise the next
+        // persist() would save this screen's older text over it.
+        .sheet(isPresented: $showSendFlow, onDismiss: reloadFromStore) {
             if let c = contract {
                 SendFlowView(contract: c)
             }
@@ -721,21 +724,20 @@ struct ContractWorkspaceView: View {
     // inline images) and upserts the contract into the store.
     // ─────────────────────────────────────────────────────────────────────────
 
+    private func reloadFromStore() {
+        guard let id = contract?.id, let stored = ContractStore.shared.contract(id: id),
+              stored.content != contract?.content else { return }
+        contract = stored
+        attributedBody = stored.baseBody()
+    }
+
     private func persist() {
         guard var c = contract else { return }
-        let body = NSAttributedString(attributedString: attributedBody)
-        if body.length > 0 {
-            c.bodyRTFD = try? body.data(
-                from: NSRange(location: 0, length: body.length),
-                documentAttributes: [.documentType: NSAttributedString.DocumentType.rtfd]
-            )
-            c.attachmentSizes = body.attachmentSizes
-            // Keep the markdown in step with the edited document. `content` is
-            // what crosses to the recipient in the signing link; frozen at the
-            // AI's first draft, a signature box the sender placed never reached
-            // them.
-            c.content = body.handshakeMarkdown()
-        }
+        // Keep the markdown in step with the edited document. `content` is
+        // what crosses to the recipient in the signing link; frozen at the
+        // AI's first draft, a signature box the sender placed never reached
+        // them.
+        c.setBody(NSAttributedString(attributedString: attributedBody))
         // Status metadata is owned by the store (SendFlow may have marked this
         // contract sent while the workspace was open) — never regress it here.
         if let stored = ContractStore.shared.contract(id: c.id) {

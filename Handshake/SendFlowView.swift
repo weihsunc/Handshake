@@ -30,8 +30,14 @@ struct SendFlowView: View {
 
     /// Signature boxes on the unsigned document, and whose they are.
     private let slots: [SignatureSlots.Slot]
-    /// "[ADDRESS]"-style placeholders the sender hasn't filled.
-    private let blanks: [String]
+    /// "[ADDRESS]"-style placeholders still in the document.
+    @State private var blanks: [String]
+    /// Where each blank sits ("…entered into as of ____ (the Effective…").
+    private let blankContext: [String: String]
+    /// What the sender typed for each blank. Written into the document when
+    /// it's sent (or on Cancel, so nothing typed is lost).
+    @State private var blankValues: [String: String] = [:]
+    @State private var showFillBlanks = false
 
     @State private var recipients: [Recipient]
     /// The box the sender signs. nil: they aren't signing.
@@ -64,7 +70,11 @@ struct SendFlowView: View {
         let base   = stored.baseBody()
         let found  = SignatureSlots.find(in: base)
         slots  = found
-        blanks = SignatureSlots.blanks(in: base)
+        let foundBlanks = SignatureSlots.blanks(in: base)
+        _blanks = State(initialValue: foundBlanks)
+        blankContext = Dictionary(uniqueKeysWithValues: foundBlanks.compactMap { b in
+            SignatureSlots.context(of: b, in: base).map { (b, $0) }
+        })
         // The sender's party: what they chose last time ("" = not signing),
         // or the AI's guess from the request. A name no box has any more
         // counts as unknown.
@@ -269,7 +279,7 @@ struct SendFlowView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") { applyBlanks(includeAuto: false); dismiss() }
                         .foregroundStyle(Color(.label))
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -309,10 +319,58 @@ struct SendFlowView: View {
         }
         .alert("Send with blanks?", isPresented: $askedAboutBlanks) {
             Button("Send Anyway") { Task { await send() } }
+            Button("Fill In") { showFillBlanks = true }
             Button("Go Back", role: .cancel) { }
         } message: {
             Text("Recipients will see \(blanksSummary) as they are.")
         }
+        .sheet(isPresented: $showFillBlanks) {
+            FillBlanksSheet(blanks: blanks, context: blankContext,
+                            auto: autoValues, values: $blankValues)
+        }
+        // Typed blanks are saved on Cancel; a swipe would skip that.
+        .interactiveDismissDisabled(!blankValues.isEmpty)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Blanks
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// Name blanks the send screen already knows: "[FREELANCER FULL NAME]"
+    /// is whoever signs as Freelancer — the sender, or that recipient.
+    private var autoValues: [String: String] {
+        var out: [String: String] = [:]
+        for b in blanks {
+            guard let p = SignatureSlots.party(forNameBlank: b, in: slots) else { continue }
+            let name = (p == mySlot ? myName : recipients.first { $0.party == p }?.name ?? "")
+                .trimmingCharacters(in: .whitespaces)
+            if !name.isEmpty { out[b] = name }
+        }
+        return out
+    }
+
+    private func value(for blank: String) -> String {
+        (blankValues[blank] ?? autoValues[blank] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Blanks that would still go out as "[…]".
+    private var pendingBlanks: [String] { blanks.filter { value(for: $0).isEmpty } }
+
+    /// Writes the filled blanks into the stored document. `includeAuto`:
+    /// also the names taken from this screen (only when actually sending —
+    /// on Cancel they may not be final).
+    private func applyBlanks(includeAuto: Bool) {
+        var fills: [String: String] = [:]
+        for b in blanks {
+            let v = (blankValues[b] ?? (includeAuto ? autoValues[b] : nil) ?? "")
+            if !v.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { fills[b] = v }
+        }
+        guard !fills.isEmpty, let stored = ContractStore.shared.contract(id: contract.id) else { return }
+        let body = stored.baseBody()
+        guard SignatureSlots.fill(fills, in: body) else { return }
+        ContractStore.shared.update(id: contract.id) { $0.setBody(body) }
+        blanks = SignatureSlots.blanks(in: body)
+        blankValues = blankValues.filter { blanks.contains($0.key) }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -320,27 +378,49 @@ struct SendFlowView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var blanksSummary: String {
-        let shown = Array(blanks.prefix(3))
-        return blanks.count > 3
-            ? String(localized: "\(shown.joined(separator: ", ")) and \(blanks.count - 3) more")
+        let pending = pendingBlanks
+        let shown = Array(pending.prefix(3))
+        return pending.count > 3
+            ? String(localized: "\(shown.joined(separator: ", ")) and \(pending.count - 3) more")
             : shown.formatted(.list(type: .and))
     }
 
+    /// Orange while blanks are left; a quiet confirmation once they're all
+    /// filled. Either way, tapping opens the form.
     private var blanksCard: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label(blanks.count == 1 ? String(localized: "1 blank still to fill in")
-                                    : String(localized: "\(blanks.count) blanks still to fill in"),
-                  systemImage: "exclamationmark.triangle.fill")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.orange)
-            Text("\(blanksSummary) still need filling in. Cancel to edit the contract, or send it as it is.")
-                .font(.footnote)
-                .foregroundStyle(Color.secondaryInk)
-                .fixedSize(horizontal: false, vertical: true)
+        let pending = pendingBlanks.count
+        let done = pending == 0
+        return Button { showFillBlanks = true } label: {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label(done ? String(localized: "All blanks filled in")
+                               : pending == 1 ? String(localized: "1 blank still to fill in")
+                                              : String(localized: "\(pending) blanks still to fill in"),
+                          systemImage: done ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(done ? Color.green : Color.orange)
+                    Text(done ? String(localized: "They go into the contract when you send it.")
+                              : String(localized: "\(blanksSummary) still need filling in."))
+                        .font(.footnote)
+                        .foregroundStyle(Color.secondaryInk)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+                Text(done ? String(localized: "Review") : String(localized: "Fill In"))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.brand)
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
+            .background((done ? Color.green : Color.orange).opacity(0.10),
+                        in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .contentShape(Rectangle())
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(Color.orange.opacity(0.10), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .buttonStyle(.plain)
         .padding(.horizontal, 16)
     }
 
@@ -406,11 +486,15 @@ struct SendFlowView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private func startSend() {
-        if !blanks.isEmpty { askedAboutBlanks = true; return }
+        if !pendingBlanks.isEmpty { askedAboutBlanks = true; return }
         Task { await send() }
     }
 
     private func send() async {
+        // Filled blanks (and the names from this screen) go into the
+        // document first, so the links, and the sender's signature, are on
+        // the finished wording.
+        applyBlanks(includeAuto: true)
         // The sender's own box first. A signature already on the record for
         // that box (sending again, wording unchanged) is reused.
         if let slot = mySlot, ownSignature?.slot != slot {
@@ -588,6 +672,72 @@ struct SendFlowView: View {
 
             The link opens in Handshake, so you'll need the app installed on your iPhone or iPad.
             """)
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARK: - FillBlanksSheet
+//
+// One field per "[…]" blank, with the sentence it sits in. Name blanks the
+// send screen already knows come pre-filled; the sender can change them.
+// ─────────────────────────────────────────────────────────────────────────────
+
+private struct FillBlanksSheet: View {
+    let blanks: [String]
+    let context: [String: String]
+    let auto: [String: String]
+    @Binding var values: [String: String]
+    @Environment(\.dismiss) private var dismiss
+    @FocusState private var focused: String?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                ForEach(blanks, id: \.self) { b in
+                    Section {
+                        TextField(label(b), text: Binding(
+                            get: { values[b] ?? auto[b] ?? "" },
+                            set: { values[b] = $0 }
+                        ))   // one line: a blank sits inside a sentence
+                        .focused($focused, equals: b)
+                        .submitLabel(.next)
+                        .onSubmit { focusNext(after: b) }
+                    } header: {
+                        Text(label(b))
+                    } footer: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            if let line = context[b] { Text(line) }
+                            if values[b] == nil, auto[b] != nil {
+                                Text("Filled in from the name on the send screen.")
+                                    .foregroundStyle(Color.brand)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Fill In Blanks")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }.fontWeight(.semibold)
+                }
+            }
+            .onAppear {
+                focused = blanks.first { (values[$0] ?? auto[$0] ?? "").isEmpty }
+            }
+        }
+    }
+
+    /// "[FREELANCER FULL NAME]" → "Freelancer Full Name".
+    private func label(_ b: String) -> String {
+        let inner = b.trimmingCharacters(in: CharacterSet(charactersIn: "[]"))
+        return inner == inner.uppercased() && inner != inner.lowercased() ? inner.capitalized : inner
+    }
+
+    private func focusNext(after b: String) {
+        guard let i = blanks.firstIndex(of: b) else { return }
+        focused = blanks.dropFirst(i + 1).first
+        if focused == nil { dismiss() }
     }
 }
 

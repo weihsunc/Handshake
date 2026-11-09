@@ -507,48 +507,48 @@
         }
       }
     },
-    "%@ still need filling in. Cancel to edit the contract, or send it as it is.": {
+    "%@ still need filling in.": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ 仍需填寫。取消即可編輯合約，或照現狀傳送。"
+            "value": "%@ 仍需填寫。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ 仍需填写。取消即可编辑合同，或按现状发送。"
+            "value": "%@ 仍需填写。"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@がまだ空欄です。キャンセルして契約書を編集するか、このまま送信してください。"
+            "value": "%@がまだ空欄です。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@이(가) 아직 비어 있어요. 취소하고 계약서를 편집하거나 그대로 보내세요."
+            "value": "%@이(가) 아직 비어 있어요."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aún falta completar %@. Cancela para editar el contrato o envíalo tal como está."
+            "value": "Faltan por rellenar: %@."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ restent à compléter. Annulez pour modifier le contrat, ou envoyez-le tel quel."
+            "value": "Encore à remplir : %@."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ müssen noch ausgefüllt werden. Tippe auf „Abbrechen“, um den Vertrag zu bearbeiten, oder sende ihn so, wie er ist."
+            "value": "Noch auszufüllen: %@."
           }
         }
       }
@@ -1331,6 +1331,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rechtsbündig"
+          }
+        }
+      }
+    },
+    "All blanks filled in": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有空白都已填寫"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有空白都已填写"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべての空欄を入力済み"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빈칸을 모두 채웠어요"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos los espacios rellenados"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tous les champs sont remplis"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Lücken ausgefüllt"
           }
         }
       }
@@ -4137,6 +4183,144 @@
           "stringUnit": {
             "state": "translated",
             "value": "Datei"
+          }
+        }
+      }
+    },
+    "Fill In": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "填寫"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "填写"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入力"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "채우기"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rellenar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remplir"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausfüllen"
+          }
+        }
+      }
+    },
+    "Fill In Blanks": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "填寫空白"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "填写空白"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空欄を入力"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빈칸 채우기"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rellenar espacios"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remplir les champs"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lücken ausfüllen"
+          }
+        }
+      }
+    },
+    "Filled in from the name on the send screen.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已從傳送畫面上的姓名自動填入。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已根据发送页面上的姓名自动填入。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "送信画面の氏名から入力しました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보내기 화면의 이름으로 채웠어요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rellenado con el nombre de la pantalla de envío."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rempli avec le nom saisi sur l’écran d’envoi."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus dem Namen auf dem Sendebildschirm übernommen."
           }
         }
       }
@@ -7131,6 +7315,52 @@
         }
       }
     },
+    "Review": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "檢查"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "检查"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "確認"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "검토"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifier"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prüfen"
+          }
+        }
+      }
+    },
     "Revise Contract": {
       "localizations": {
         "zh-Hant": {
@@ -8967,6 +9197,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Der Absender erfährt, dass du abgelehnt hast – mit deinem Grund, falls du einen angibst."
+          }
+        }
+      }
+    },
+    "They go into the contract when you send it.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "傳送時會寫入合約。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发送时会写入合同。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "送信時に契約書に反映されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보낼 때 계약서에 반영돼요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se añaden al contrato al enviarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ils seront intégrés au contrat à l’envoi."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie werden beim Senden in den Vertrag übernommen."
           }
         }
       }
