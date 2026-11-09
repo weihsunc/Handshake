@@ -49,6 +49,7 @@ struct SigningView: View {
     @State private var askDecline = false
     @State private var declineReason = ""
     @State private var changesText = ""
+    @FocusState private var changesFocused: Bool
 
     // ── Find in the contract (the bar's search button) ──
     @State private var isSearching  = false
@@ -232,18 +233,17 @@ struct SigningView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
 
-                HStack(alignment: .top) {
-                    Text(contract.title)
-                        .font(.title.weight(.bold))
-                        .foregroundStyle(Color(.label))
-                        .fixedSize(horizontal: false, vertical: true)
-                    Spacer(minLength: 8)
-                    StatusBadge(status: status, incoming: contract.isIncoming)
-                        .padding(.top, 6)
-                }
+                // The title gets the full width; the status sits under it.
+                Text(contract.title)
+                    .font(.title.weight(.bold))
+                    .foregroundStyle(Color(.label))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                // Who's asking, and as whom they're asked to sign.
+                // Status, who's asking, and as whom they're asked to sign.
                 VStack(alignment: .leading, spacing: 6) {
+                    StatusBadge(status: status, incoming: contract.isIncoming)
+                        .padding(.bottom, 4)
                     if let from = contract.senderName {
                         Label(String(localized: "From \(from)"), systemImage: "person.crop.circle")
                     }
@@ -525,32 +525,34 @@ struct SigningView: View {
     // MARK: - Ask for changes / decline
     // ─────────────────────────────────────────────────────────────────────────
 
+    /// A plain iOS form: one multi-line field with a placeholder, the
+    /// explanation as its footer, the keyboard up from the start.
     private var changesSheet: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Tell \(contract.senderName ?? String(localized: "the sender")) what you'd like changed. They can revise it and send you a new version.")
-                    .font(.subheadline)
-                    .foregroundStyle(Color.secondaryInk)
-                TextEditor(text: $changesText)
-                    .frame(minHeight: 140)
-                    .padding(8)
-                    .scrollContentBackground(.hidden)
-                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.cardFill))
-                Spacer()
+            Form {
+                Section {
+                    TextField("Changes", text: $changesText,
+                              prompt: Text("For example, move the start date to March 1."),
+                              axis: .vertical)
+                        .lineLimit(4...12)
+                        .focused($changesFocused)
+                } footer: {
+                    Text("Tell \(contract.senderName ?? String(localized: "the sender")) what you'd like changed. They can revise it and send you a new version.")
+                }
             }
-            .padding(16)
             .navigationTitle("Ask for Changes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { sheet = nil }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Send") { requestChanges() }
                         .fontWeight(.semibold)
                         .disabled(changesText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
+            .onAppear { changesFocused = true }
         }
         .presentationDetents([.medium, .large])
     }
