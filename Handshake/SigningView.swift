@@ -456,6 +456,19 @@ struct SigningView: View {
     // MARK: - Sign sheet
     // ─────────────────────────────────────────────────────────────────────────
 
+    private func signRow<Value: View>(_ label: LocalizedStringKey,
+                                      @ViewBuilder value: () -> Value) -> some View {
+        HStack(spacing: 12) {
+            Text(label)
+                .font(.body)
+                .foregroundStyle(Color.primaryInk)
+            Spacer(minLength: 8)
+            value()
+        }
+        .padding(.horizontal, 16)
+        .frame(minHeight: 50)
+    }
+
     private var signSheet: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(role.map { String(localized: "Sign as \($0)") } ?? String(localized: "Sign"))
@@ -471,32 +484,26 @@ struct SigningView: View {
                 .pickerStyle(.segmented)
             }
 
-            HStack(spacing: 10) {
-                Text("Name")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(Color.secondaryInk)
-                TextField("Your full name", text: $signerName)
-                    .font(.body)
-                    .textContentType(.name)
-                    .submitLabel(.done)
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.cardFill))
-
-            if slotHasDateField {
-                HStack {
-                    Text("Date")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Color.secondaryInk)
-                    Spacer()
-                    DatePicker("", selection: $signedDate, displayedComponents: .date)
-                        .labelsHidden()
+            // One grouped box, the iOS way (Calendar's new event, Contacts):
+            // labels on the left, values on the right, rows the same height,
+            // a hairline between them.
+            VStack(spacing: 0) {
+                signRow("Name") {
+                    TextField("Your full name", text: $signerName)
+                        .font(.body)
+                        .multilineTextAlignment(.trailing)
+                        .textContentType(.name)
+                        .submitLabel(.done)
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 6)
-                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.cardFill))
+                if slotHasDateField {
+                    Divider().padding(.leading, 16)
+                    signRow("Date") {
+                        DatePicker("", selection: $signedDate, displayedComponents: .date)
+                            .labelsHidden()
+                    }
+                }
             }
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.cardFill))
 
             Spacer(minLength: 0)
 
