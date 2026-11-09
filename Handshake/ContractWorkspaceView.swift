@@ -536,17 +536,16 @@ struct ContractWorkspaceView: View {
 
     // ── Suggestions ───────────────────────────────────────────────────────
 
-    /// Next steps after the latest reply, in one row pinned to the bottom of
-    /// the panel (always in view, whatever the panel's height): fill in the
-    /// blanks (the app does that, no AI), then the AI's own ideas.
+    /// Next steps under the latest reply, wrapping onto as many lines as
+    /// they need: fill in the blanks (the app does that, no AI), then the
+    /// AI's own ideas.
     @ViewBuilder
     private var suggestionRow: some View {
         if let last = messages.last, !last.isUser, contract != nil, !isLoading, !isAILoading {
             let blanks = SignatureSlots.blanks(in: attributedBody).count
             let ideas = last.suggestions ?? []
             if blanks > 0 || !ideas.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
+                WrapLayout(spacing: 8, lineSpacing: 8) {
                         if blanks > 0 {
                             suggestionChip(blanks == 1 ? String(localized: "Fill in 1 blank")
                                                        : String(localized: "Fill in \(blanks) blanks"),
@@ -558,10 +557,9 @@ struct ContractWorkspaceView: View {
                                 sendToAI()
                             }
                         }
-                    }
-                    .padding(.horizontal, 16)
                 }
-                .padding(.vertical, 8)
+                .padding(.horizontal, 16)
+                .padding(.top, -4)
                 .transition(.opacity)
             }
         }
@@ -691,7 +689,6 @@ struct ContractWorkspaceView: View {
     private var sidePanel: some View {
         VStack(spacing: 0) {
             messageList(asSheet: false)
-            suggestionRow
             chatBar(inSidePanel: true)
                 .padding(.horizontal, 16)
                 .padding(.top, 4)
@@ -711,6 +708,9 @@ struct ContractWorkspaceView: View {
                     ForEach(messages) { msg in
                         MessageBubble(message: msg).id(msg.id)
                     }
+
+                    // Next steps, wrapped under the latest reply.
+                    suggestionRow
 
 
                     if isLoading || isAILoading {
@@ -784,7 +784,6 @@ struct ContractWorkspaceView: View {
                     .accessibilityHint("Drag up to expand, down to shrink or close")
 
                 messageList(asSheet: true)
-                suggestionRow
             }
             .frame(height: clampedPanelHeight)
             .frame(maxWidth: .infinity)
@@ -800,7 +799,13 @@ struct ContractWorkspaceView: View {
             Rectangle()
                 .fill(.regularMaterial)
                 .frame(height: Self.chatBarH)
-                .ignoresSafeArea(edges: .bottom)
+                // …and on past the frame, down over the home-indicator strip.
+                // ignoresSafeArea alone left it open whenever the bottom safe
+                // area changed (the bar focused, the keyboard up), and the
+                // document showed through under the bar.
+                .background(alignment: .bottom) {
+                    Rectangle().fill(.regularMaterial).frame(height: 120).offset(y: 120)
+                }
         }
         // On a wide screen the panel is a centred sheet over the document's
         // column, not a slab across the whole display.

@@ -694,3 +694,56 @@ struct MessageBubble: View {
         }
     }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARK: - Wrap layout
+//
+// Lays children out left to right and starts a new line when the next one
+// doesn't fit — chips that wrap under a chat reply. A child wider than the
+// line gets the whole line (and truncates).
+// ─────────────────────────────────────────────────────────────────────────────
+
+struct WrapLayout: SwiftUI.Layout {
+    var spacing: CGFloat = 8
+    var lineSpacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: SwiftUI.LayoutSubviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? .infinity
+        let rows = arrange(subviews, width: width)
+        let height = rows.map(\.height).reduce(0, +) + lineSpacing * CGFloat(max(rows.count - 1, 0))
+        let used = rows.map(\.width).max() ?? 0
+        return CGSize(width: proposal.width ?? used, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: SwiftUI.LayoutSubviews, cache: inout ()) {
+        var y = bounds.minY
+        for row in arrange(subviews, width: bounds.width) {
+            var x = bounds.minX
+            for (i, size) in zip(row.items, row.sizes) {
+                subviews[i].place(at: CGPoint(x: x, y: y + (row.height - size.height) / 2),
+                                  proposal: ProposedViewSize(size))
+                x += size.width + spacing
+            }
+            y += row.height + lineSpacing
+        }
+    }
+
+    private struct Row { var items: [Int] = []; var sizes: [CGSize] = []; var width: CGFloat = 0; var height: CGFloat = 0 }
+
+    private func arrange(_ subviews: SwiftUI.LayoutSubviews, width: CGFloat) -> [Row] {
+        var rows: [Row] = [], row = Row()
+        for i in subviews.indices {
+            var size = subviews[i].sizeThatFits(.unspecified)
+            if size.width > width { size = subviews[i].sizeThatFits(ProposedViewSize(width: width, height: nil)) }
+            let needed = row.items.isEmpty ? size.width : row.width + spacing + size.width
+            if !row.items.isEmpty && needed > width {
+                rows.append(row); row = Row()
+            }
+            row.width = row.items.isEmpty ? size.width : row.width + spacing + size.width
+            row.items.append(i); row.sizes.append(size)
+            row.height = max(row.height, size.height)
+        }
+        if !row.items.isEmpty { rows.append(row) }
+        return rows
+    }
+}
