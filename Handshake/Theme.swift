@@ -26,6 +26,14 @@ extension Color {
     /// Far end of the placeholder text gradient — must stay readable on the bar.
     static let brandTextDeep  = Color(light: 0x26065D, dark: 0xC9B8FF)
 
+    /// Primary actions — the Send pills, the send circle, the chat bar's
+    /// placeholder. Near-black until the accent colour is decided: swap these
+    /// two and every primary action follows. #141414 is the handshake
+    /// drawing's own stroke colour (softer than #000 on the #FAFAFA page).
+    static let action         = Color(light: 0x141414, dark: 0xF2F2F2)
+    /// Text / icons on `action`.
+    static let onAction       = Color(light: 0xFFFFFF, dark: 0x141414)
+
     /// Screen background: stone/50 #FAFAFA, system black in dark.
     static let pageBackground = Color(UIColor { $0.userInterfaceStyle == .dark ? .systemBackground
                                                                                : UIColor(hex: 0xFAFAFA) })

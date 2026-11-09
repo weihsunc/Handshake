@@ -85,8 +85,14 @@ struct ChatBar: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 10) {
                 if !isExpanded {
-                    attachButton
-                        .matchedGeometryEffect(id: "attach", in: ns)
+                    // At rest the bar shows the handshake; once it's tapped
+                    // "+" takes its place (Home has no "+", so it keeps it).
+                    if isFocused && onAttach != nil {
+                        attachButton
+                            .matchedGeometryEffect(id: "attach", in: ns)
+                    } else {
+                        brandGlyph
+                    }
                 }
 
                 field
@@ -130,13 +136,7 @@ struct ChatBar: View {
             if prompt.isEmpty {
                 Text(placeholder)
                     .font(.body.weight(.medium))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color.brand,
-                                     Color.brandTextDeep],
-                            startPoint: .leading, endPoint: .trailing
-                        )
-                    )
+                    .foregroundStyle(Color.action)
                     .allowsHitTesting(false)
             }
             TextField("", text: $prompt, axis: .vertical)
@@ -189,6 +189,22 @@ struct ChatBar: View {
         }
     }
 
+    // ── The handshake mark, at rest ───────────────────────────────────────
+    private var brandGlyph: some View {
+        Image("handshake-glyph")
+            .resizable()
+            .scaledToFit()
+            .foregroundStyle(Color.action)
+            // A wide drawing (about 2:1): let it run a little past the
+            // square icon slot so the hands stay legible.
+            .frame(width: iconSize * 1.25)
+            .frame(height: iconSize)
+            .contentShape(Rectangle())
+            .onTapGesture { isFocused = true }
+            .accessibilityHidden(true)
+            .transition(.opacity)
+    }
+
     // ── Mic: tap to dictate, tap again to stop ────────────────────────────
     private var micButton: some View {
         Button {
@@ -217,16 +233,9 @@ struct ChatBar: View {
         Button(action: onSend) {
             Image(systemName: "arrow.up")
                 .font(.subheadline.weight(.bold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.onAction)
                 .frame(width: iconSize, height: iconSize)
-                .background(
-                    LinearGradient(
-                        colors: [Color.brandFill,
-                                 Color.brandDeep],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .background(Color.action)
                 .clipShape(Circle())
         }
         .buttonStyle(.plain)
@@ -325,14 +334,14 @@ struct ToolbarPillButton: View {
         Button(action: action) {
             Text(title)
                 .font(.body.weight(.medium))
-                // Prominent glass picks a dark label on a tint in dark mode;
-                // the brand purple always wants white.
-                .foregroundStyle(.white)
+                // Set explicitly: the fill flips with the appearance (ink in
+                // light, near-white in dark), and so must the label.
+                .foregroundStyle(Color.onAction)
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
         }
         .buttonStyle(.glassProminent)
-        .tint(Color.brandFill)
+        .tint(Color.action)
     }
 }
 
@@ -355,10 +364,7 @@ struct PurplePillButton: View {
         Button(action: action) {
             Text(title)
                 .font(.body.weight(.medium))
-                // mix-blend-plus-lighter from Figma — gives the text a slight glow
-                // against the dark gradient background
-                .blendMode(.plusLighter)
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.onAction)
                 // An iOS 26 toolbar clamps its item to a 44pt glass container and
                 // will wrap the label to fit it — "Send" came out as "S/e" on two
                 // lines. fixedSize makes the text refuse to be compressed.
@@ -367,15 +373,9 @@ struct PurplePillButton: View {
                 .padding(.horizontal, 14)
                 .frame(maxWidth: fullWidth ? .infinity : nil)
                 .frame(height: fullWidth ? fullH : barH)
-                .background(
-                    LinearGradient(
-                        colors: [Color.brandFill,   // #4C00FF
-                                 Color.brandDeep],  // #26065D
-                        startPoint: UnitPoint(x: 0.08, y: 0),
-                        endPoint:   UnitPoint(x: 1.47, y: 1)
-                    ),
-                    in: Capsule()
-                )
+                // The primary-action colour (Theme `action`), not the purple
+                // gradient, until the accent is chosen.
+                .background(Color.action, in: Capsule())
                 .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 8)
         }
         .buttonStyle(.plain)
@@ -437,20 +437,12 @@ struct PurpleCircleButton: View {
         Button(action: { action() }) {
             Image(systemName: systemName)
                 .font(.callout.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.onAction)
                 .frame(width: iconSize, height: iconSize)
         }
         .frame(height: 44)
         .padding(.horizontal, 4)
-        .background(
-            LinearGradient(
-                colors: [Color.brandFill,
-                         Color.brandDeep],
-                startPoint: UnitPoint(x: 0.08, y: 0),
-                endPoint:   UnitPoint(x: 1.47, y: 1)
-            ),
-            in: Capsule()
-        )
+        .background(Color.action, in: Capsule())
         .buttonStyle(.plain)
         .accessibilityLabel(label)
     }

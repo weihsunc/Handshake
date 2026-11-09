@@ -238,7 +238,7 @@ struct ContractWorkspaceView: View {
                     // Plain "Edit", no AI sparkle (owner's call).
                     Toggle("Edit", isOn: $showSidePanel.animation())
                     .toggleStyle(.button)
-                    .tint(Color.brandFill)
+                    .tint(Color.action)
                     .accessibilityHint("Shows or hides the conversation with HandShake")
                 }
             }
