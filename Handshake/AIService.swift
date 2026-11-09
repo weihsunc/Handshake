@@ -94,6 +94,10 @@ enum AIService {
             exactly as its label in the signature block (e.g. FREELANCER). Infer it from \
             the request ("I'm a freelancer…", "my tenant", "for my employee"). Write NONE \
             if the request doesn't make it clear.]
+            NEXT: [2 or 3 short next steps the person might ask you for with this contract, \
+            separated by " | ". Each under 7 words, phrased as a request, specific to this \
+            contract (e.g. "Add a late payment fee | Add detail to the scope clause"). \
+            Never suggest filling in the [bracketed] fields — the app does that.]
             ---
 
             Then write the full contract body.
@@ -119,7 +123,8 @@ enum AIService {
             - Write the title and the whole contract in the language of the user's request \
               (a request in Japanese gets a contract in Japanese, and so on).
             - These markers stay exactly as shown, untranslated, because the app reads them: \
-              "TITLE:", "SENDER:", "NONE", "---", "[Signature]", "[Date]". Everything else, including the \
+              "TITLE:", "SENDER:", "NEXT:", "NONE", "---", "[Signature]", "[Date]". Everything else, \
+              including the NEXT suggestions and the \
               SIGNATURES heading, the role labels and the [bracketed] fill-in fields, is \
               written in the contract's language. Write role labels in capitals where the \
               script has capitals, followed by a colon.
@@ -137,6 +142,7 @@ enum AIService {
         let lines = raw.components(separatedBy: "\n")
         var title: String? = nil
         var sender: String? = nil
+        var next: [String] = []
         var bodyStart: Int? = nil
 
         for (i, line) in lines.enumerated() {
@@ -154,6 +160,15 @@ enum AIService {
                     .trimmingCharacters(in: .whitespaces)
                     .trimmingCharacters(in: CharacterSet(charactersIn: "[]"))
                 if !r.isEmpty && r.uppercased() != "NONE" { sender = r }
+            }
+            // Optional: suggested next steps, shown as chips under the reply.
+            if trimmed.hasPrefix("NEXT:") {
+                next = String(trimmed.dropFirst("NEXT:".count))
+                    .components(separatedBy: "|")
+                    .map { $0.trimmingCharacters(in: .whitespaces)
+                              .trimmingCharacters(in: CharacterSet(charactersIn: "[]\"")) }
+                    .filter { !$0.isEmpty && $0.count <= 60 }
+                next = Array(next.prefix(3))
             }
             if trimmed == "---" {
                 bodyStart = i + 1
@@ -174,6 +189,7 @@ enum AIService {
 
         var contract = GeneratedContract(id: UUID(), title: title, content: body)
         contract.senderRole = sender
+        contract.nextSteps  = next
         return contract
     }
 

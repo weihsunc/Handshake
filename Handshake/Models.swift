@@ -98,6 +98,9 @@ struct GeneratedContract: Identifiable, Codable {
     /// The AI suggests it from the request ("I'm a freelancer…") when it
     /// drafts; the sender's choice on the send screen replaces it.
     var senderRole: String?         = nil
+    /// The AI's suggested next steps from its latest draft (NEXT: line).
+    /// Shown as chips under its reply; not needed after that.
+    var nextSteps: [String]         = []
 }
 
 /// One party's signature. `slot` indexes SignatureSlots.find on the
@@ -175,6 +178,8 @@ struct ChatMessage: Identifiable, Codable, Hashable {
     var id = UUID()
     let content: String
     let isUser: Bool
+    /// Next steps offered under an assistant reply (tap to ask for them).
+    var suggestions: [String]? = nil
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

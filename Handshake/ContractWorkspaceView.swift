@@ -87,6 +87,11 @@ struct ContractWorkspaceView: View {
     /// "Contract updated · N blanks filled in", shown after that.
     @State private var filledToast:    Int?                    = nil
     @State private var toastGeneration                         = 0
+    /// Fill In Blanks opened from the contract itself (a chat suggestion).
+    @State private var showBlanksForm                          = false
+    @State private var formBlanks:     [String]                = []
+    @State private var formContext:    [String: String]        = [:]
+    @State private var formValues:     [String: String]        = [:]
     @State private var textViewRef:    UITextView?             = nil
 
     // ── Find in document (phone bottom bar; see DocumentSearch.swift) ─────────
@@ -261,6 +266,9 @@ struct ContractWorkspaceView: View {
                     Button("Cancel") { dismiss() }
                 }
             }
+        }
+        .sheet(isPresented: $showBlanksForm, onDismiss: blanksFormClosed) {
+            FillBlanksSheet(blanks: formBlanks, context: formContext, auto: [:], values: $formValues)
         }
         .overlay(alignment: .top) {
             if let n = filledToast, !showSendFlow, filledRanges.isEmpty == false {
@@ -496,8 +504,9 @@ struct ContractWorkspaceView: View {
     // After the fill-in form on the send page, the sender lands back on the
     // document: each filled spot gets the search highlight (draw-only, never
     // saved — DocumentSearch.decorate), the first is scrolled into view, and
-    // a toast says what happened, with Send to go straight back. The
-    // highlights stay until the sender edits, searches, or sends.
+    // a toast says what happened. The highlights stay until the sender
+    // edits, searches, asks the AI, or sends. The same happens when the form
+    // is opened from the contract (the "Fill in N blanks" chat suggestion).
     // ─────────────────────────────────────────────────────────────────────────
 
     private func showFilledBlanks(attempt: Int = 0) {
@@ -525,6 +534,82 @@ struct ContractWorkspaceView: View {
         }
     }
 
+    // ── Suggestions ───────────────────────────────────────────────────────
+
+    /// Next steps after the latest reply, in one row pinned to the bottom of
+    /// the panel (always in view, whatever the panel's height): fill in the
+    /// blanks (the app does that, no AI), then the AI's own ideas.
+    @ViewBuilder
+    private var suggestionRow: some View {
+        if let last = messages.last, !last.isUser, contract != nil, !isLoading, !isAILoading {
+            let blanks = SignatureSlots.blanks(in: attributedBody).count
+            let ideas = last.suggestions ?? []
+            if blanks > 0 || !ideas.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        if blanks > 0 {
+                            suggestionChip(blanks == 1 ? String(localized: "Fill in 1 blank")
+                                                       : String(localized: "Fill in \(blanks) blanks"),
+                                           icon: "square.and.pencil") { openBlanksForm() }
+                        }
+                        ForEach(ideas, id: \.self) { idea in
+                            suggestionChip(idea, icon: "sparkles") {
+                                aiChatPrompt = idea
+                                sendToAI()
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                }
+                .padding(.vertical, 8)
+                .transition(.opacity)
+            }
+        }
+    }
+
+    private func suggestionChip(_ title: String, icon: String,
+                                action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: icon)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Color.primaryInk)
+                .lineLimit(1)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 9)
+                .background(Color(.systemBackground).opacity(0.6), in: Capsule())
+                .overlay(Capsule().strokeBorder(Color(.separator), lineWidth: 1))
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Fill In Blanks, right on the contract: the same form as the send
+    /// page, written into the document when it closes.
+    private func openBlanksForm() {
+        if isEditing { isEditing = false }
+        let b = SignatureSlots.blanks(in: attributedBody)
+        guard !b.isEmpty else { return }
+        formBlanks  = b
+        formContext = Dictionary(uniqueKeysWithValues: b.compactMap { x in
+            SignatureSlots.context(of: x, in: attributedBody).map { (x, $0) } })
+        formValues  = [:]
+        showBlanksForm = true
+    }
+
+    private func blanksFormClosed() {
+        let fills = formValues.filter { !$0.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        formValues = [:]
+        guard !fills.isEmpty else { return }
+        let doc = NSMutableAttributedString(attributedString: attributedBody)
+        let ranges = SignatureSlots.fillTracking(fills, in: doc)
+        guard !ranges.isEmpty else { return }
+        attributedBody = doc
+        persist()
+        filledRanges = ranges
+        filledToast  = fills.count
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { showFilledBlanks() }
+    }
+
     private func clearFilledHighlights() {
         guard !filledRanges.isEmpty else { return }
         filledRanges = []
@@ -532,7 +617,7 @@ struct ContractWorkspaceView: View {
         withAnimation(.easeInOut(duration: 0.2)) { filledToast = nil }
     }
 
-    /// "Contract updated · 3 blanks filled in"  [Send]
+    /// "Contract updated · 3 blanks filled in, highlighted below"
     private func filledToastView(_ n: Int) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
@@ -547,20 +632,9 @@ struct ContractWorkspaceView: View {
                     .font(.footnote)
                     .foregroundStyle(Color.secondaryInk)
             }
-            Spacer(minLength: 8)
-            Button(String(localized: "Send")) {
-                clearFilledHighlights()
-                showSendFlow = true
-            }
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Color.onAction)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 7)
-            .background(Color.action, in: Capsule())
-            .buttonStyle(.plain)
+            Spacer(minLength: 0)
         }
-        .padding(.leading, 14)
-        .padding(.trailing, 10)
+        .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         .padding(.horizontal, 16)
@@ -617,6 +691,7 @@ struct ContractWorkspaceView: View {
     private var sidePanel: some View {
         VStack(spacing: 0) {
             messageList(asSheet: false)
+            suggestionRow
             chatBar(inSidePanel: true)
                 .padding(.horizontal, 16)
                 .padding(.top, 4)
@@ -637,6 +712,7 @@ struct ContractWorkspaceView: View {
                         MessageBubble(message: msg).id(msg.id)
                     }
 
+
                     if isLoading || isAILoading {
                         // First draft vs a follow-up edit get different stages.
                         ThinkingIndicator(task: contract == nil ? .drafting : .editing)
@@ -652,15 +728,14 @@ struct ContractWorkspaceView: View {
                             .padding(.horizontal, 16)
                     }
 
-                    Color.clear.frame(height: 16)
+                    Color.clear.frame(height: 16).id("bottom")
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
             }
+            // To the very bottom, so the suggestions under a reply show too.
             .onChange(of: messages.count) { _, _ in
-                withAnimation {
-                    if let last = messages.last { proxy.scrollTo(last.id, anchor: .bottom) }
-                }
+                withAnimation { proxy.scrollTo("bottom", anchor: .bottom) }
             }
             .onChange(of: isLoading) { _, loading in
                 withAnimation { if loading { proxy.scrollTo("loading", anchor: .bottom) } }
@@ -709,6 +784,7 @@ struct ContractWorkspaceView: View {
                     .accessibilityHint("Drag up to expand, down to shrink or close")
 
                 messageList(asSheet: true)
+                suggestionRow
             }
             .frame(height: clampedPanelHeight)
             .frame(maxWidth: .infinity)
@@ -849,7 +925,8 @@ struct ContractWorkspaceView: View {
                 attributedBody = .fromHandshakeMarkdown(result.content)
                 messages.append(ChatMessage(
                     content: String(localized: "Created! Feel free to edit directly on the contract or ask me to update it for you!"),
-                    isUser: false
+                    isUser: false,
+                    suggestions: result.nextSteps
                 ))
                 persist()   // save immediately — a generated contract is a draft (and its reply)
 
@@ -978,7 +1055,8 @@ struct ContractWorkspaceView: View {
                     attributedBody = .fromHandshakeMarkdown(result.content)
                     messages.append(ChatMessage(
                         content: String(localized: "Updated! Feel free to keep editing or ask me for more changes."),
-                        isUser: false
+                        isUser: false,
+                        suggestions: result.nextSteps
                     ))
                     persist()          // after the append, so the reply is saved too
                 }

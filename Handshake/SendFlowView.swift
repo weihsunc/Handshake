@@ -1183,7 +1183,7 @@ struct SendFlowView: View {
 // send screen already knows come pre-filled; the sender can change them.
 // ─────────────────────────────────────────────────────────────────────────────
 
-private struct FillBlanksSheet: View {
+struct FillBlanksSheet: View {
     let blanks: [String]
     let context: [String: String]
     let auto: [String: String]
