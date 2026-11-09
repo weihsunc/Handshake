@@ -26,6 +26,8 @@ import MessageUI
 struct SendFlowView: View {
 
     let contract: GeneratedContract
+    /// Called when the page goes away, after any typed blanks are saved.
+    var onClose: () -> Void = {}
     @Environment(\.dismiss) private var dismiss
 
     /// Signature boxes on the unsigned document, and whose they are.
@@ -35,7 +37,7 @@ struct SendFlowView: View {
     /// Where each blank sits ("…entered into as of ____ (the Effective…").
     private let blankContext: [String: String]
     /// What the sender typed for each blank. Written into the document when
-    /// it's sent (or on Cancel, so nothing typed is lost).
+    /// it's sent (or on leaving the page, so nothing typed is lost).
     @State private var blankValues: [String: String] = [:]
     @State private var showFillBlanks = false
 
@@ -64,8 +66,9 @@ struct SendFlowView: View {
     private static let replyToKey = "send.replyTo"
     private static let myNameKey  = "send.myName"
 
-    init(contract: GeneratedContract) {
+    init(contract: GeneratedContract, onClose: @escaping () -> Void = {}) {
         self.contract = contract
+        self.onClose  = onClose
         let stored = ContractStore.shared.contract(id: contract.id) ?? contract
         let base   = stored.baseBody()
         let found  = SignatureSlots.find(in: base)
@@ -226,7 +229,6 @@ struct SendFlowView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     var body: some View {
-        NavigationStack {
           ScrollViewReader { scroller in
             ScrollView {
                 VStack(spacing: 12) {
@@ -277,11 +279,10 @@ struct SendFlowView: View {
             .background(Color.pageBackground.ignoresSafeArea())
             .navigationTitle("Send for Signing")
             .navigationBarTitleDisplayMode(.inline)
+            // A pushed page: the system back button (and edge swipe) leave it.
+            // Hidden only while Face ID / the provider call is in flight.
+            .navigationBarBackButtonHidden(isSigning)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { applyBlanks(includeAuto: false); dismiss() }
-                        .foregroundStyle(Color(.label))
-                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     // Not disabled for missing details: tapping says what's
                     // missing instead of leaving a grey button to puzzle over.
@@ -301,7 +302,6 @@ struct SendFlowView: View {
                 }
             }
           }
-        }
         .sheet(item: $activeSheet) { d in deliverySheet(d) }
         .alert("Couldn't register with the signing provider",
                isPresented: Binding(get: { providerError != nil }, set: { if !$0 { providerError = nil } })) {
@@ -328,8 +328,13 @@ struct SendFlowView: View {
             FillBlanksSheet(blanks: blanks, context: blankContext,
                             auto: autoValues, values: $blankValues)
         }
-        // Typed blanks are saved on Cancel; a swipe would skip that.
-        .interactiveDismissDisabled(!blankValues.isEmpty)
+        // However the page is left (back, swipe, or after sending), keep any
+        // blanks typed in, then let the workspace reload the stored copy.
+        // After a send this is a no-op: send() already applied them.
+        .onDisappear {
+            applyBlanks(includeAuto: false)
+            onClose()
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -358,7 +363,7 @@ struct SendFlowView: View {
 
     /// Writes the filled blanks into the stored document. `includeAuto`:
     /// also the names taken from this screen (only when actually sending —
-    /// on Cancel they may not be final).
+    /// on leaving the page they may not be final).
     private func applyBlanks(includeAuto: Bool) {
         var fills: [String: String] = [:]
         for b in blanks {
@@ -927,9 +932,9 @@ private struct RecipientCard: View {
 // ─────────────────────────────────────────────────────────────────────────────
 
 #Preview {
-    SendFlowView(contract: GeneratedContract(
+    NavigationStack { SendFlowView(contract: GeneratedContract(
         id: UUID(),
         title: "Non-Disclosure Agreement",
         content: "This NDA is entered into between the parties...\n\nLANDLORD: [FULL NAME]\n[Signature]\n\nTENANT: [FULL NAME]\n[Signature]"
-    ))
+    )) }
 }

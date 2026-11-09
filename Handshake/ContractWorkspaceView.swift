@@ -43,6 +43,7 @@ struct ContractWorkspaceView: View {
     /// phone sheet's state (editing hides it; that shouldn't close the side).
     @State private var showSidePanel:     Bool  = true
     @State private var showSendFlow:      Bool  = false
+    @State private var didStartInitial:   Bool  = false
     /// The phone's chat bar has focus: it opens full width (search steps aside).
     @State private var chatBarFocused:    Bool  = false
     @State private var showImagePicker:   Bool  = false
@@ -255,12 +256,13 @@ struct ContractWorkspaceView: View {
                 }
             }
         }
-        // The send screen can write into the document (blanks filled in), so
-        // pick up the stored copy when it closes — otherwise the next
-        // persist() would save this screen's older text over it.
-        .sheet(isPresented: $showSendFlow, onDismiss: reloadFromStore) {
+        // Sending is its own step, pushed as a full page (back / Sign & Send).
+        // It can write into the document (blanks filled in), so pick up the
+        // stored copy when it closes — otherwise the next persist() would
+        // save this screen's older text over it.
+        .navigationDestination(isPresented: $showSendFlow) {
             if let c = contract {
-                SendFlowView(contract: c)
+                SendFlowView(contract: c, onClose: reloadFromStore)
             }
         }
         // System pickers, owned by SwiftUI. The old UIKit bridges sat inside a
@@ -686,6 +688,11 @@ struct ContractWorkspaceView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private func generateInitial() async {
+        // `.task` runs again whenever the workspace reappears — including on
+        // the way back from the pushed send page. Only the first run loads or
+        // generates; a second would reload the stale draft or start over.
+        guard !didStartInitial else { return }
+        didStartInitial = true
         // ── Reopening a saved draft: load it, skip generation ────────────────
         if let saved = existing {
             await MainActor.run {
