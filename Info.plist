@@ -26,11 +26,11 @@
 	<string>Handshake listens so you can describe a contract out loud instead of typing.</string>
 
 	<!-- Bundled fonts (Handshake/Fonts, copied to the bundle root by the
-	     synchronized group). Momo Signature draws signatures; SIL OFL 1.1,
-	     licence in Fonts/OFL-MomoSignature.txt. -->
+	     synchronized group). Mrs Saint Delafield draws signatures; SIL OFL
+	     1.1, licence in Fonts/OFL-MrsSaintDelafield.txt. -->
 	<key>UIAppFonts</key>
 	<array>
-		<string>MomoSignature-Regular.ttf</string>
+		<string>MrsSaintDelafield-Regular.ttf</string>
 	</array>
 
 	<key>CFBundleURLTypes</key>

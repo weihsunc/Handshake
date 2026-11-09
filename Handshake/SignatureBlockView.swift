@@ -5,8 +5,8 @@ import UIKit
 // MARK: - SignatureBlockView
 //
 // The stamp that replaces the [Signature] placeholder once a contract is
-// signed, in the app's doodle style: an ink ✕, the signer's name in Momo
-// Signature over a hand-drawn line, the local time and a short fingerprint of the
+// signed, in the app's doodle style: an ink ✕, the signer's name in Mrs
+// Saint Delafield over a hand-drawn line, the local time and a short fingerprint of the
 // SHA256 hash, and a small tilted rubber-stamp seal ("SIGNED · FACE ID ·
 // date" around a doodled Face ID face).
 //
@@ -32,13 +32,17 @@ struct SignatureBlockView: View {
                     InkCross()
                         .stroke(ink, style: StrokeStyle(lineWidth: 1.8, lineCap: .round))
                         .frame(width: 11, height: 11)
-                    // Momo Signature (bundled, SIL OFL — Handshake/Fonts).
+                    // Mrs Saint Delafield (bundled, SIL OFL — Handshake/Fonts).
+                    // Fine strokes, so it's set larger than a system face.
                     Text(stamp.signerName)
-                        .font(.custom("MomoSignature-Regular", size: 28))
+                        .font(.custom("MrsSaintDelafield-Regular", size: 40))
                         .foregroundStyle(ink)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                 }
+                // The face keeps a deep descender; without this the line
+                // floats well below the name instead of sitting under it.
+                .padding(.bottom, -14)
                 InkLine()
                     .stroke(ink.opacity(0.85), style: StrokeStyle(lineWidth: 1.3, lineCap: .round))
                     .frame(height: 6)
