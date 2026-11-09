@@ -63,6 +63,10 @@ struct SigningView: View {
     @State private var boxDirection: BoxDirection? = nil   // nil: on screen
     @State private var scrollGeneration = 0
     private enum BoxDirection { case above, below }
+    /// Which way the last scroll went: up offers "Back to top" instead.
+    @State private var scrollingUp = false
+    /// Far enough down that going back to the top is worth a button.
+    @State private var farFromTop = false
 
     private enum SignSheet: Identifiable {
         case sign, changes, reply(subject: String, message: String)
@@ -282,7 +286,16 @@ struct SigningView: View {
                 }
             }
         }
-        .onScrollGeometryChange(for: CGFloat.self, of: { $0.contentOffset.y }) { _, _ in
+        .onScrollGeometryChange(for: ScrollPosition.self, of: {
+            ScrollPosition(y: $0.contentOffset.y + $0.contentInsets.top, height: $0.containerSize.height)
+        }) { old, new in
+            let dy = new.y - old.y
+            if abs(dy) > 2 {
+                let up = dy < 0
+                if up != scrollingUp { withAnimation(.easeOut(duration: 0.2)) { scrollingUp = up } }
+            }
+            let far = new.y > new.height
+            if far != farFromTop { withAnimation(.easeOut(duration: 0.2)) { farFromTop = far } }
             updateBoxDirection()
         }
     }
@@ -302,18 +315,32 @@ struct SigningView: View {
         if dir != boxDirection { withAnimation(.easeOut(duration: 0.2)) { boxDirection = dir } }
     }
 
+    private struct ScrollPosition: Equatable { var y: CGFloat; var height: CGFloat }
+
+    /// While scrolling: going up (and well down the page) offers "Back to
+    /// top"; otherwise "Jump to signature" while their box is off screen.
+    private var showsBackToTop: Bool { scrollingUp && farFromTop }
     private var showsJump: Bool {
-        scrolledRecently && boxDirection != nil && !isSearching && sheet == nil
+        scrolledRecently && !isSearching && sheet == nil
+            && (showsBackToTop || boxDirection != nil)
     }
 
-    /// "Jump to signature", floating above the bar while it's useful.
+    private func scrollToTop() {
+        var v = textView?.superview
+        while let x = v, !(x is UIScrollView) { v = x.superview }
+        guard let scroll = v as? UIScrollView else { return }
+        scroll.setContentOffset(CGPoint(x: 0, y: -scroll.adjustedContentInset.top), animated: true)
+    }
+
+    /// The contextual button floating above the bar while scrolling.
     private var jumpButton: some View {
-        Button {
-            jumpToMyBox()
+        let toTop = showsBackToTop
+        return Button {
+            if toTop { scrollToTop() } else { jumpToMyBox() }
             withAnimation(.easeOut(duration: 0.2)) { scrolledRecently = false }
         } label: {
-            Label("Jump to signature",
-                  systemImage: boxDirection == .above ? "arrow.up" : "arrow.down")
+            Label(toTop ? String(localized: "Back to top") : String(localized: "Jump to signature"),
+                  systemImage: toTop || boxDirection == .above ? "arrow.up" : "arrow.down")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color.primaryInk)
                 .padding(.horizontal, 16)
@@ -371,7 +398,9 @@ struct SigningView: View {
     // MARK: - Sign bar
     //
     // One row: search on the left, the button that opens the sign sheet on
-    // the right. "Jump to signature" floats above it only while scrolling.
+    // the right, floating over the contract. While scrolling, one contextual
+    // button floats above them: "Jump to signature" going down (while their
+    // box is off screen), "Back to top" going up (once well down the page).
     // It used to hold the party picker, the date, the name, the button and
     // the consent line — about 40% of a phone screen, with the contract
     // squeezed into what was left.
@@ -382,11 +411,6 @@ struct SigningView: View {
     private var signBar: some View {
         VStack(spacing: 0) {
             if showsJump { jumpButton.padding(.bottom, 10) }
-
-            LinearGradient(colors: [Color.pageBackground.opacity(0), Color.pageBackground],
-                           startPoint: .top, endPoint: .bottom)
-                .frame(height: 28)
-                .allowsHitTesting(false)
 
             Group {
                 if isSearching {
@@ -417,7 +441,9 @@ struct SigningView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 12)
             .readableColumn(Layout.readableWidth + 32)
-            .background(Color.pageBackground.ignoresSafeArea(edges: .bottom))
+            // No backdrop: the buttons float over the contract (Figma
+            // 2011:54312). The inset still leaves room to scroll the last
+            // lines clear of them.
         }
         .animation(.spring(response: 0.34, dampingFraction: 0.86), value: showsJump)
         .onChange(of: searchQuery) { _, _ in runSearch() }
