@@ -67,6 +67,13 @@ struct SigningView: View {
     @State private var scrollingUp = false
     /// Far enough down that going back to the top is worth a button.
     @State private var farFromTop = false
+    /// After the button is used, it stays away until the signer's own finger
+    /// scrolls again — the jump's animated scroll mustn't bring it back
+    /// (it came straight back as "Back to top").
+    @State private var jumpDismissed = false
+    /// SwiftUI's own handle on the document's scroll, for Back to top.
+    /// (Setting the UIScrollView's offset directly was ignored.)
+    @State private var docScroll = ScrollPosition(edge: .top)
 
     private enum SignSheet: Identifiable {
         case sign, changes, reply(subject: String, message: String)
@@ -271,7 +278,11 @@ struct SigningView: View {
             .padding(.bottom, 24)
             .readableColumn(Layout.readableWidth + 32)
         }
+        .scrollPosition($docScroll)
         .onScrollPhaseChange { _, phase in
+            // Only a drag counts as "scrolling again"; .animating is the
+            // jump's own scroll.
+            if phase == .interacting { jumpDismissed = false }
             if phase.isScrolling {
                 scrollGeneration += 1
                 withAnimation(.easeOut(duration: 0.2)) { scrolledRecently = true }
@@ -285,8 +296,8 @@ struct SigningView: View {
                 }
             }
         }
-        .onScrollGeometryChange(for: ScrollPosition.self, of: {
-            ScrollPosition(y: $0.contentOffset.y + $0.contentInsets.top, height: $0.containerSize.height)
+        .onScrollGeometryChange(for: ScrollMetrics.self, of: {
+            ScrollMetrics(y: $0.contentOffset.y + $0.contentInsets.top, height: $0.containerSize.height)
         }) { old, new in
             let dy = new.y - old.y
             if abs(dy) > 2 {
@@ -314,21 +325,18 @@ struct SigningView: View {
         if dir != boxDirection { withAnimation(.easeOut(duration: 0.2)) { boxDirection = dir } }
     }
 
-    private struct ScrollPosition: Equatable { var y: CGFloat; var height: CGFloat }
+    private struct ScrollMetrics: Equatable { var y: CGFloat; var height: CGFloat }
 
     /// While scrolling: going up (and well down the page) offers "Back to
     /// top"; otherwise "Jump to signature" while their box is off screen.
     private var showsBackToTop: Bool { scrollingUp && farFromTop }
     private var showsJump: Bool {
-        scrolledRecently && !isSearching && sheet == nil
+        scrolledRecently && !jumpDismissed && !isSearching && sheet == nil
             && (showsBackToTop || boxDirection != nil)
     }
 
     private func scrollToTop() {
-        var v = textView?.superview
-        while let x = v, !(x is UIScrollView) { v = x.superview }
-        guard let scroll = v as? UIScrollView else { return }
-        scroll.setContentOffset(CGPoint(x: 0, y: -scroll.adjustedContentInset.top), animated: true)
+        withAnimation(.easeInOut(duration: 0.45)) { docScroll.scrollTo(edge: .top) }
     }
 
     /// The contextual button floating above the bar while scrolling.
@@ -336,14 +344,17 @@ struct SigningView: View {
         let toTop = showsBackToTop
         return Button {
             if toTop { scrollToTop() } else { jumpToMyBox() }
-            withAnimation(.easeOut(duration: 0.2)) { scrolledRecently = false }
+            withAnimation(.easeOut(duration: 0.2)) {
+                jumpDismissed = true
+                scrolledRecently = false
+            }
         } label: {
             Label(toTop ? String(localized: "Back to top") : String(localized: "Jump to signature"),
                   systemImage: toTop || boxDirection == .above ? "arrow.up" : "arrow.down")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color.primaryInk)
                 .padding(.horizontal, 16)
-                .padding(.vertical, 10)
+                .frame(height: jumpH)
                 .glassEffect(.regular.interactive(), in: Capsule())
         }
         .buttonStyle(.plain)
@@ -406,11 +417,10 @@ struct SigningView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     @ScaledMetric(relativeTo: .body) private var barH: CGFloat = 52
+    @ScaledMetric(relativeTo: .subheadline) private var jumpH: CGFloat = 40
 
     private var signBar: some View {
         VStack(spacing: 0) {
-            if showsJump { jumpButton.padding(.bottom, 10) }
-
             Group {
                 if isSearching {
                     DocumentSearchBar(query: $searchQuery,
@@ -438,6 +448,14 @@ struct SigningView: View {
                 }
             }
             .padding(.horizontal, 16)
+            // Floats above the bar without taking space: showing or hiding
+            // it must not change the inset (that cut the jump's scroll short).
+            .overlay(alignment: .top) {
+                if showsJump {
+                    // Its own height (~40) plus a 10pt gap, above the bar.
+                    jumpButton.offset(y: -(jumpH + 10))
+                }
+            }
             .padding(.bottom, 12)
             .readableColumn(Layout.readableWidth + 32)
             // No backdrop: the buttons float over the contract (Figma
