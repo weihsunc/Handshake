@@ -664,6 +664,15 @@ struct ContractWorkspaceView: View {
                     } else {
                         detent = .large               // settle at large
                     }
+                    // Swiping the conversation away is "not now": the bar
+                    // goes back to its resting state too — keyboard down,
+                    // compact pill, search beside it — instead of staying
+                    // half-open with nothing above it.
+                    if !showAIPanel && chatBarFocused {
+                        chatBarFocused = false
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                                        to: nil, from: nil, for: nil)
+                    }
                 }
             }
     }

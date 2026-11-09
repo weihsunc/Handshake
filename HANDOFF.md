@@ -329,6 +329,9 @@ These cost real debugging time. Don't re-litigate them without reading first.
 
 Originally used `.sheet` with `PresentationDetent`. The problem: anything inside a `UISheetPresentationController` moves when the sheet is dragged — including the chat bar, which must stay fixed. Rebuilt as a plain `ZStack` layer with a custom `DragGesture` that snaps between heights. The chat bar is a sibling at a higher `zIndex`, so it's structurally incapable of moving.
 
+### The phone's AI panel slides by offset; it is never inserted/removed
+As an `if showAIPanel { aiPanel.transition(.move…) }` the insertion never animated when opened from a chat-bar tap (it popped in at full height; closing was fine). It's now always mounted and offset below the screen when closed (`allowsHitTesting`/`accessibilityHidden` follow `showAIPanel`). Tapping the bar opens the bar full width (`ChatBar(expandsOnFocus:)`) while the panel rises out of it; swiping the panel away also resigns the bar's focus so it returns to the resting pill + search button.
+
 ### Panel height must come from `GeometryReader`, not `UIScreen`
 
 `UIScreen.main.bounds.height` includes the nav bar and status bar, so the panel extended up behind the toolbar buttons. `NavigationStack` already excludes its own nav bar from the content area, so `geo.size.height` inside a `GeometryReader` is the correct measurement.
