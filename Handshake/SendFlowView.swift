@@ -9,9 +9,13 @@ import MessageUI
 //   • Each recipient is assigned a party ("Signs as Tenant"), picked from the
 //     contract's own signature boxes. Their link names that box, so their
 //     phone never asks which party they are.
-//   • A box nobody is assigned to is the sender's. They sign it with Face ID
-//     before anything goes out ("Sign & Send"), so the recipient sees the
-//     sender's signature already in place.
+//   • The sender picks their own party too ("You · Signs as Freelancer", or
+//     not signing). Pre-selected from what they chose last time, else the
+//     AI's read of the request, else the one box left over. They sign it
+//     with Face ID before anything goes out ("Sign & Send"), so the
+//     recipient sees the sender's signature already in place.
+//   • Parties are remembered by NAME as well as box number, so a revision
+//     that reorders the signature block doesn't swap people's roles.
 //   • Each recipient gets their own message and link (one compose sheet
 //     each), because the link differs by the box it unlocks.
 //   • Placeholders still in the text ("[ADDRESS]") are flagged before sending.
@@ -30,6 +34,8 @@ struct SendFlowView: View {
     private let blanks: [String]
 
     @State private var recipients: [Recipient]
+    /// The box the sender signs. nil: they aren't signing.
+    @State private var myParty: Int?
     @State private var myName: String
     @State private var replyTo: String
 
@@ -56,10 +62,27 @@ struct SendFlowView: View {
         let found  = SignatureSlots.find(in: base)
         slots  = found
         blanks = SignatureSlots.blanks(in: base)
+        // The sender's party: what they chose last time ("" = not signing),
+        // or the AI's guess from the request. A name no box has any more
+        // counts as unknown.
+        var mine: Int? = Self.index(ofRole: stored.senderRole, in: found)
+        let senderDecided = stored.senderRole == "" || mine != nil
         // Sending again (after changes were asked for, say): start from the
-        // people it went to last time, in the same parties.
-        let start = stored.recipients.isEmpty ? [Recipient()] : stored.recipients
-        _recipients = State(initialValue: Self.assignDefaults(start, slotCount: found.count))
+        // people it went to last time, in the same parties — by name first,
+        // so a reordered signature block keeps everyone in their role.
+        let start = (stored.recipients.isEmpty ? [Recipient()] : stored.recipients).map { r in
+            var r = r
+            if let i = Self.index(ofRole: r.partyRole, in: found) { r.party = i }
+            return r
+        }
+        let rs = Self.assignDefaults(start, slotCount: found.count, reserved: mine)
+        // Not decided: the sender takes the one box left over, as before.
+        if !senderDecided {
+            let left = found.indices.filter { p in !rs.contains { $0.party == p } }
+            mine = left.count == 1 ? left[0] : nil
+        }
+        _recipients = State(initialValue: rs)
+        _myParty    = State(initialValue: found.isEmpty ? nil : mine)
         _myName  = State(initialValue: AccountStore.shared.name
                                 ?? UserDefaults.standard.string(forKey: Self.myNameKey) ?? "")
         // An Apple private-relay address only accepts mail from domains the
@@ -72,41 +95,53 @@ struct SendFlowView: View {
     // MARK: - Parties
     // ─────────────────────────────────────────────────────────────────────────
 
-    /// The order recipients take parties in: the second party first, the
-    /// first party last. The sender usually writes themselves in as the first
-    /// party (LANDLORD, then TENANT), so one recipient gets the second.
-    private static func preferenceOrder(_ n: Int) -> [Int] {
-        n <= 1 ? Array(0..<n) : Array(1..<n) + [0]
+    /// The order recipients take parties in. With the sender's party known,
+    /// the others in document order. Without it, the second party first and
+    /// the first party last: the sender is more often the first party
+    /// (LANDLORD, then TENANT), so one recipient gets the second.
+    private static func preferenceOrder(_ n: Int, reserved: Int? = nil) -> [Int] {
+        if let reserved { return (0..<n).filter { $0 != reserved } }
+        return n <= 1 ? Array(0..<n) : Array(1..<n) + [0]
+    }
+
+    private static func index(ofRole role: String?, in slots: [SignatureSlots.Slot]) -> Int? {
+        SignatureSlots.index(ofRole: role, in: slots)
     }
 
     /// Gives every recipient without a valid, unique party the next free one.
-    private static func assignDefaults(_ rs: [Recipient], slotCount n: Int) -> [Recipient] {
+    private static func assignDefaults(_ rs: [Recipient], slotCount n: Int, reserved: Int? = nil) -> [Recipient] {
         guard n > 0 else { return rs.map { var r = $0; r.party = nil; return r } }
-        var used = Set<Int>(), out = rs
+        var used = Set<Int>(reserved.map { [$0] } ?? []), out = rs
         for i in out.indices {
             if let p = out[i].party, p < n, used.insert(p).inserted { continue }
             out[i].party = nil
         }
         for i in out.indices where out[i].party == nil {
-            out[i].party = preferenceOrder(n).first { !used.contains($0) }
+            out[i].party = preferenceOrder(n, reserved: reserved).first { !used.contains($0) }
             if let p = out[i].party { used.insert(p) }
         }
         return out
     }
 
-    /// Boxes no recipient signs. One of them is the sender's.
+    /// Boxes nobody — no recipient, not the sender — is signing.
     private var unassigned: [Int] {
-        slots.indices.filter { p in !recipients.contains { $0.party == p } }
+        slots.indices.filter { p in p != myParty && !recipients.contains { $0.party == p } }
     }
 
-    /// The box the sender signs, when there is exactly one left for them.
-    private var mySlot: Int? { unassigned.count == 1 ? unassigned.first : nil }
+    /// The box the sender signs, if any.
+    private var mySlot: Int? { slots.indices.contains(myParty ?? -1) ? myParty : nil }
 
     /// With no boxes in the document, each recipient's signature goes at the
     /// end and counts on its own; a party index per recipient keeps them apart.
     private var finalRecipients: [Recipient] {
-        guard slots.isEmpty else { return recipients }
-        return recipients.enumerated().map { i, r in var r = r; r.party = i; return r }
+        guard slots.isEmpty else {
+            return recipients.map { r in
+                var r = r
+                r.partyRole = r.party.flatMap { slots.indices.contains($0) ? slots[$0].role : nil }
+                return r
+            }
+        }
+        return recipients.enumerated().map { i, r in var r = r; r.party = i; r.partyRole = nil; return r }
     }
 
     private var partyCount: Int { slots.isEmpty ? recipients.count : slots.count }
@@ -114,15 +149,28 @@ struct SendFlowView: View {
     private func pick(_ party: Int, for id: UUID) {
         guard let i = recipients.firstIndex(where: { $0.id == id }) else { return }
         // Two people can't sign one box: whoever had it takes this one's old box.
-        if let j = recipients.firstIndex(where: { $0.party == party }), j != i {
+        if myParty == party {
+            myParty = recipients[i].party
+        } else if let j = recipients.firstIndex(where: { $0.party == party }), j != i {
             recipients[j].party = recipients[i].party
         }
         recipients[i].party = party
     }
 
+    /// The sender's own choice. nil: not signing.
+    private func pickMine(_ party: Int?) {
+        if let party, let j = recipients.firstIndex(where: { $0.party == party }) {
+            // The recipient who had it takes the sender's old box, or the
+            // first free one; with none free they're asked to choose.
+            recipients[j].party = myParty ?? unassigned.first { $0 != party }
+        }
+        myParty = party
+    }
+
     private func addRecipient() {
         var r = Recipient()
-        r.party = Self.preferenceOrder(slots.count).first { p in !recipients.contains { $0.party == p } }
+        r.party = Self.preferenceOrder(slots.count, reserved: myParty)
+            .first { p in p != myParty && !recipients.contains { $0.party == p } }
         recipients.append(r)
     }
 
@@ -142,9 +190,12 @@ struct SendFlowView: View {
         if !slots.isEmpty && recipients.count > slots.count {
             out.append(String(localized: "This contract has \(slots.count) signature boxes, one per signer. Remove a recipient, or add a box for them."))
         }
-        if unassigned.count > 1 {
+        if !slots.isEmpty, recipients.contains(where: { $0.party == nil }), recipients.count <= slots.count {
+            out.append(String(localized: "Choose what each recipient signs as."))
+        }
+        if !unassigned.isEmpty {
             let roles = unassigned.map { slots[$0].role }.formatted(.list(type: .and))
-            out.append(String(localized: "No one is signing as \(roles). Add a recipient for each, or delete the extra signature boxes."))
+            out.append(String(localized: "No one is signing as \(roles). Choose it for yourself or a recipient, or delete the extra signature box."))
         }
         return out
     }
@@ -164,6 +215,10 @@ struct SendFlowView: View {
             ScrollView {
                 VStack(spacing: 12) {
                     if !blanks.isEmpty { blanksCard }
+
+                    // The sender's own party first: who they are decides
+                    // what's left for everyone else.
+                    if !slots.isEmpty { youCard }
 
                     ForEach($recipients) { $recipient in
                         RecipientCard(
@@ -192,8 +247,6 @@ struct SendFlowView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 16)
                     }
-
-                    if let mySlot { youCard(role: slots[mySlot].role) }
 
                     replyCard
                 }
@@ -270,21 +323,46 @@ struct SendFlowView: View {
         .padding(.horizontal, 16)
     }
 
-    private func youCard(role: String) -> some View {
+    private var youCard: some View {
         SendCard(header: String(localized: "You")) {
             CardRow(icon: "signature") {
                 Text("Signs as")
                     .foregroundStyle(Color.secondaryInk)
                 Spacer()
-                Text(role).fontWeight(.medium)
+                Menu {
+                    Picker("Signs as", selection: Binding(
+                        get: { mySlot ?? -1 },
+                        set: { pickMine($0 >= 0 ? $0 : nil) }
+                    )) {
+                        ForEach(slots.indices, id: \.self) { i in
+                            Text(slots[i].role).tag(i)
+                        }
+                        Divider()
+                        Text("I'm not signing").tag(-1)
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(mySlot.map { slots[$0].role } ?? String(localized: "Not signing"))
+                            .fontWeight(.medium)
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption.weight(.semibold))
+                    }
+                    .foregroundStyle(Color.brand)
+                }
             }
-            Divider().padding(.leading, 48)
-            CardRow(icon: "person") {
-                TextField("Your full name", text: $myName)
-                    .textContentType(.name)
+            if mySlot != nil {
+                Divider().padding(.leading, 48)
+                CardRow(icon: "person") {
+                    TextField("Your full name", text: $myName)
+                        .textContentType(.name)
+                }
             }
         } footer: {
-            Text("You'll sign with \(SignatureService.biometryName) before it's sent, so recipients see your signature in place.")
+            if mySlot != nil {
+                Text("You'll sign with \(SignatureService.biometryName) before it's sent, so recipients see your signature in place.")
+            } else {
+                Text("Only your recipients sign. You'll get the signed copy back.")
+            }
         }
     }
 
@@ -408,6 +486,7 @@ struct SendFlowView: View {
                                           partyCount: partyCount,
                                           replyTo: reply.isEmpty ? nil : reply,
                                           senderName: senderName,
+                                          senderRole: slots.isEmpty ? nil : (mySlot.map { slots[$0].role } ?? ""),
                                           ownSignature: ownSignature)
             Haptics.success()
             dismiss()
@@ -632,8 +711,9 @@ private struct RecipientCard: View {
                     .keyboardType(.phonePad)
             }
 
-            // Which box they sign. Only a choice when there's more than one.
-            if slots.count > 1 {
+            // Which box they sign. Only a choice when there's more than one,
+            // or when the sender took theirs and they need another.
+            if slots.count > 1 || (!slots.isEmpty && recipient.party == nil) {
                 Divider().padding(.leading, 48)
                 CardRow(icon: "signature") {
                     Text("Signs as")

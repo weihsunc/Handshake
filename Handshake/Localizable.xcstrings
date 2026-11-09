@@ -2071,6 +2071,52 @@
         }
       }
     },
+    "Choose what each recipient signs as.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請選擇每位收件人的簽署身分。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请选择每位收件人的签署身份。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "各受信者の署名者の立場を選択してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "각 수신자의 서명 역할을 선택하세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige como qué parte firma cada destinatario."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez à quel titre signe chaque destinataire."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle für jeden Empfänger, als was er signiert."
+          }
+        }
+      }
+    },
     "Close": {
       "localizations": {
         "zh-Hant": {
@@ -4601,6 +4647,52 @@
         }
       }
     },
+    "I'm not signing": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我不簽署"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我不签署"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自分は署名しない"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "나는 서명하지 않음"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No voy a firmar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je ne signe pas"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich signiere nicht"
+          }
+        }
+      }
+    },
     "Insert photo": {
       "localizations": {
         "zh-Hant": {
@@ -5291,48 +5383,48 @@
         }
       }
     },
-    "No one is signing as %@. Add a recipient for each, or delete the extra signature boxes.": {
+    "No one is signing as %@. Choose it for yourself or a recipient, or delete the extra signature box.": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "沒有人以 %@ 身分簽署。請為每個身分加入收件人，或刪除多餘的簽名欄。"
+            "value": "沒有人以 %@ 身分簽署。請選擇由你或某位收件人簽署，或刪除多餘的簽名欄。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "没有人以 %@ 身份签署。请为每个身份添加收件人，或删除多余的签名框。"
+            "value": "没有人以 %@ 身份签署。请选择由你或某位收件人签署，或删除多余的签名框。"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@として署名する人がいません。それぞれに受信者を追加するか、余分な署名ボックスを削除してください。"
+            "value": "%@として署名する人がいません。自分か受信者を選ぶか、余分な署名ボックスを削除してください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@(으)로 서명할 사람이 없어요. 각각 수신자를 추가하거나 남는 서명란을 삭제하세요."
+            "value": "%@(으)로 서명할 사람이 없어요. 나 또는 수신자를 선택하거나 남는 서명란을 삭제하세요."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nadie firma como %@. Añade un destinatario para cada uno o elimina los cuadros de firma sobrantes."
+            "value": "Nadie firma como %@. Elígelo para ti o para un destinatario, o elimina el cuadro de firma sobrante."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Personne ne signe en tant que %@. Ajoutez un destinataire pour chacun, ou supprimez les champs de signature en trop."
+            "value": "Personne ne signe en tant que %@. Attribuez-le à vous-même ou à un destinataire, ou supprimez le champ de signature en trop."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Niemand signiert als %@. Füge für jede Rolle einen Empfänger hinzu oder lösche die überzähligen Signaturfelder."
+            "value": "Niemand signiert als %@. Wähle dich selbst oder einen Empfänger, oder lösche das überzählige Signaturfeld."
           }
         }
       }
@@ -5613,6 +5705,52 @@
         }
       }
     },
+    "Not signing": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不簽署"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不签署"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名しない"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명 안 함"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No firma"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ne signe pas"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signiert nicht"
+          }
+        }
+      }
+    },
     "Not yet": {
       "localizations": {
         "zh-Hant": {
@@ -5793,6 +5931,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Auf diesem Gerät"
+          }
+        }
+      }
+    },
+    "Only your recipients sign. You'll get the signed copy back.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只有收件人需要簽署。已簽署的副本會傳回給你。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只有收件人需要签署。已签署的副本会发回给你。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名するのは受信者だけです。署名済みのコピーが返送されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "수신자만 서명해요. 서명된 사본은 나에게 돌아와요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo firman tus destinatarios. Recibirás la copia firmada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seuls vos destinataires signent. Vous recevrez la copie signée."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur deine Empfänger signieren. Du bekommst die signierte Kopie zurück."
           }
         }
       }

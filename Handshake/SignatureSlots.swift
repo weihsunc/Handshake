@@ -63,6 +63,21 @@ enum SignatureSlots {
         }
     }
 
+    /// The box for a party named `role`, matched loosely: "FREELANCER",
+    /// "Freelancer" and "freelancer:" are the same party. nil when no box
+    /// has that name, or more than one does (then the name doesn't decide).
+    static func index(ofRole role: String?, in slots: [Slot]) -> Int? {
+        guard let key = role.map(roleKey), !key.isEmpty else { return nil }
+        let hits = slots.indices.filter { roleKey(slots[$0].role) == key }
+        return hits.count == 1 ? hits[0] : nil
+    }
+
+    private static func roleKey(_ s: String) -> String {
+        s.lowercased()
+         .trimmingCharacters(in: CharacterSet(charactersIn: ":：").union(.whitespaces))
+         .split(whereSeparator: \.isWhitespace).joined(separator: " ")
+    }
+
     /// Plain-text convenience (tests, markdown).
     static func find(in text: String) -> [Slot] { find(in: NSAttributedString(string: text)) }
 

@@ -82,7 +82,8 @@ final class ContractStore {
 
     func markSent(id: UUID, recipients: [Recipient], providerRef: ProviderRef? = nil,
                   partyCount: Int? = nil, replyTo: String? = nil,
-                  senderName: String? = nil, ownSignature: PartySignature? = nil) {
+                  senderName: String? = nil, senderRole: String? = nil,
+                  ownSignature: PartySignature? = nil) {
         guard let i = contracts.firstIndex(where: { $0.id == id }) else { return }
         contracts[i].recipients  = recipients
         contracts[i].status      = .sent
@@ -90,6 +91,7 @@ final class ContractStore {
         contracts[i].partyCount  = partyCount
         contracts[i].replyTo     = replyTo
         contracts[i].senderName  = senderName
+        if let senderRole { contracts[i].senderRole = senderRole }
         // A fresh send answers any earlier request for changes.
         contracts[i].changeRequest = nil
         contracts[i].declinedBy    = nil

@@ -747,6 +747,7 @@ struct ContractWorkspaceView: View {
             c.replyTo    = stored.replyTo
             c.senderName = stored.senderName
             c.changeRequest = stored.changeRequest
+            c.senderRole = stored.senderRole
             // A signature is on the words it was given. If they've changed
             // since, it doesn't carry over to the new wording.
             c.signatures = stored.content == c.content ? stored.signatures : []
@@ -808,6 +809,14 @@ struct ContractWorkspaceView: View {
                         updated.content  = result.content
                         updated.bodyRTFD = nil   // body regenerated from markdown
                         updated.attachmentSizes = nil
+                        // Before the first send, follow the AI's latest read
+                        // of who the sender is ("actually I'm the client").
+                        // After it, the sender's own choice on the send
+                        // screen stands.
+                        if updated.sentAt == nil, let role = result.senderRole {
+                            updated.senderRole = role
+                            ContractStore.shared.update(id: updated.id) { $0.senderRole = role }
+                        }
                         contract = updated
                     } else {
                         contract = result

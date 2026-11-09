@@ -92,6 +92,12 @@ struct GeneratedContract: Identifiable, Codable {
     var declineReason: String?      = nil
     /// A recipient asked for changes instead of signing.
     var changeRequest: ChangeRequest? = nil
+    /// The party the sender signs as, by name ("Freelancer").
+    ///   nil  — not known yet; the send screen falls back to the box left over
+    ///   ""   — the sender chose not to sign
+    /// The AI suggests it from the request ("I'm a freelancer…") when it
+    /// drafts; the sender's choice on the send screen replaces it.
+    var senderRole: String?         = nil
 }
 
 /// One party's signature. `slot` indexes SignatureSlots.find on the
@@ -157,6 +163,7 @@ extension GeneratedContract {
         declinedBy    = try c.decodeIfPresent(String.self,          forKey: .declinedBy)
         declineReason = try c.decodeIfPresent(String.self,          forKey: .declineReason)
         changeRequest = try c.decodeIfPresent(ChangeRequest.self,   forKey: .changeRequest)
+        senderRole    = try c.decodeIfPresent(String.self,          forKey: .senderRole)
     }
 }
 
@@ -182,12 +189,18 @@ struct Recipient: Identifiable, Codable {
     /// The party (signature slot) this recipient signs as. nil on records
     /// from before parties were assigned.
     var party: Int?
+    /// That party's name ("Freelancer") when it was sent. Sending again
+    /// matches by this first: a revision can reorder or add signature boxes,
+    /// and the box number alone would then hand them someone else's.
+    var partyRole: String?
 
-    init(id: UUID = UUID(), name: String = "", email: String = "", phone: String = "", party: Int? = nil) {
+    init(id: UUID = UUID(), name: String = "", email: String = "", phone: String = "",
+         party: Int? = nil, partyRole: String? = nil) {
         self.id    = id
         self.name  = name
         self.email = email
         self.phone = phone
         self.party = party
+        self.partyRole = partyRole
     }
 }

@@ -90,6 +90,10 @@ enum AIService {
 
             Start your response with exactly:
             TITLE: [Short descriptive contract title]
+            SENDER: [The party role the person making this request will sign as, written \
+            exactly as its label in the signature block (e.g. FREELANCER). Infer it from \
+            the request ("I'm a freelancer…", "my tenant", "for my employee"). Write NONE \
+            if the request doesn't make it clear.]
             ---
 
             Then write the full contract body.
@@ -115,7 +119,7 @@ enum AIService {
             - Write the title and the whole contract in the language of the user's request \
               (a request in Japanese gets a contract in Japanese, and so on).
             - These markers stay exactly as shown, untranslated, because the app reads them: \
-              "TITLE:", "---", "[Signature]", "[Date]". Everything else, including the \
+              "TITLE:", "SENDER:", "NONE", "---", "[Signature]", "[Date]". Everything else, including the \
               SIGNATURES heading, the role labels and the [bracketed] fill-in fields, is \
               written in the contract's language. Write role labels in capitals where the \
               script has capitals, followed by a colon.
@@ -132,6 +136,7 @@ enum AIService {
         // TITLE the contract would be filed as a generic "Agreement".
         let lines = raw.components(separatedBy: "\n")
         var title: String? = nil
+        var sender: String? = nil
         var bodyStart: Int? = nil
 
         for (i, line) in lines.enumerated() {
@@ -141,6 +146,14 @@ enum AIService {
                     .replacingOccurrences(of: "TITLE:", with: "")
                     .trimmingCharacters(in: .whitespaces)
                 if !t.isEmpty { title = t }
+            }
+            // Optional: a guess, never required. The send screen shows it as
+            // the sender's pre-selected party, and they can change it.
+            if trimmed.hasPrefix("SENDER:") {
+                let r = String(trimmed.dropFirst("SENDER:".count))
+                    .trimmingCharacters(in: .whitespaces)
+                    .trimmingCharacters(in: CharacterSet(charactersIn: "[]"))
+                if !r.isEmpty && r.uppercased() != "NONE" { sender = r }
             }
             if trimmed == "---" {
                 bodyStart = i + 1
@@ -159,7 +172,9 @@ enum AIService {
             throw AIError.malformedContract
         }
 
-        return GeneratedContract(id: UUID(), title: title, content: body)
+        var contract = GeneratedContract(id: UUID(), title: title, content: body)
+        contract.senderRole = sender
+        return contract
     }
 
     // ─────────────────────────────────────────────────────────────
