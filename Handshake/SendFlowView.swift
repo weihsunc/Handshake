@@ -34,11 +34,11 @@ struct SendFlowView: View {
     @Environment(\.dismiss) private var dismiss
 
     /// Signature boxes on the unsigned document, and whose they are.
-    private let slots: [SignatureSlots.Slot]
+    @State private var slots: [SignatureSlots.Slot]
     /// "[ADDRESS]"-style placeholders still in the document.
     @State private var blanks: [String]
     /// Where each blank sits ("…entered into as of ____ (the Effective…").
-    private let blankContext: [String: String]
+    @State private var blankContext: [String: String]
     /// What the sender typed for each blank. Written into the document when
     /// it's sent (or on leaving the page, so nothing typed is lost).
     @State private var blankValues: [String: String] = [:]
@@ -78,6 +78,11 @@ struct SendFlowView: View {
     /// How many timeline steps have come in on the Sent page.
     @State private var revealedSteps = 0
 
+    /// The party being chosen in the sheet (or a signer being added).
+    @State private var editing: PartyEdit? = nil
+    @State private var editingReply = false
+    @State private var replyDraft = ""
+
     private static let replyToKey = "send.replyTo"
     private static let myNameKey  = "send.myName"
 
@@ -89,12 +94,10 @@ struct SendFlowView: View {
         let stored = ContractStore.shared.contract(id: contract.id) ?? contract
         let base   = stored.baseBody()
         let found  = SignatureSlots.find(in: base)
-        slots  = found
+        _slots = State(initialValue: found)
         let foundBlanks = SignatureSlots.blanks(in: base)
         _blanks = State(initialValue: foundBlanks)
-        blankContext = Dictionary(uniqueKeysWithValues: foundBlanks.compactMap { b in
-            SignatureSlots.context(of: b, in: base).map { (b, $0) }
-        })
+        _blankContext = State(initialValue: Self.contexts(of: foundBlanks, in: base))
         // The sender's party: what they chose last time ("" = not signing),
         // or the AI's guess from the request. A name no box has any more
         // counts as unknown.
@@ -103,7 +106,7 @@ struct SendFlowView: View {
         // Sending again (after changes were asked for, say): start from the
         // people it went to last time, in the same parties — by name first,
         // so a reordered signature block keeps everyone in their role.
-        let start = (stored.recipients.isEmpty ? [Recipient()] : stored.recipients).map { r in
+        let start = stored.recipients.map { r in
             var r = r
             if let i = Self.index(ofRole: r.partyRole, in: found) { r.party = i }
             return r
@@ -179,39 +182,99 @@ struct SendFlowView: View {
 
     private var partyCount: Int { slots.isEmpty ? recipients.count : slots.count }
 
-    private func pick(_ party: Int, for id: UUID) {
-        guard let i = recipients.firstIndex(where: { $0.id == id }) else { return }
-        // Two people can't sign one box: whoever had it takes this one's old box.
-        if myParty == party {
-            myParty = recipients[i].party
-        } else if let j = recipients.firstIndex(where: { $0.party == party }), j != i {
-            recipients[j].party = recipients[i].party
+    /// Who a party (or, in a document without boxes, a signer) is.
+    private func assign(_ choice: PartyChoice, party p: Int?, recipientID: UUID?) {
+        switch choice {
+        case .me:
+            guard let p else { return }
+            // One box, one signer: whoever had it is off the contract.
+            recipients.removeAll { $0.party == p }
+            myParty = p
+        case .person(let name, let contact):
+            if let p, myParty == p { myParty = nil }
+            let i = p.flatMap { p in recipients.firstIndex { $0.party == p } }
+                 ?? recipientID.flatMap { id in recipients.firstIndex { $0.id == id } }
+            var r = i.map { recipients[$0] } ?? Recipient(party: p)
+            r.name = name.trimmingCharacters(in: .whitespaces)
+            Self.setContact(contact, on: &r)
+            if let i { recipients[i] = r } else { recipients.append(r) }
+        case .nobody:
+            if let p {
+                if myParty == p { myParty = nil }
+                recipients.removeAll { $0.party == p }
+            } else if let recipientID {
+                recipients.removeAll { $0.id == recipientID }
+            }
         }
-        recipients[i].party = party
     }
 
-    /// The sender's own choice. nil: not signing.
-    private func pickMine(_ party: Int?) {
-        if let party, let j = recipients.firstIndex(where: { $0.party == party }) {
-            // The recipient who had it takes the sender's old box, or the
-            // first free one; with none free they're asked to choose.
-            recipients[j].party = myParty ?? unassigned.first { $0 != party }
-        }
-        myParty = party
+    /// One field for either: an "@" makes it an email, anything else a
+    /// phone number. The other is cleared, so an old number can't take
+    /// over delivery (Messages is tried before Mail).
+    private static func setContact(_ value: String, on r: inout Recipient) {
+        let v = value.trimmingCharacters(in: .whitespaces)
+        if v.contains("@") { r.email = v; r.phone = "" } else { r.phone = v; r.email = "" }
     }
 
-    private func addRecipient() {
-        var r = Recipient()
-        r.party = Self.preferenceOrder(slots.count, reserved: myParty)
-            .first { p in p != myParty && !recipients.contains { $0.party == p } }
-        recipients.append(r)
+    nonisolated static func contact(of r: Recipient) -> String {
+        let e = r.email.trimmingCharacters(in: .whitespaces)
+        return e.isEmpty ? r.phone.trimmingCharacters(in: .whitespaces) : e
+    }
+
+    /// A new signature box at the end of the contract, for a signer it
+    /// didn't name ("WITNESS: [FULL NAME]", the box, the date). Returns the
+    /// new box's party.
+    private func addSignatureBox(role: String) -> Int? {
+        guard let stored = ContractStore.shared.contract(id: contract.id) else { return nil }
+        let body = stored.baseBody()
+        let head = role.replacingOccurrences(of: ":", with: "")
+            .trimmingCharacters(in: .whitespaces).uppercased()
+        guard !head.isEmpty else { return nil }
+        let trimmed = body.string.trimmingCharacters(in: .whitespacesAndNewlines)
+        let block = NSMutableAttributedString.fromHandshakeMarkdown(
+            (trimmed.isEmpty ? "" : "\n\n") + "\(head): [FULL NAME]\n[Signature]\n[Date]")
+        // Trim trailing blank lines first so the gap above it is one blank line.
+        while body.length > 0, let last = body.string.last, last.isNewline {
+            body.deleteCharacters(in: NSRange(location: body.length - 1, length: 1))
+        }
+        body.append(block)
+        ContractStore.shared.update(id: contract.id) { $0.setBody(body) }
+        slots = SignatureSlots.find(in: body)
+        let b = SignatureSlots.blanks(in: body)
+        blanks = b
+        blankContext = Self.contexts(of: b, in: body)
+        return slots.isEmpty ? nil : slots.count - 1
+    }
+
+    private static func contexts(of blanks: [String], in body: NSAttributedString) -> [String: String] {
+        Dictionary(uniqueKeysWithValues: blanks.compactMap { b in
+            SignatureSlots.context(of: b, in: body).map { (b, $0) }
+        })
+    }
+
+    /// People sent to before, most recent first — the sheet's suggestions.
+    private var pastRecipients: [Recipient] {
+        var seen = Set<String>(), out: [Recipient] = []
+        let sent = ContractStore.shared.contracts
+            .filter { !$0.isIncoming && $0.id != contract.id }
+            .sorted { ($0.sentAt ?? $0.createdAt) > ($1.sentAt ?? $1.createdAt) }
+        for c in sent {
+            for r in c.recipients {
+                let name = r.name.trimmingCharacters(in: .whitespaces)
+                let contact = Self.contact(of: r)
+                guard !name.isEmpty, !contact.isEmpty,
+                      seen.insert((name + "|" + contact).lowercased()).inserted else { continue }
+                out.append(r)
+            }
+        }
+        return out
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // MARK: - Validation
     // ─────────────────────────────────────────────────────────────────────────
 
-    private static func isComplete(_ r: Recipient) -> Bool {
+    nonisolated private static func isComplete(_ r: Recipient) -> Bool {
         !r.name.trimmingCharacters(in: .whitespaces).isEmpty &&
         (!r.email.trimmingCharacters(in: .whitespaces).isEmpty ||
          !r.phone.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -248,28 +311,8 @@ struct SendFlowView: View {
     private var form: some View {
           ScrollViewReader { scroller in
             ScrollView {
-                VStack(spacing: 12) {
-                    if !blanks.isEmpty { blanksCard }
-
-                    ForEach($recipients) { $recipient in
-                        RecipientCard(
-                            recipient: $recipient,
-                            slots: slots,
-                            canDelete: recipients.count > 1,
-                            onPick: { pick($0, for: recipient.id) },
-                            onDelete: { recipients.removeAll { $0.id == recipient.id } }
-                        )
-                    }
-
-                    Button(action: addRecipient) {
-                        Label("Add Recipient", systemImage: "plus.circle.fill")
-                            .font(.body.weight(.medium))
-                            .foregroundStyle(Color.accent)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.vertical, 4)
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, 16)
+                VStack(alignment: .leading, spacing: 0) {
+                    signersSection
 
                     if triedToSend && !problems.isEmpty {
                         VStack(spacing: 6) {
@@ -280,16 +323,21 @@ struct SendFlowView: View {
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         }
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 14)
                         .id("problems")
                         .transition(.opacity)
                     }
 
-                    if !slots.isEmpty { youCard }
+                    if !blanks.isEmpty {
+                        blanksAlert
+                            .padding(.top, 24)
+                    }
 
-                    replyCard
+                    replyLine
+                        .padding(.top, 24)
                 }
-                .padding(.top, 20)
+                .padding(.top, 12)
                 .padding(.bottom, 40)
                 .readableColumn(Layout.readableWidth + 32)
             }
@@ -326,6 +374,18 @@ struct SendFlowView: View {
             if showSent { sentPage.transition(.opacity) } else { form }
         }
         .sheet(item: $activeSheet) { d in deliverySheet(d) }
+        .sheet(item: $editing) { e in partySheet(e) }
+        .alert("Signed copies come back to", isPresented: $editingReply) {
+            TextField("Your email or phone", text: $replyDraft)
+                .textContentType(.emailAddress)
+                .keyboardType(.emailAddress)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+            Button("Save") { replyTo = replyDraft.trimmingCharacters(in: .whitespaces) }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Recipients' replies open already addressed to you. Optional.")
+        }
         .alert("Couldn't register with the signing provider",
                isPresented: Binding(get: { providerError != nil }, set: { if !$0 { providerError = nil } })) {
             Button("OK", role: .cancel) { providerError = nil }
@@ -415,89 +475,239 @@ struct SendFlowView: View {
             : shown.formatted(.list(type: .and))
     }
 
-    /// Orange while blanks are left; a quiet confirmation once they're all
-    /// filled. Either way, tapping opens the form.
-    private var blanksCard: some View {
-        let pending = pendingBlanks.count
-        let done = pending == 0
-        // One tint per card: the action takes the banner's own colour, so
-        // a blue link doesn't sit on an orange wash.
-        let tint = done ? Color.statusSigned : Color.orange
-        return Button { showFillBlanks = true } label: {
-            HStack(alignment: .center, spacing: 12) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Label(done ? String(localized: "All blanks filled in")
-                               : pending == 1 ? String(localized: "1 blank still to fill in")
-                                              : String(localized: "\(pending) blanks still to fill in"),
-                          systemImage: done ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(tint)
-                    Text(done ? String(localized: "They go into the contract when you send it.")
-                              : String(localized: "\(blanksSummary) still need filling in."))
+    // ── Signers ──────────────────────────────────────────────────────────
+
+    /// One row per signature box: the contract says who signs, the sender
+    /// says who that is. A document without boxes lists its signers instead.
+    private var signersSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Who signs")
+                .font(.footnote)
+                .foregroundStyle(Color.secondaryInk)
+                .padding(.horizontal, 20)
+            VStack(spacing: 0) {
+                if slots.isEmpty {
+                    ForEach(Array(recipients.enumerated()), id: \.element.id) { i, r in
+                        if i > 0 { Divider().padding(.leading, 62) }
+                        signerRow(role: String(localized: "Signer \(i + 1)"), me: false, person: r) {
+                            editing = PartyEdit(party: nil, recipientID: r.id)
+                        }
+                    }
+                } else {
+                    ForEach(slots.indices, id: \.self) { p in
+                        if p > 0 { Divider().padding(.leading, 62) }
+                        signerRow(role: slots[p].role, me: myParty == p,
+                                  person: recipients.first { $0.party == p }) {
+                            editing = PartyEdit(party: p, recipientID: nil)
+                        }
+                    }
+                }
+                if !(slots.isEmpty && recipients.isEmpty) { Divider().padding(.leading, 62) }
+                Button { editing = PartyEdit(party: nil, recipientID: nil, adding: true) } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 22))
+                            .frame(width: 34)
+                        Text("Add Signer")
+                        Spacer()
+                    }
+                    .foregroundStyle(Color.accent)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            .background(Color.raisedSurface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .padding(.horizontal, 16)
+
+            if !slots.isEmpty {
+                Group {
+                    if mySlot != nil {
+                        Text("You'll sign with \(SignatureService.biometryName) before it's sent, so recipients see your signature in place.")
+                    } else {
+                        Text("Only your recipients sign. You'll get the signed copy back.")
+                    }
+                }
+                .font(.footnote)
+                .foregroundStyle(Color.secondaryInk)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 20)
+                .padding(.top, 2)
+            }
+        }
+    }
+
+    /// A party, and who's signing it: you, someone, or nobody yet.
+    private func signerRow(role: String, me: Bool, person: Recipient?,
+                           action: @escaping () -> Void) -> some View {
+        let name = me ? myName.trimmingCharacters(in: .whitespaces)
+                      : person?.name.trimmingCharacters(in: .whitespaces) ?? ""
+        let contact = person.map(Self.contact(of:)) ?? ""
+        let assigned = me || person != nil
+        let warn = triedToSend
+        var detail: Text {
+            if me {
+                return name.isEmpty
+                    ? Text("You · \(Text("Add your name").foregroundStyle(warn ? Color.orange : Color.accent))")
+                    : Text("You · \(name)")
+            }
+            if let _ = person {
+                if name.isEmpty { return Text("Add a name").foregroundStyle(warn ? Color.orange : Color.accent) }
+                if contact.isEmpty { return Text("\(name) · \(Text("Add an email or phone").foregroundStyle(warn ? Color.orange : Color.accent))") }
+                return Text("\(name) · \(contact)")
+            }
+            return Text("Choose who signs").foregroundStyle(warn ? Color.orange : Color.accent)
+        }
+        return Button(action: action) {
+            HStack(spacing: 12) {
+                Monogram(name: name, empty: !assigned)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(role)
+                        .foregroundStyle(Color.primaryInk)
+                    detail
                         .font(.footnote)
                         .foregroundStyle(Color.secondaryInk)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(1)
                 }
-                Spacer(minLength: 0)
-                Text(done ? String(localized: "Review") : String(localized: "Fill In"))
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(tint)
+                Spacer(minLength: 8)
                 Image(systemName: "chevron.right")
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(tint.opacity(0.6))
+                    .foregroundStyle(Color(.tertiaryLabel))
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(16)
-            .background(tint.opacity(0.10),
-                        in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, 16)
     }
 
-    private var youCard: some View {
-        SendCard(header: String(localized: "You")) {
-            CardRow(icon: "signature") {
-                Text("Signs as")
-                    .foregroundStyle(Color.secondaryInk)
-                Spacer()
-                Menu {
-                    Picker("Signs as", selection: Binding(
-                        get: { mySlot ?? -1 },
-                        set: { pickMine($0 >= 0 ? $0 : nil) }
-                    )) {
-                        ForEach(slots.indices, id: \.self) { i in
-                            Text(slots[i].role).tag(i)
-                        }
-                        Divider()
-                        Text("I'm not signing").tag(-1)
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(mySlot.map { slots[$0].role } ?? String(localized: "Not signing"))
-                            .fontWeight(.medium)
-                        Image(systemName: "chevron.up.chevron.down")
-                            .font(.caption.weight(.semibold))
-                    }
-                    .foregroundStyle(Color.accent)
+    @ViewBuilder
+    private func partySheet(_ e: PartyEdit) -> some View {
+        let p = e.party
+        let person = p.map { p in recipients.first { $0.party == p } }
+                  ?? e.recipientID.flatMap { id in recipients.first { $0.id == id } }
+        let taken = Set(recipients.compactMap { r in
+            r.id == person?.id ? nil : (r.name + "|" + Self.contact(of: r)).lowercased() })
+        PartySheet(
+            role: p.map { slots[$0].role },
+            asksForRole: e.adding && !slots.isEmpty,
+            canBeMe: !slots.isEmpty,
+            startsAsMe: p != nil && myParty == p,
+            name: person?.name ?? "",
+            contact: person.map(Self.contact(of:)) ?? "",
+            canRemove: !e.adding && (person != nil || (p != nil && myParty == p)),
+            myName: $myName,
+            suggestions: pastRecipients.filter { !taken.contains(($0.name + "|" + Self.contact(of: $0)).lowercased()) }
+        ) { choice, newRole in
+            if e.adding, slots.isEmpty {
+                assign(choice, party: nil, recipientID: nil)
+            } else if e.adding {
+                guard case .nobody = choice else {
+                    if let p = addSignatureBox(role: newRole) { assign(choice, party: p, recipientID: nil) }
+                    return
                 }
-            }
-            if mySlot != nil {
-                Divider().padding(.leading, 48)
-                CardRow(icon: "person") {
-                    TextField("Your full name", text: $myName)
-                        .textContentType(.name)
-                }
-            }
-        } footer: {
-            if mySlot != nil {
-                Text("You'll sign with \(SignatureService.biometryName) before it's sent, so recipients see your signature in place.")
             } else {
-                Text("Only your recipients sign. You'll get the signed copy back.")
+                assign(choice, party: p, recipientID: e.recipientID)
             }
         }
+    }
+
+    // ── Blanks ───────────────────────────────────────────────────────────
+
+    /// Must-fix before it goes out, so it says which: the first few blanks
+    /// with the sentence each sits in, and the button to fill them in.
+    /// Once they're all filled, a quiet green line to review them.
+    @ViewBuilder
+    private var blanksAlert: some View {
+        let pending = pendingBlanks
+        if pending.isEmpty {
+            Button { showFillBlanks = true } label: {
+                HStack(spacing: 10) {
+                    Label("All blanks filled in", systemImage: "checkmark.circle.fill")
+                        .font(.subheadline.weight(.semibold))
+                    Spacer()
+                    Text("Review").font(.subheadline.weight(.semibold))
+                    Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).opacity(0.6)
+                }
+                .foregroundStyle(Color.statusSigned)
+                .padding(14)
+                .background(Color.statusSigned.opacity(0.10), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 16)
+        } else {
+            VStack(alignment: .leading, spacing: 12) {
+                Label(pending.count == 1 ? String(localized: "1 blank to fill in before sending")
+                                         : String(localized: "\(pending.count) blanks to fill in before sending"),
+                      systemImage: "exclamationmark.triangle.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.orange)
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(pending.prefix(3), id: \.self) { b in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(blankLabel(b))
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(Color.primaryInk)
+                            if let line = blankContext[b] {
+                                Text(line)
+                                    .font(.footnote)
+                                    .foregroundStyle(Color.secondaryInk)
+                                    .lineLimit(2)
+                            }
+                        }
+                    }
+                    if pending.count > 3 {
+                        Text("and \(pending.count - 3) more")
+                            .font(.footnote)
+                            .foregroundStyle(Color.secondaryInk)
+                    }
+                }
+                .padding(.leading, 28)
+                Button { showFillBlanks = true } label: {
+                    Text("Fill In Blanks")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.orange)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.orange.opacity(0.14), in: Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(16)
+            .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .padding(.horizontal, 16)
+        }
+    }
+
+    // ── Reply address ────────────────────────────────────────────────────
+
+    /// Set once and remembered, so a line rather than a section.
+    private var replyLine: some View {
+        let addr = replyTo.trimmingCharacters(in: .whitespaces)
+        return HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Image(systemName: "arrowshape.turn.up.left")
+                .font(.footnote)
+            Group {
+                if addr.isEmpty {
+                    Text("Signed copies come back to you.")
+                } else {
+                    Text("Signed copies come back to \(addr).")
+                }
+            }
+            .font(.footnote)
+            .fixedSize(horizontal: false, vertical: true)
+            Button(addr.isEmpty ? String(localized: "Add Address") : String(localized: "Change")) {
+                replyDraft = addr
+                editingReply = true
+            }
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(Color.accent)
+            .buttonStyle(.plain)
+        }
+        .foregroundStyle(Color.secondaryInk)
+        .padding(.horizontal, 20)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -686,20 +896,6 @@ struct SendFlowView: View {
     private var replyAddress: String? {
         let r = replyTo.trimmingCharacters(in: .whitespaces)
         return r.isEmpty ? nil : r
-    }
-
-    private var replyCard: some View {
-        SendCard(header: String(localized: "Signed copies come back to")) {
-            CardRow(icon: "arrowshape.turn.up.left") {
-                TextField("Your email or phone", text: $replyTo)
-                    .textContentType(.emailAddress)
-                    .keyboardType(.emailAddress)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-            }
-        } footer: {
-            Text("Recipients' replies open already addressed to you. Optional.")
-        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -963,11 +1159,7 @@ private struct FillBlanksSheet: View {
         }
     }
 
-    /// "[FREELANCER FULL NAME]" → "Freelancer Full Name".
-    private func label(_ b: String) -> String {
-        let inner = b.trimmingCharacters(in: CharacterSet(charactersIn: "[]"))
-        return inner == inner.uppercased() && inner != inner.lowercased() ? inner.capitalized : inner
-    }
+    private func label(_ b: String) -> String { blankLabel(b) }
 
     private func focusNext(after b: String) {
         guard let i = blanks.firstIndex(of: b) else { return }
@@ -1005,157 +1197,227 @@ private struct Delivery: Identifiable {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MARK: - Cards
+// MARK: - Parties
 // ─────────────────────────────────────────────────────────────────────────────
 
-private struct SendCard<Content: View, Footer: View>: View {
-    let header: String
-    @ViewBuilder var content: Content
-    @ViewBuilder var footer: Footer
+/// "[FREELANCER FULL NAME]" → "Freelancer Full Name".
+private func blankLabel(_ b: String) -> String {
+    let inner = b.trimmingCharacters(in: CharacterSet(charactersIn: "[]"))
+    return inner == inner.uppercased() && inner != inner.lowercased() ? inner.capitalized : inner
+}
+
+/// The sheet's subject: a party (signature box), a signer in a document
+/// without boxes, or a new signer being added.
+private struct PartyEdit: Identifiable {
+    let id = UUID()
+    var party: Int?
+    var recipientID: UUID?
+    var adding = false
+}
+
+private enum PartyChoice {
+    case me
+    case person(name: String, contact: String)
+    case nobody
+}
+
+/// Initials in a circle, Contacts-style; a dashed "+" for nobody yet.
+private struct Monogram: View {
+    let name: String
+    var empty = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            VStack(spacing: 0) {
-                Text(header)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .tracking(0.4)
-                    .textCase(.uppercase)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                Divider()
-                content
+        ZStack {
+            if empty {
+                Circle().strokeBorder(Color(.tertiaryLabel), style: StrokeStyle(lineWidth: 1.2, dash: [3, 3]))
+                Image(systemName: "plus").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.secondaryInk)
+            } else {
+                Circle().fill(Color(.systemGray4))
+                Text(initials).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
             }
-            .background(Color.raisedSurface)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
-
-            footer
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 16)
-                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
+        .frame(width: 34, height: 34)
+        .accessibilityHidden(true)
+    }
+
+    private var initials: String {
+        let s = name.split(separator: " ").prefix(2).compactMap(\.first).map(String.init).joined().uppercased()
+        return s.isEmpty ? "?" : s
     }
 }
 
-private struct CardRow<Content: View>: View {
-    let icon: String
-    @ViewBuilder var content: Content
+/// Who signs as one party: you, or someone — typed, picked from people
+/// you've sent to before, or from Contacts. Adding a signer also asks what
+/// they sign as; a box for them goes at the end of the contract.
+private struct PartySheet: View {
+    let role: String?
+    let asksForRole: Bool
+    let canBeMe: Bool
+    let startsAsMe: Bool
+    let name: String
+    let contact: String
+    let canRemove: Bool
+    @Binding var myName: String
+    let suggestions: [Recipient]
+    var onSave: (PartyChoice, String) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var isMe = false
+    @State private var newRole = ""
+    @State private var typedName = ""
+    @State private var typedContact = ""
+    @FocusState private var focus: Field?
+    private enum Field { case role, name, contact, myName }
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .frame(width: 20)
-            content
-        }
-        .font(.body)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MARK: - RecipientCard
-// ─────────────────────────────────────────────────────────────────────────────
-
-private struct RecipientCard: View {
-    @Binding var recipient: Recipient
-    let slots: [SignatureSlots.Slot]
-    var canDelete: Bool
-    var onPick: (Int) -> Void
-    var onDelete: () -> Void
-
-    var body: some View {
-        VStack(spacing: 0) {
-
-            // Header
-            HStack {
-                Text("Recipient")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .tracking(0.4)
-                    .textCase(.uppercase)
-                Spacer()
-                if canDelete {
-                    Button(action: onDelete) {
-                        Image(systemName: "trash")
-                            .font(.subheadline)
-                            .foregroundStyle(.red.opacity(0.8))
+        NavigationStack {
+            Form {
+                if asksForRole {
+                    Section {
+                        TextField("Witness, Guarantor…", text: $newRole)
+                            .focused($focus, equals: .role)
+                            .textInputAutocapitalization(.words)
+                    } header: {
+                        Text("Signs as")
+                    } footer: {
+                        Text("A signature box for them is added at the end of the contract.")
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Remove recipient")
                 }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
 
-            Divider()
-
-            CardRow(icon: "person") {
-                TextField("Full name", text: $recipient.name)
-                    .textContentType(.name)
-                    .submitLabel(.next)
-            }
-
-            Divider().padding(.leading, 48)
-
-            CardRow(icon: "envelope") {
-                TextField("Email", text: $recipient.email)
-                    .textContentType(.emailAddress)
-                    .keyboardType(.emailAddress)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                    .submitLabel(.next)
-            }
-
-            Divider().padding(.leading, 48)
-
-            CardRow(icon: "phone") {
-                TextField("Phone number", text: $recipient.phone)
-                    .textContentType(.telephoneNumber)
-                    .keyboardType(.phonePad)
-            }
-
-            // Which box they sign. Only a choice when there's more than one,
-            // or when the sender took theirs and they need another.
-            if slots.count > 1 || (!slots.isEmpty && recipient.party == nil) {
-                Divider().padding(.leading, 48)
-                CardRow(icon: "signature") {
-                    Text("Signs as")
-                        .foregroundStyle(Color.secondaryInk)
-                    Spacer()
-                    Menu {
-                        Picker("Signs as", selection: Binding(
-                            get: { recipient.party ?? -1 },
-                            set: { if $0 >= 0 { onPick($0) } }
-                        )) {
-                            ForEach(slots.indices, id: \.self) { i in
-                                Text(slots[i].role).tag(i)
+                if canBeMe {
+                    Section {
+                        Button { withAnimation { isMe = true }; focus = nil } label: {
+                            HStack(spacing: 12) {
+                                Monogram(name: myName)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text("Me").foregroundStyle(Color.primaryInk)
+                                    Text("You sign with \(SignatureService.biometryName) before it's sent.")
+                                        .font(.footnote)
+                                        .foregroundStyle(Color.secondaryInk)
+                                }
+                                Spacer()
+                                if isMe { Image(systemName: "checkmark").fontWeight(.semibold).foregroundStyle(Color.accent) }
                             }
                         }
-                    } label: {
-                        HStack(spacing: 4) {
-                            Text(recipient.party.flatMap { slots.indices.contains($0) ? slots[$0].role : nil }
-                                 ?? String(localized: "Choose"))
-                                .fontWeight(.medium)
-                            Image(systemName: "chevron.up.chevron.down")
-                                .font(.caption.weight(.semibold))
+                        if isMe {
+                            TextField("Your full name", text: $myName)
+                                .textContentType(.name)
+                                .focused($focus, equals: .myName)
                         }
-                        .foregroundStyle(Color.accent)
+                    }
+                }
+
+                Section {
+                    HStack {
+                        TextField("Full name", text: $typedName)
+                            .textContentType(.name)
+                            .focused($focus, equals: .name)
+                            .submitLabel(.next)
+                            .onSubmit { focus = .contact }
+                        if canBeMe, !isMe, !typedName.isEmpty || !typedContact.isEmpty {
+                            Image(systemName: "checkmark").fontWeight(.semibold).foregroundStyle(Color.accent)
+                        }
+                    }
+                    TextField("Email or phone", text: $typedContact)
+                        .textContentType(.emailAddress)
+                        .keyboardType(.emailAddress)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .focused($focus, equals: .contact)
+                        .submitLabel(.done)
+                        .onSubmit(save)
+                    Button {
+                        ContactPicking.pick { n, c in
+                            typedName = n; typedContact = c
+                            withAnimation { isMe = false }
+                        }
+                    } label: {
+                        Label("Choose from Contacts", systemImage: "person.crop.circle")
+                    }
+                } header: {
+                    if canBeMe { Text("Someone else") }
+                }
+
+                if !shownSuggestions.isEmpty {
+                    Section("People you've sent to") {
+                        ForEach(shownSuggestions) { r in
+                            Button {
+                                typedName = r.name
+                                typedContact = SendFlowView.contact(of: r)
+                                withAnimation { isMe = false }
+                                focus = nil
+                            } label: {
+                                HStack(spacing: 12) {
+                                    Monogram(name: r.name)
+                                    VStack(alignment: .leading, spacing: 1) {
+                                        Text(r.name).foregroundStyle(Color.primaryInk)
+                                        Text(SendFlowView.contact(of: r))
+                                            .font(.footnote)
+                                            .foregroundStyle(Color.secondaryInk)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if canRemove {
+                    Section {
+                        Button("Remove Signer", role: .destructive) {
+                            onSave(.nobody, ""); dismiss()
+                        }
                     }
                 }
             }
+            .onChange(of: focus) { _, f in
+                if f == .name || f == .contact { withAnimation { isMe = false } }
+            }
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done", action: save).fontWeight(.semibold)
+                }
+            }
+            .onAppear {
+                isMe = startsAsMe
+                typedName = name
+                typedContact = contact
+                if asksForRole { focus = .role }
+                else if !startsAsMe && name.isEmpty { focus = .name }
+            }
         }
-        .background(Color.raisedSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
-        .padding(.horizontal, 16)
+    }
+
+    private var title: String {
+        if asksForRole || (role == nil && name.isEmpty) { return String(localized: "Add Signer") }
+        return role ?? String(localized: "Signer")
+    }
+
+    /// Filtered by what's typed; the first few when nothing is.
+    private var shownSuggestions: [Recipient] {
+        let q = typedName.trimmingCharacters(in: .whitespaces).lowercased()
+        let list = q.isEmpty ? suggestions : suggestions.filter {
+            $0.name.lowercased().contains(q) || SendFlowView.contact(of: $0).lowercased().contains(q)
+        }
+        return Array(list.filter { $0.name != typedName || SendFlowView.contact(of: $0) != typedContact }.prefix(4))
+    }
+
+    private func save() {
+        let n = typedName.trimmingCharacters(in: .whitespaces)
+        let c = typedContact.trimmingCharacters(in: .whitespaces)
+        let r = newRole.trimmingCharacters(in: .whitespaces)
+        if asksForRole && r.isEmpty { focus = .role; return }
+        if canBeMe && isMe {
+            onSave(.me, r)
+        } else if !(n.isEmpty && c.isEmpty) {
+            onSave(.person(name: n, contact: c), r)
+        }
+        // Nothing entered: the party stays as it was.
+        dismiss()
     }
 }
 

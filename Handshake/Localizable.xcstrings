@@ -553,94 +553,94 @@
         }
       }
     },
-    "%@ still need filling in.": {
+    "%@ · %@": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ 仍需填寫。"
+            "value": "%@ · %@"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ 仍需填写。"
+            "value": "%@ · %@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@がまだ空欄です。"
+            "value": "%@ · %@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@이(가) 아직 비어 있어요."
+            "value": "%@ · %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Faltan por rellenar: %@."
+            "value": "%@ · %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Encore à remplir : %@."
+            "value": "%@ · %@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Noch auszufüllen: %@."
+            "value": "%@ · %@"
           }
         }
       }
     },
-    "%lld blanks still to fill in": {
+    "%lld blanks to fill in before sending": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "還有 %lld 處空白待填"
+            "value": "傳送前還有 %lld 個空格要填寫"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "还有 %lld 处空白待填"
+            "value": "发送前还有 %lld 个空格要填写"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "未入力の空欄が%lld件あります"
+            "value": "送信前に埋める空欄が %lld 件あります"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "빈칸 %lld개가 아직 남아 있어요"
+            "value": "보내기 전에 채울 빈칸 %lld개"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quedan %lld espacios por completar"
+            "value": "%lld espacios por rellenar antes de enviar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld champs restent à compléter"
+            "value": "%lld blancs à remplir avant l’envoi"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Noch %lld Lücken auszufüllen"
+            "value": "%lld Lücken vor dem Senden ausfüllen"
           }
         }
       }
@@ -737,48 +737,94 @@
         }
       }
     },
-    "1 blank still to fill in": {
+    "1 blank to fill in before sending": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "還有 1 處空白待填"
+            "value": "傳送前還有 1 個空格要填寫"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "还有 1 处空白待填"
+            "value": "发送前还有 1 个空格要填写"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "未入力の空欄が1件あります"
+            "value": "送信前に埋める空欄が 1 件あります"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "빈칸 1개가 아직 남아 있어요"
+            "value": "보내기 전에 채울 빈칸 1개"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Queda 1 espacio por completar"
+            "value": "1 espacio por rellenar antes de enviar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "1 champ reste à compléter"
+            "value": "1 blanc à remplir avant l’envoi"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Noch 1 Lücke auszufüllen"
+            "value": "1 Lücke vor dem Senden ausfüllen"
+          }
+        }
+      }
+    },
+    "A signature box for them is added at the end of the contract.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合約結尾會為他們加上一個簽名欄。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合同结尾会为他们加上一个签名栏。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "契約書の末尾にこの人の署名欄が追加されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "계약서 끝에 이 사람의 서명란이 추가됩니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se añade un recuadro de firma para esta persona al final del contrato."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un champ de signature est ajouté pour cette personne à la fin du contrat."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Am Ende des Vertrags wird ein Signaturfeld für diese Person hinzugefügt."
           }
         }
       }
@@ -921,6 +967,52 @@
         }
       }
     },
+    "Add Address": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加入地址"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加地址"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アドレスを追加"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "주소 추가"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir dirección"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter une adresse"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adresse hinzufügen"
+          }
+        }
+      }
+    },
     "Add Recipient": {
       "localizations": {
         "zh-Hant": {
@@ -967,6 +1059,98 @@
         }
       }
     },
+    "Add Signer": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加入簽署人"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加签署人"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名者を追加"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명자 추가"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir firmante"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter un signataire"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unterzeichner hinzufügen"
+          }
+        }
+      }
+    },
+    "Add a name": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加入姓名"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加姓名"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名前を追加"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이름 추가"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir un nombre"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter un nom"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Namen hinzufügen"
+          }
+        }
+      }
+    },
     "Add a name, and an email or phone number, for each recipient.": {
       "localizations": {
         "zh-Hant": {
@@ -1009,6 +1193,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gib für jeden Empfänger einen Namen und eine E-Mail-Adresse oder Telefonnummer an."
+          }
+        }
+      }
+    },
+    "Add an email or phone": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加入電子郵件或電話"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加电子邮件或电话"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メールまたは電話番号を追加"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이메일 또는 전화번호 추가"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir un correo o teléfono"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter un e-mail ou un téléphone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-Mail oder Telefon hinzufügen"
           }
         }
       }
@@ -1193,6 +1423,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Füge deinen Anthropic-API-Schlüssel in Secrets.swift hinzu."
+          }
+        }
+      }
+    },
+    "Add your name": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加入你的姓名"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加你的姓名"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名前を追加"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이름 추가"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añade tu nombre"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoutez votre nom"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deinen Namen hinzufügen"
           }
         }
       }
@@ -2025,6 +2301,52 @@
         }
       }
     },
+    "Change": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更改"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更改"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "변경"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ändern"
+          }
+        }
+      }
+    },
     "Changes Asked": {
       "localizations": {
         "zh-Hant": {
@@ -2163,48 +2485,48 @@
         }
       }
     },
-    "Choose": {
+    "Choose from Contacts": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "選擇"
+            "value": "從聯絡人選擇"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "选择"
+            "value": "从通讯录选择"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "選択"
+            "value": "連絡先から選択"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "선택"
+            "value": "연락처에서 선택"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elegir"
+            "value": "Elegir de Contactos"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choisir"
+            "value": "Choisir dans Contacts"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Auswählen"
+            "value": "Aus Kontakten wählen"
           }
         }
       }
@@ -2251,6 +2573,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wähle für jeden Empfänger, als was er signiert."
+          }
+        }
+      }
+    },
+    "Choose who signs": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇簽署人"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择签署人"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名する人を選択"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명할 사람 선택"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige quién firma"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir qui signe"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wählen, wer signiert"
           }
         }
       }
@@ -3911,6 +4279,52 @@
         }
       }
     },
+    "Email or phone": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "電子郵件或電話"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "电子邮件或电话"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メールまたは電話番号"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이메일 또는 전화번호"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correo o teléfono"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-mail ou téléphone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-Mail oder Telefon"
+          }
+        }
+      }
+    },
     "Employment Contract": {
       "localizations": {
         "zh-Hant": {
@@ -5015,52 +5429,6 @@
         }
       }
     },
-    "I'm not signing": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "我不簽署"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "我不签署"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "自分は署名しない"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "나는 서명하지 않음"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No voy a firmar"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Je ne signe pas"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ich signiere nicht"
-          }
-        }
-      }
-    },
     "Insert photo": {
       "localizations": {
         "zh-Hant": {
@@ -5563,6 +5931,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abo verwalten"
+          }
+        }
+      }
+    },
+    "Me": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自分"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "나"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moi"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich"
           }
         }
       }
@@ -6349,52 +6763,6 @@
         }
       }
     },
-    "Not signing": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "不簽署"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "不签署"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "署名しない"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "서명 안 함"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No firma"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ne signe pas"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Signiert nicht"
-          }
-        }
-      }
-    },
     "Not yet": {
       "localizations": {
         "zh-Hant": {
@@ -6851,6 +7219,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Signatur ausstehend"
+          }
+        }
+      }
+    },
+    "People you've sent to": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你傳送過的人"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你发送过的人"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "送信したことがある人"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보낸 적 있는 사람"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personas a las que has enviado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personnes à qui vous avez envoyé"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personen, an die du gesendet hast"
           }
         }
       }
@@ -7499,48 +7913,48 @@
         }
       }
     },
-    "Remove recipient": {
+    "Remove Signer": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "移除收件人"
+            "value": "移除簽署人"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "移除收件人"
+            "value": "移除签署人"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "受信者を削除"
+            "value": "署名者を削除"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "수신자 삭제"
+            "value": "서명자 제거"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quitar destinatario"
+            "value": "Quitar firmante"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Retirer le destinataire"
+            "value": "Retirer le signataire"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Empfänger entfernen"
+            "value": "Unterzeichner entfernen"
           }
         }
       }
@@ -7771,6 +8185,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vertrag überarbeiten"
+          }
+        }
+      }
+    },
+    "Save": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "儲存"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저장"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sichern"
           }
         }
       }
@@ -8925,6 +9385,98 @@
         }
       }
     },
+    "Signed copies come back to %@.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "簽署後的副本會寄回 %@。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "签署后的副本会发回 %@。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名済みのコピーは %@ に届きます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명된 사본은 %@(으)로 돌아옵니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las copias firmadas vuelven a %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les copies signées reviennent à %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signierte Kopien kommen an %@ zurück."
+          }
+        }
+      }
+    },
+    "Signed copies come back to you.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "簽署後的副本會寄回給你。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "签署后的副本会发回给你。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名済みのコピーはあなたに届きます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명된 사본은 나에게 돌아옵니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las copias firmadas vuelven a ti."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les copies signées vous reviennent."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signierte Kopien kommen an dich zurück."
+          }
+        }
+      }
+    },
     "Signed copy comes back": {
       "localizations": {
         "zh-Hant": {
@@ -9109,6 +9661,98 @@
         }
       }
     },
+    "Signer": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "簽署人"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "签署人"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名者"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명자"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firmante"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signataire"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unterzeichner"
+          }
+        }
+      }
+    },
+    "Signer %lld": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "簽署人 %lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "签署人 %lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名者 %lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명자 %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firmante %lld"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signataire %lld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unterzeichner %lld"
+          }
+        }
+      }
+    },
     "Signs as": {
       "localizations": {
         "zh-Hant": {
@@ -9151,6 +9795,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Signiert als"
+          }
+        }
+      }
+    },
+    "Someone else": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他人"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他人"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ほかの人"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다른 사람"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otra persona"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quelqu’un d’autre"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jemand anderes"
           }
         }
       }
@@ -9749,52 +10439,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Der Absender erfährt, dass du abgelehnt hast – mit deinem Grund, falls du einen angibst."
-          }
-        }
-      }
-    },
-    "They go into the contract when you send it.": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "傳送時會寫入合約。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "发送时会写入合同。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "送信時に契約書に反映されます。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "보낼 때 계약서에 반영돼요."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se añaden al contrato al enviarlo."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ils seront intégrés au contrat à l’envoi."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sie werden beim Senden in den Vertrag übernommen."
           }
         }
       }
@@ -10811,6 +11455,98 @@
         }
       }
     },
+    "Who signs": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "簽署人"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "签署人"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名する人"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명하는 사람"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quién firma"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qui signe"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wer signiert"
+          }
+        }
+      }
+    },
+    "Witness, Guarantor…": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "見證人、保證人…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "见证人、担保人…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "立会人、保証人…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "증인, 보증인…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Testigo, avalista…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Témoin, garant…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeuge, Bürge…"
+          }
+        }
+      }
+    },
     "Working on your changes": {
       "localizations": {
         "zh-Hant": {
@@ -10949,6 +11685,52 @@
         }
       }
     },
+    "You sign with %@ before it's sent.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "傳送前你會用 %@ 簽署。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发送前你会用 %@ 签署。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "送信前に %@ で署名します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보내기 전에 %@(으)로 서명합니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firmas con %@ antes de enviarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous signez avec %@ avant l’envoi."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du signierst vor dem Senden mit %@."
+          }
+        }
+      }
+    },
     "You signed": {
       "localizations": {
         "zh-Hant": {
@@ -11037,6 +11819,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Du hast als %@ signiert"
+          }
+        }
+      }
+    },
+    "You · %@": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你 · %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你 · %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自分 · %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "나 · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tú · %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous · %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du · %@"
           }
         }
       }
@@ -11405,6 +12233,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deine Eingaben und der Vertragstext werden an Anthropic gesendet, um Verträge zu entwerfen und zu überarbeiten. %@ Entwürfe werden von KI erstellt und sind keine Rechtsberatung."
+          }
+        }
+      }
+    },
+    "and %lld more": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "還有 %lld 個"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还有 %lld 个"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ほか %lld 件"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "외 %lld개"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "y %lld más"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "et %lld autres"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "und %lld weitere"
           }
         }
       }
