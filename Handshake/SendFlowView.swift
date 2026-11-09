@@ -505,10 +505,8 @@ struct SendFlowView: View {
         return ScrollView {
             VStack(spacing: 12) {
                 VStack(spacing: 10) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 56))
-                        .foregroundStyle(Color.statusSigned)
-                        .symbolEffect(.bounce, value: showSent)
+                    CheckDoodle(size: 96)
+                        .padding(.bottom, 4)
                     Text("Sent for Signing")
                         .font(.title2.weight(.bold))
                         .foregroundStyle(Color.primaryInk)
