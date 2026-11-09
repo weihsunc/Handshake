@@ -390,6 +390,9 @@ struct SendFlowView: View {
     private var blanksCard: some View {
         let pending = pendingBlanks.count
         let done = pending == 0
+        // One tint per card: the action takes the banner's own colour, so
+        // a blue link doesn't sit on an orange wash.
+        let tint = done ? Color.statusSigned : Color.orange
         return Button { showFillBlanks = true } label: {
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 6) {
@@ -398,7 +401,7 @@ struct SendFlowView: View {
                                               : String(localized: "\(pending) blanks still to fill in"),
                           systemImage: done ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(done ? Color.green : Color.orange)
+                        .foregroundStyle(tint)
                     Text(done ? String(localized: "They go into the contract when you send it.")
                               : String(localized: "\(blanksSummary) still need filling in."))
                         .font(.footnote)
@@ -409,14 +412,14 @@ struct SendFlowView: View {
                 Spacer(minLength: 0)
                 Text(done ? String(localized: "Review") : String(localized: "Fill In"))
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.accent)
+                    .foregroundStyle(tint)
                 Image(systemName: "chevron.right")
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(tint.opacity(0.6))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(16)
-            .background((done ? Color.green : Color.orange).opacity(0.10),
+            .background(tint.opacity(0.10),
                         in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .contentShape(Rectangle())
         }
