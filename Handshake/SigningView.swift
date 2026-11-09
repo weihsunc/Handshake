@@ -557,7 +557,6 @@ struct SigningConfirmationView: View {
     var signedContract: GeneratedContract? = nil
     var onDone: () -> Void
 
-    @State private var appeared  = false
     @State private var showShare = false
     @State private var sentBack  = false
     /// "Copy" in the share sheet: the link is on the clipboard, not sent.
@@ -571,12 +570,10 @@ struct SigningConfirmationView: View {
             VStack(spacing: 0) {
                 Spacer()
 
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 84, weight: .regular))
-                    .foregroundStyle(Color.accent)
-                    .scaleEffect(appeared ? 1 : 0.6)
-                    .opacity(appeared ? 1 : 0)
-                    .padding(.bottom, 28)
+                // The owner's hand-drawn check, drawn in like a pen — the
+                // same hand as the sender's paper plane on the Sent page.
+                CheckDoodle(size: 104)
+                    .padding(.bottom, 24)
 
                 Text("Signed")
                     .font(.title.weight(.bold))
@@ -643,9 +640,6 @@ struct SigningConfirmationView: View {
                 .opacity(showShare ? 0 : 1)        // see SigningView.signBar
                 .animation(.easeOut(duration: 0.2), value: showShare)
             }
-        }
-        .onAppear {
-            withAnimation(.spring(response: 0.45, dampingFraction: 0.6)) { appeared = true }
         }
         .sheet(isPresented: $showShare) {
             if let c = signedContract {
