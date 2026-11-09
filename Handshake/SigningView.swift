@@ -162,7 +162,11 @@ struct SigningView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") { dismiss() }
+                    // An icon, not the word, so the title gets the room.
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark")
+                    }
+                    .accessibilityLabel("Close")
                 }
                 if !isSigned && !isDeclined {
                     ToolbarItem(placement: .navigationBarTrailing) {
