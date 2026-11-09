@@ -1016,7 +1016,10 @@ struct ContractWorkspaceView: View {
             .map { $0.isUser ? "User: \($0.content)" : "Assistant: \($0.content)" }
             .joined(separator: "\n\n")
         let currentTitle = contract?.title ?? "Agreement"
-        let currentBody  = attributedBody.string
+        // As markdown, not plain text: plain text dropped the **bold** (so a
+        // revision came back with "WALKER:" un-bolded) and turned signature
+        // and date boxes into stray object-replacement characters.
+        let currentBody  = attributedBody.handshakeMarkdown()
         let request = """
             CURRENT CONTRACT — revise this, do not start over:
             TITLE: \(currentTitle)
@@ -1027,6 +1030,10 @@ struct ContractWorkspaceView: View {
             \(transcript)
 
             Keep the contract in the language it is written in.
+            Keep its formatting exactly as it is: every **bold** run stays bold, \
+            numbering and line breaks stay, and [Signature] / [Date] stay where they are. \
+            Change only what the request asks for, and format any new text the same way \
+            as the text around it.
             Apply the user's latest request to the current contract. Return the COMPLETE \
             updated contract in the required format — a TITLE: line, then ---, then the \
             entire body with the change incorporated. Never return only the changed \
