@@ -28,16 +28,9 @@ struct SignatureBlockView: View {
         // beside it — inside a quiet card with a header, so it reads as
         // something the app added, not words in the contract.
         VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 6) {
-                Image("handshake-glyph")
-                    .resizable()
-                    .renderingMode(.template)
-                    .scaledToFit()
-                    .frame(width: 22, height: 11)
-                Text("Signed electronically with Handshake")
-                    .font(.system(size: 11, weight: .medium))
-            }
-            .foregroundStyle(Color.secondaryInk)
+            Text("Signed electronically with Handshake")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Color.secondaryInk)
 
         HStack(alignment: .center, spacing: 14) {
             VStack(alignment: .leading, spacing: 3) {
@@ -80,13 +73,12 @@ struct SignatureBlockView: View {
         .padding(.horizontal, 16)
         .padding(.top, 12)
         .padding(.bottom, 14)
+        // The card fills the width it's drawn at, so its edges line up with
+        // the text column (it used to hug its content and sit centred).
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(Color(red: 0xF5 / 255, green: 0xF5 / 255, blue: 0xF4 / 255))      // stone/100
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(Color(red: 0xE7 / 255, green: 0xE5 / 255, blue: 0xE4 / 255), lineWidth: 1)  // stone/200
         )
     }
 }
