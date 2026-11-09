@@ -226,7 +226,7 @@ struct DocumentSearchBar: View {
             } label: {
                 Image(systemName: speech.isRecording ? "mic.fill" : "mic")
                     .font(.body.weight(.medium))
-                    .foregroundStyle(speech.isRecording ? Color.brand : Color(.secondaryLabel))
+                    .foregroundStyle(speech.isRecording ? Color.accent : Color(.secondaryLabel))
                     .frame(width: iconSize, height: iconSize)
                     .symbolEffect(.pulse, isActive: speech.isRecording)
             }

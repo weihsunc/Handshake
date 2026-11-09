@@ -16,7 +16,6 @@ struct SignatureBlockView: View {
 
     let stamp: SignatureStamp
 
-    private static let purple = Color(red: 76/255, green: 0, blue: 255/255)   // #4C00FF
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -41,10 +40,10 @@ struct SignatureBlockView: View {
                 Text("Verified with \(stamp.method ?? "Face ID")")
                     .font(.system(size: 12, weight: .semibold))
             }
-            .foregroundStyle(Self.purple)
+            .foregroundStyle(Color.accent)
             .padding(.horizontal, 9)
             .padding(.vertical, 5)
-            .background(Self.purple.opacity(0.10), in: Capsule())
+            .background(Color.accent.opacity(0.10), in: Capsule())
 
             // ── Timestamp + fingerprint ───────────────────────────────────────
             // Local time with its zone. It used to be the ISO string in UTC

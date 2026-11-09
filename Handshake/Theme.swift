@@ -20,9 +20,8 @@ import UIKit
 //   cardFill       #F5F5F4   system    cards, wells (stone/100)
 //
 // The handshake drawing (app icon, chat-bar mark) uses the same ink.
-// The accent colour isn't decided yet: `action` is ink for now, so swapping
-// it later moves every primary action at once. Purple (`brand`) remains
-// only on text/menus and the signature boxes until then.
+// Accent: Apple's default blue (`accent` = the empty AccentColor asset) for
+// links, menu values and the signature boxes. Primary actions stay ink.
 // ─────────────────────────────────────────────────────────────────────────────
 
 extension Color {
@@ -54,14 +53,13 @@ extension Color {
     /// White panels that sit on the page (recipient rows).
     static let raisedSurface  = Color(.secondarySystemGroupedBackground)
 
-    // ── Purple: text / menus / signature boxes, until the accent is set ──
-    /// Purple text / icons on the page background (#4C00FF on black is
-    /// ~2.3:1, so it lightens in dark).
-    static let brand          = Color(light: 0x4C00FF, dark: 0x9D80FF)
-    /// Purple behind white text. Same in both modes.
-    static let brandFill      = Color(hex: 0x4C00FF)
-    /// Far end of the old brand gradient (#26065D) — profile avatar only.
-    static let brandDeep      = Color(hex: 0x26065D)
+    // ── Accent: Apple's default ──────────────────────────────────────────
+    /// Links, menu values, the signature boxes, the "Verified" badge — the
+    /// places that want a colour other than ink. AccentColor in the asset
+    /// catalog is empty, so this is iOS's own blue (adapting in dark mode,
+    /// and in step with system controls). Give AccentColor a value to
+    /// rebrand every accent at once.
+    static let accent         = Color.accentColor
 
     static let statusSigned   = Color(UIColor { $0.userInterfaceStyle == .dark ? .systemGreen
                                                                                : UIColor(red: 0.13, green: 0.60, blue: 0.28, alpha: 1) })
@@ -113,7 +111,7 @@ extension View {
 // the time (black in light, white in dark). Reopened in the other mode, that
 // text would be black-on-black or white-on-white. So on load, any plain
 // black / white / missing text colour goes back to .label. Coloured text
-// (links, purple) is left alone.
+// (links, accents) is left alone.
 // ─────────────────────────────────────────────────────────────────────────────
 
 extension NSMutableAttributedString {

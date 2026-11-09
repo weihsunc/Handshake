@@ -131,9 +131,9 @@ struct ChatBar: View {
         .shadow(color: .black.opacity(0.10), radius: 20, x: 0, y: 8)
     }
 
-    // ── The text field, with the brand-gradient placeholder ───────────────
-    // A TextField can't style its own placeholder (Figma 2160:6641 wants the
-    // purple gradient), so overlay one while empty.
+    // ── The text field, with an ink placeholder ───────────────────────────
+    // A TextField can't style its own placeholder (font weight, ink), so
+    // overlay one while empty.
     private var field: some View {
         ZStack(alignment: .leading) {
             if prompt.isEmpty {
@@ -222,7 +222,7 @@ struct ChatBar: View {
             Image(systemName: speech.isRecording ? "mic.fill" : "mic")
                 .font(.body.weight(.medium))
                 .foregroundStyle(speech.isRecording
-                                 ? Color.brand
+                                 ? Color.accent
                                  : Color(.label))
                 .frame(width: iconSize, height: iconSize)
                 .symbolEffect(.pulse, isActive: speech.isRecording)
@@ -321,11 +321,11 @@ struct GlassIconButton: View {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MARK: - Toolbar Pill Button  (Send)
-// The purple primary action when it lives in a navigation bar.
+// The primary action when it lives in a navigation bar.
 //
-// Uses the iOS 26 prominent glass style with the brand purple as tint, so the
+// Uses the iOS 26 prominent glass style with the ink `action` colour as tint, so the
 // system's own toolbar capsule IS the filled pill — nothing custom to ring.
-// PurplePillButton (custom gradient) is for full-width actions outside
+// PrimaryPillButton (custom fill) is for full-width actions outside
 // toolbars, where there's no system container to fight.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -349,10 +349,10 @@ struct ToolbarPillButton: View {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MARK: - Purple Pill Button  (Send)
+// MARK: - Primary Pill Button  (filled, ink)
 // ─────────────────────────────────────────────────────────────────────────────
 
-struct PurplePillButton: View {
+struct PrimaryPillButton: View {
     let title: String
     /// Stretches the pill to fill its container — used for the primary action on
     /// the signing screen. Toolbar usages keep the default hug-to-content width.
@@ -376,8 +376,7 @@ struct PurplePillButton: View {
                 .padding(.horizontal, 14)
                 .frame(maxWidth: fullWidth ? .infinity : nil)
                 .frame(height: fullWidth ? fullH : barH)
-                // The primary-action colour (Theme `action`), not the purple
-                // gradient, until the accent is chosen.
+                // The primary-action colour (Theme `action`).
                 .background(Color.action, in: Capsule())
                 .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 8)
         }
@@ -422,15 +421,15 @@ enum FormatAction {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MARK: - Purple Circle Button  (share / send action in nav bar)
+// MARK: - Primary Circle Button  (share / send action in nav bar)
 //
 // Mirrors GlassIconButton's layout exactly (36 pt icon · 44 pt tall · 4 pt
-// horizontal padding → 44×44 capsule = circle) but fills with the purple
-// gradient instead of .regularMaterial, so the iOS 26 liquid-glass button-
-// group container sees a solid purple surface and shows no white ring.
+// horizontal padding → 44×44 capsule = circle) but fills with the `action`
+// colour instead of .regularMaterial, so the iOS 26 liquid-glass button-
+// group container sees a solid surface and shows no white ring.
 // ─────────────────────────────────────────────────────────────────────────────
 
-struct PurpleCircleButton: View {
+struct PrimaryCircleButton: View {
     let systemName: String
     var label: String
     var action: () -> Void

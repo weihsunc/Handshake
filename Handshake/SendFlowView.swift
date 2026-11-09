@@ -245,7 +245,7 @@ struct SendFlowView: View {
                     Button(action: addRecipient) {
                         Label("Add Recipient", systemImage: "plus.circle.fill")
                             .font(.body.weight(.medium))
-                            .foregroundStyle(Color.brand)
+                            .foregroundStyle(Color.accent)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, 4)
                     }
@@ -409,7 +409,7 @@ struct SendFlowView: View {
                 Spacer(minLength: 0)
                 Text(done ? String(localized: "Review") : String(localized: "Fill In"))
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.brand)
+                    .foregroundStyle(Color.accent)
                 Image(systemName: "chevron.right")
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(.tertiary)
@@ -448,7 +448,7 @@ struct SendFlowView: View {
                         Image(systemName: "chevron.up.chevron.down")
                             .font(.caption.weight(.semibold))
                     }
-                    .foregroundStyle(Color.brand)
+                    .foregroundStyle(Color.accent)
                 }
             }
             if mySlot != nil {
@@ -709,7 +709,7 @@ private struct FillBlanksSheet: View {
                             if let line = context[b] { Text(line) }
                             if values[b] == nil, auto[b] != nil {
                                 Text("Filled in from the name on the send screen.")
-                                    .foregroundStyle(Color.brand)
+                                    .foregroundStyle(Color.accent)
                             }
                         }
                     }
@@ -907,7 +907,7 @@ private struct RecipientCard: View {
                             Image(systemName: "chevron.up.chevron.down")
                                 .font(.caption.weight(.semibold))
                         }
-                        .foregroundStyle(Color.brand)
+                        .foregroundStyle(Color.accent)
                     }
                 }
             }

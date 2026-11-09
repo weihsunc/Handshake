@@ -214,7 +214,7 @@ struct ContractWorkspaceView: View {
         // ── Custom top bar injected into the safe area so it never squashes ───
         // SwiftUI's ToolbarItem(.navigationBarTrailing) clamps any custom-styled
         // view to an icon-square. Moving the bar into safeAreaInset gives it full
-        // SwiftUI layout and lets PurplePillButton size itself to its content.
+        // SwiftUI layout and lets PrimaryPillButton size itself to its content.
         .navigationBarBackButtonHidden(true)
         // The system title, not a principal Text: iOS 26 lays a custom
         // principal item out at its full width when the first layout already

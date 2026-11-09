@@ -287,7 +287,7 @@ struct SigningView: View {
                                     label: String(localized: "Go to your signature box"),
                                     size: barH, action: jumpToMyBox)
                 }
-                PurplePillButton(title: role.map { String(localized: "Sign as \($0)") } ?? String(localized: "Sign"),
+                PrimaryPillButton(title: role.map { String(localized: "Sign as \($0)") } ?? String(localized: "Sign"),
                                  fullWidth: true) {
                     sheet = .sign
                 }
@@ -297,7 +297,7 @@ struct SigningView: View {
             .readableColumn(Layout.readableWidth + 32)
             .background(Color.pageBackground.ignoresSafeArea(edges: .bottom))
         }
-        // iOS 26 sheets are glass: the purple pill glowed through the bottom
+        // iOS 26 sheets are glass: the filled pill glowed through the bottom
         // of every sheet opened over it. It steps back while one is up.
         .opacity(sheet == nil ? 1 : 0)
         .animation(.easeOut(duration: 0.2), value: sheet == nil)
@@ -357,7 +357,7 @@ struct SigningView: View {
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
 
-            PurplePillButton(title: isSigning ? String(localized: "Verifying…") : String(localized: "Sign with \(SignatureService.biometryName)"),
+            PrimaryPillButton(title: isSigning ? String(localized: "Verifying…") : String(localized: "Sign with \(SignatureService.biometryName)"),
                              fullWidth: true) {
                 Task { await sign() }
             }
@@ -573,7 +573,7 @@ struct SigningConfirmationView: View {
 
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 84, weight: .regular))
-                    .foregroundStyle(Color.brand)
+                    .foregroundStyle(Color.accent)
                     .scaleEffect(appeared ? 1 : 0.6)
                     .opacity(appeared ? 1 : 0)
                     .padding(.bottom, 28)
@@ -597,10 +597,10 @@ struct SigningConfirmationView: View {
                         Text("Verified with \(SignatureService.biometryName)")
                             .font(.caption.weight(.semibold))
                     }
-                    .foregroundStyle(Color.brand)
+                    .foregroundStyle(Color.accent)
                     .padding(.horizontal, 9)
                     .padding(.vertical, 5)
-                    .background(Color.brand.opacity(0.10), in: Capsule())
+                    .background(Color.accent.opacity(0.10), in: Capsule())
 
                     Text(stamp.signedAt, format: .dateTime.year().month().day().hour().minute())
                     Text("Fingerprint \(stamp.fingerprint)")
@@ -616,7 +616,7 @@ struct SigningConfirmationView: View {
                     if signedContract != nil {
                         // The other party has no way to know this was signed
                         // until the copy reaches them — this is that step.
-                        PurplePillButton(title: sentBack ? String(localized: "Signed copy sent ✓")
+                        PrimaryPillButton(title: sentBack ? String(localized: "Signed copy sent ✓")
                                                  : copied ? String(localized: "Link copied. Paste it to the sender")
                                                  : String(localized: "Send signed copy back"),
                                          fullWidth: true) { showShare = true }
@@ -634,7 +634,7 @@ struct SigningConfirmationView: View {
                             .foregroundStyle(Color.secondaryInk)
                             .padding(.vertical, 6)
                     } else {
-                        PurplePillButton(title: String(localized: "Done"), fullWidth: true) { onDone() }
+                        PrimaryPillButton(title: String(localized: "Done"), fullWidth: true) { onDone() }
                     }
                 }
                 .padding(.horizontal, 16)

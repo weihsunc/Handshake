@@ -5,15 +5,16 @@ import UIKit
 // MARK: - Field boxes
 //
 // What a placed-but-unfilled field looks like in the document: a dashed,
-// purple-tinted box with an icon and a label, the e-sign convention for
+// accent-tinted box with an icon and a label, the e-sign convention for
 // "someone still has to fill this in". Rendered at scale 1 for the same RTFD
 // reason as the signed stamp (see SignatureBlockView).
 // ─────────────────────────────────────────────────────────────────────────────
 
-private let fieldPurple = Color.brandFill
-/// Opaque, so the box reads the same on a dark page. Matches what 6% purple
-/// over white looked like before.
-private let fieldWash   = Color(red: 0.958, green: 0.94, blue: 1)
+private let fieldTint = Color.accent
+/// Opaque, so the box reads the same on a dark page: 6% system blue over
+/// white. (Fixed, not derived from the accent — the box is drawn into the
+/// document and has to look the same on every phone.)
+private let fieldWash   = Color(red: 0.94, green: 0.969, blue: 1)
 
 struct SignatureFieldBox: View {
     var body: some View {
@@ -26,13 +27,13 @@ struct SignatureFieldBox: View {
             }
             Spacer()
         }
-        .foregroundStyle(fieldPurple)
+        .foregroundStyle(fieldTint)
         .padding(.horizontal, 14)
         .frame(width: 300, height: 64)
         .background(fieldWash, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(fieldPurple.opacity(0.55), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+                .strokeBorder(fieldTint.opacity(0.55), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
         )
     }
 }
@@ -45,13 +46,13 @@ struct DateFieldBox: View {
             Text("Date").font(.system(size: 15, weight: .semibold))
             Spacer()
         }
-        .foregroundStyle(fieldPurple)
+        .foregroundStyle(fieldTint)
         .padding(.horizontal, 12)
         .frame(width: 170, height: 44)
         .background(fieldWash, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(fieldPurple.opacity(0.55), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+                .strokeBorder(fieldTint.opacity(0.55), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
         )
     }
 }

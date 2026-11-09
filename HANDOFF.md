@@ -37,7 +37,7 @@ Also confirmed: a seeded `contracts.json` decodes correctly (ISO-8601 dates) and
 
 - **Template card icons rendered as `[?]` tofu.** Not app code: the **iOS 26.3 simulator runtime** fails to render colour emoji at all (the same build renders them fine on 26.5). The old `EmojiView` UILabel bridge that pinned `AppleColorEmoji` didn't help and was removed; the cards use plain `Text` now. **Verify on the 26.5 runtime or newer**, and expect tofu on 26.3.
 - **Nav title showed the raw prompt cut mid-sentence** ("Create a contract for a") while generating. Now "New Agreement" until the AI returns a title.
-- **The Send pill in the workspace toolbar rendered as "S / e" on two lines.** The iOS 26 glass container squeezes the item and wraps the label. `PurplePillButton` now has `lineLimit(1)` + `fixedSize(horizontal: true)`, which stops the wrap without changing the geometry §6 warns about.
+- **The Send pill in the workspace toolbar rendered as "S / e" on two lines.** The iOS 26 glass container squeezes the item and wraps the label. `PrimaryPillButton` now has `lineLimit(1)` + `fixedSize(horizontal: true)`, which stops the wrap without changing the geometry §6 warns about.
 - **The share-sheet fallback was a dead end.** It passed `[subject, body]` as two items, which iOS described as "2 Images", and on dismissal dropped the user back on the send form with no feedback and no status change. It now shares one combined string and, when a share *completes*, asks "Did you send it?" — marking sent only on an explicit yes, since the share sheet can't distinguish Mail from Copy. The §0 rule that the fallback never marks sent silently still holds.
 - **A signing link arriving while the workspace was open was silently dropped.** The workspace is a `fullScreenCover` from `HomeView`; SwiftUI won't present `RootView`'s cover on top of it, so tapping "Open in Handshake" did nothing. `DeepLinkRouter.dismissAll()` now tells `HomeView` to close its cover and history sheet before `RootView` presents, ~400 ms later.
 - **The workspace didn't reflect a contract being sent from inside it.** It now reads status live from the store: a Pending/Signed badge appears beside the title, and Send is replaced by the Signed badge once signed (editing a signed document would invalidate the stamp).
@@ -178,7 +178,7 @@ A native iOS app that turns a plain-English prompt into a legally formatted cont
 | `HandshakeApp.swift` | App entry + `RootView` (deep-link routing, §4f) + `DeepLinkRouter` |
 | `HomeView.swift` | Landing screen — illustration, template cards, chat bar |
 | `ContractWorkspaceView.swift` | **The main screen.** Contract + AI panel + editor |
-| `Components.swift` | Shared UI: ChatBar, toolbars, `GlassIconButton` / `ToolbarPillButton` (system glass) / `PurplePillButton` (custom, full-width only), illustration, `MessageBubble` |
+| `Components.swift` | Shared UI: ChatBar, toolbars, `GlassIconButton` / `ToolbarPillButton` (system glass) / `PrimaryPillButton` (custom, full-width only), illustration, `MessageBubble` |
 | `RichTextEditor.swift` | `RichTextEditorImpl` — the `UITextView` ↔ SwiftUI bridge |
 | `MarkdownParser.swift` | `NSMutableAttributedString.fromHandshakeMarkdown` |
 | `ListNumbering.swift` | Pure Foundation: what number the next list item gets. Testable outside the app |
@@ -350,7 +350,7 @@ Any `ToolbarItem` is wrapped in a 44pt Liquid Glass capsule by the system. Paint
 
 - Icon buttons (`GlassIconButton`) are a bare `Button { Image }` — iOS renders a solid glass circle.
 - The purple Send action in a toolbar is `ToolbarPillButton`: `.buttonStyle(.glassProminent)` + `.tint(#4C00FF)`. The system capsule *is* the filled pill, so there is nothing to ring. Cost: it's a flat tint rather than the §6 gradient, which only the system can draw there.
-- `PurplePillButton` (custom gradient) is now only for full-width actions **outside** toolbars — the signing screen and confirmation — where there's no system container to fight.
+- `PrimaryPillButton` (custom gradient) is now only for full-width actions **outside** toolbars — the signing screen and confirmation — where there's no system container to fight.
 
 ### UIKit renames every text attachment to "Attachment.png"
 
@@ -393,8 +393,11 @@ Primary action    `action` = ink for now (Send pills, send circle, chat placehol
 User chat bubble  #1F1E1C, white text / dark: #3A3936, #EDECE9 text
 Secondary text    #787774 / dark #9B9A97
 Page / card       #FAFAF9 (stone/50) / #F5F5F4 (stone/100); system colours in dark
-Purple            `brand` #4C00FF still on text/menus ("Signs as", Fill In, Add Recipient),
-                  signature-field boxes, the profile avatar. Gradient #4C00FF → #26065D no longer on buttons.
+Accent            `accent` = Color.accentColor — the AccentColor asset is EMPTY, so it's iOS's
+                  default blue. Links, menu values ("Signs as"), Fill In, Add Recipient, the
+                  signature-field boxes (wash #F0F7FF), the "Verified with Face ID" badge.
+                  Set AccentColor in Assets to rebrand all of them. No purple left anywhere.
+Profile avatar    systemGray2 → systemGray, like Contacts' monogram
 Body text         SF Pro Regular 17 / 22, tracking -0.43  → `.body` (scales with Dynamic Type)
 Title             SF Pro Bold 28 / 34, tracking 0.38      → `.title.weight(.bold)`
 Pill radius       Capsule / 296px in Figma
@@ -542,7 +545,7 @@ Three options were considered:
 - [ ] The iOS 26.3 simulator runtime renders no colour emoji (template icons show as `[?]`). Test on 26.5+
 - [ ] A recipient sees the markdown rendering, not the sender's rich-text edits — the RTFD is deliberately excluded from the link payload for size. If that matters, the fix is a real transport (backend or `.fileImporter` with an `.rtfd` attachment), not a bigger link.
 - [x] The stamped signature block and the field boxes were soft on Retina — they render at 3× now, sized by `attachmentSizes` (§6)
-- [x] `PurplePillButton` in the nav bar rendered clamped ("S e" wrapped over two lines) — first patched with `lineLimit(1)` + `fixedSize`, then superseded by `ToolbarPillButton` (system glass); see §6
+- [x] `PrimaryPillButton` in the nav bar rendered clamped ("S e" wrapped over two lines) — first patched with `lineLimit(1)` + `fixedSize`, then superseded by `ToolbarPillButton` (system glass); see §6
 - [x] Malformed AI output (missing `TITLE:` / `---`, or a body under 40 chars) now throws `AIError.malformedContract` with a "try rephrasing" message instead of filing an empty "Agreement"
 - [x] ~~Nothing compile-verified~~ — stale since August; everything since has been built and run on the simulator (§0)
 

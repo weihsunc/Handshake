@@ -224,7 +224,7 @@ struct StatusBadge: View {
         if !c.isIncoming, c.changeRequest != nil, c.status == .sent || c.status == .draft {
             override = (String(localized: "Changes Asked"), .orange)
         } else if let progress = c.progressLabel {
-            override = (progress, Color.brand)
+            override = (progress, Color.accent)
         }
     }
 
@@ -236,7 +236,7 @@ struct StatusBadge: View {
         if let override { return override.color }
         switch status {
         case .draft:    return Color(.secondaryLabel)
-        case .sent:     return Color.brand
+        case .sent:     return Color.accent
         case .signed:   return Color.statusSigned
         case .declined: return Color.statusDeclined
         }
@@ -310,7 +310,7 @@ struct ReadOnlyContractView: View {
                         declinedBanner
                         // Revise and send again, the way DocuSign offers "Correct" on a declined envelope.
                         if !contract.isIncoming {
-                            PurplePillButton(title: String(localized: "Revise Contract"), fullWidth: true) { revise() }
+                            PrimaryPillButton(title: String(localized: "Revise Contract"), fullWidth: true) { revise() }
                         }
                     } else if let request = contract.changeRequest, !contract.isIncoming {
                         changesBanner(request)
@@ -439,7 +439,7 @@ struct ReadOnlyContractView: View {
             Banner(icon: "text.bubble.fill", tint: .orange,
                    title: String(localized: "\(r.by) asked for changes"),
                    detail: r.text)
-            PurplePillButton(title: String(localized: "Revise Contract"), fullWidth: true) { revise() }
+            PrimaryPillButton(title: String(localized: "Revise Contract"), fullWidth: true) { revise() }
         }
     }
 
