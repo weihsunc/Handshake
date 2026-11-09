@@ -49,7 +49,6 @@ struct SigningView: View {
     @State private var askDecline = false
     @State private var declineReason = ""
     @State private var changesText = ""
-    @FocusState private var changesFocused: Bool
 
     // ── Find in the contract (the bar's search button) ──
     @State private var isSearching  = false
@@ -529,30 +528,30 @@ struct SigningView: View {
     /// explanation as its footer, the keyboard up from the start.
     private var changesSheet: some View {
         NavigationStack {
-            Form {
-                Section {
-                    TextField("Changes", text: $changesText,
-                              prompt: Text("For example, move the start date to March 1."),
-                              axis: .vertical)
-                        .lineLimit(4...12)
-                        .focused($changesFocused)
-                } footer: {
-                    Text("Tell \(contract.senderName ?? String(localized: "the sender")) what you'd like changed. They can revise it and send you a new version.")
-                }
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Tell \(contract.senderName ?? String(localized: "the sender")) what you'd like changed. They can revise it and send you a new version.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.secondaryInk)
+                TextEditor(text: $changesText)
+                    .frame(minHeight: 140)
+                    .padding(8)
+                    .scrollContentBackground(.hidden)
+                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.cardFill))
+                Spacer()
             }
+            .padding(16)
             .navigationTitle("Ask for Changes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") { sheet = nil }
                 }
-                ToolbarItem(placement: .confirmationAction) {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Send") { requestChanges() }
                         .fontWeight(.semibold)
                         .disabled(changesText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
-            .onAppear { changesFocused = true }
         }
         .presentationDetents([.medium, .large])
     }
