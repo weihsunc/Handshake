@@ -37,6 +37,9 @@ struct ChatBar: View {
     /// tapped, not only once the text wraps. The contract screen uses it:
     /// tapping the bar there is the start of a message.
     var expandsOnFocus: Bool = false
+    /// Off while there's nothing to send to yet (the first draft is still
+    /// being written): the arrow dims and the text waits in the bar.
+    var sendEnabled: Bool = true
 
     @FocusState private var isFocused: Bool
     @State private var speech = SpeechInput()
@@ -240,8 +243,8 @@ struct ChatBar: View {
         }
         .buttonStyle(.plain)
         // The card can be open with nothing typed yet (expandsOnFocus).
-        .disabled(isEmpty)
-        .opacity(isEmpty ? 0.35 : 1)
+        .disabled(isEmpty || !sendEnabled)
+        .opacity(isEmpty || !sendEnabled ? 0.35 : 1)
         .accessibilityLabel("Send")
     }
 

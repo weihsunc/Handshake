@@ -416,7 +416,8 @@ struct ContractWorkspaceView: View {
         // Once there's a document the bar edits it; "Start with" only
         // makes sense before the first draft exists.
         ChatBar(prompt: $aiChatPrompt,
-                placeholder: contract == nil ? String(localized: "Start with HandShake") : String(localized: "Edit with HandShake"),
+                placeholder: contract == nil && !isLoading ? String(localized: "Start with HandShake")
+                                                           : String(localized: "Edit with HandShake"),
                 onSend: {
             // Re-open panel when user sends a message after dismissing it
             if !inSidePanel && !showAIPanel {
@@ -434,7 +435,9 @@ struct ContractWorkspaceView: View {
             // one thing. Next run loop: the focus change arrives inside
             // UIKit's own update, which swallowed the animation and made the
             // panel pop in.
-            let opensPanel = focused && !showAIPanel && contract != nil
+            // Also while the first draft is being written: swiping the
+            // panel away then left no way back to the progress.
+            let opensPanel = focused && !showAIPanel && (contract != nil || isLoading)
             DispatchQueue.main.async {
                 withAnimation(.spring(response: 0.42, dampingFraction: 0.86)) {
                     chatBarFocused = focused
@@ -451,7 +454,8 @@ struct ContractWorkspaceView: View {
             case .photo: showImagePicker    = true
             case .file:  showDocumentPicker = true
             }
-        }, expandsOnFocus: !inSidePanel && contract != nil)
+        }, expandsOnFocus: !inSidePanel && (contract != nil || isLoading),
+           sendEnabled: !isLoading)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -792,7 +796,9 @@ struct ContractWorkspaceView: View {
 
     private func sendToAI() {
         let text = aiChatPrompt.trimmingCharacters(in: .whitespaces)
-        guard !text.isEmpty else { return }
+        // While the first draft is still being written there's nothing to
+        // revise yet; the text stays in the bar to send once it arrives.
+        guard !text.isEmpty, !isLoading else { return }
         aiChatPrompt = ""
 
         messages.append(ChatMessage(content: text, isUser: true))
