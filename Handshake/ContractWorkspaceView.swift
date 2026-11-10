@@ -997,7 +997,7 @@ struct ContractWorkspaceView: View {
         let text = aiChatPrompt.trimmingCharacters(in: .whitespaces)
         // While the first draft is still being written there's nothing to
         // revise yet; the text stays in the bar to send once it arrives.
-        guard !text.isEmpty, !isLoading else { return }
+        guard !text.isEmpty, !isLoading, !isAILoading, let current = contract else { return }
         // A revision rewrites the text under the highlights.
         clearFilledHighlights()
         aiChatPrompt = ""
@@ -1015,16 +1015,13 @@ struct ContractWorkspaceView: View {
         let transcript = messages
             .map { $0.isUser ? "User: \($0.content)" : "Assistant: \($0.content)" }
             .joined(separator: "\n\n")
-        let currentTitle = contract?.title ?? "Agreement"
-        // As markdown, not plain text: plain text dropped the **bold** (so a
-        // revision came back with "WALKER:" un-bolded) and turned signature
-        // and date boxes into stray object-replacement characters.
-        let currentBody  = attributedBody.handshakeMarkdown()
+        let original = NSAttributedString(attributedString: attributedBody)
+        let revision = ContractRevision(original)
         let request = """
             CURRENT CONTRACT — revise this, do not start over:
-            TITLE: \(currentTitle)
+            TITLE: \(current.title)
             ---
-            \(currentBody)
+            \(revision.markdown)
 
             CONVERSATION:
             \(transcript)
@@ -1034,6 +1031,7 @@ struct ContractWorkspaceView: View {
             numbering and line breaks stay, and [Signature] / [Date] stay where they are. \
             Change only what the request asks for, and format any new text the same way \
             as the text around it. Convert any existing tables to numbered lists, preserving their details.
+            \(revision.instructions)
             Apply the user's latest request to the current contract. Return the COMPLETE \
             updated contract in the required format — a TITLE: line, then ---, then the \
             entire body with the change incorporated. Never return only the changed \
@@ -1043,28 +1041,22 @@ struct ContractWorkspaceView: View {
         Task {
             do {
                 let result = try await AIService.generateContract(for: request)
-                await MainActor.run {
+                try await MainActor.run {
+                    guard var updated = contract, updated.id == current.id,
+                          attributedBody.isEqual(to: original) else { throw AIError.malformedContract }
+                    let revisedBody = try revision.restore(result.content)
                     isAILoading    = false
                     // Keep the same contract identity (and metadata) across AI
                     // updates — otherwise every update would create a new draft.
-                    if var updated = contract {
-                        updated.title    = result.title
-                        updated.content  = result.content
-                        updated.bodyRTFD = nil   // body regenerated from markdown
-                        updated.attachmentSizes = nil
-                        // Before the first send, follow the AI's latest read
-                        // of who the sender is ("actually I'm the client").
-                        // After it, the sender's own choice on the send
-                        // screen stands.
-                        if updated.sentAt == nil, let role = result.senderRole {
-                            updated.senderRole = role
-                            ContractStore.shared.update(id: updated.id) { $0.senderRole = role }
-                        }
-                        contract = updated
-                    } else {
-                        contract = result
+                    updated.title = result.title
+                    // Before the first send, follow the AI's latest read of
+                    // who the sender is. After it, the sender's choice stands.
+                    if updated.sentAt == nil, let role = result.senderRole {
+                        updated.senderRole = role
+                        ContractStore.shared.update(id: updated.id) { $0.senderRole = role }
                     }
-                    attributedBody = .fromHandshakeMarkdown(result.content)
+                    contract = updated
+                    attributedBody = revisedBody
                     messages.append(ChatMessage(
                         content: String(localized: "Updated! Feel free to keep editing or ask me for more changes."),
                         isUser: false,
