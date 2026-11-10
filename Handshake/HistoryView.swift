@@ -272,7 +272,7 @@ struct ReadOnlyContractView: View {
 
     init(contract: GeneratedContract) {
         self.contract = contract
-        _attributedBody = State(initialValue: contract.displayBody())
+        _attributedBody = State(initialValue: contract.baseBody())
         slots = contract.signatureSlots()
     }
 
@@ -329,6 +329,12 @@ struct ReadOnlyContractView: View {
                         )
                     }
                     .frame(height: editorHeight)
+                    .onGeometryChange(for: CGFloat.self) {
+                        min($0.size.width.rounded(.down), SignatureBlockView.maxWidth)
+                    } action: { width in
+                        guard width > 0, !contract.signatures.isEmpty else { return }
+                        attributedBody = contract.displayBody(signatureWidth: width)
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 24)

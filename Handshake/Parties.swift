@@ -53,9 +53,9 @@ extension GeneratedContract {
     }
 
     /// The document as everyone sees it: each party's stamp in its box.
-    func displayBody() -> NSMutableAttributedString {
+    func displayBody(signatureWidth: CGFloat) -> NSMutableAttributedString {
         let body = baseBody()
-        if !signatures.isEmpty { body.applySignatures(signatures) }
+        if !signatures.isEmpty { body.applySignatures(signatures, width: signatureWidth) }
         return body
     }
 
@@ -103,12 +103,12 @@ extension NSMutableAttributedString {
     /// Draws each signature into its box, fills the date after it, and writes
     /// the signer's name over the placeholder on their party's line
     /// ("TENANT: [FULL NAME]" → "TENANT: Dana Whitfield").
-    func applySignatures(_ sigs: [PartySignature]) {
+    func applySignatures(_ sigs: [PartySignature], width: CGFloat) {
         let slots = SignatureSlots.find(in: self)
         // Last box first, so filling one never moves a box still to come.
         for sig in sigs.filter({ slots.indices.contains($0.slot) }).sorted(by: { $0.slot > $1.slot }) {
             let s = slots[sig.slot]
-            stampSignature(sig.stamp, width: 360, slot: s.range, signedDate: sig.date, dateLimit: s.end)
+            stampSignature(sig.stamp, width: width, slot: s.range, signedDate: sig.date, dateLimit: s.end)
             if let line = s.roleLine,
                let ph = SignatureSlots.namePlaceholder(in: line, of: string as NSString) {
                 var attrs = attributes(at: ph.location, effectiveRange: nil)
@@ -118,7 +118,7 @@ extension NSMutableAttributedString {
         }
         // A document with no boxes: each signature at the end, in order.
         for sig in sigs.filter({ !slots.indices.contains($0.slot) }).sorted(by: { $0.slot < $1.slot }) {
-            stampSignature(sig.stamp, width: 360, slot: NSRange(location: NSNotFound, length: 0))
+            stampSignature(sig.stamp, width: width, slot: NSRange(location: NSNotFound, length: 0))
         }
     }
 }

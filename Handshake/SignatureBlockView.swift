@@ -16,6 +16,7 @@ import UIKit
 
 struct SignatureBlockView: View {
 
+    nonisolated static let maxWidth: CGFloat = 360
     let stamp: SignatureStamp
 
     /// Always ink on paper: the stamp is an image inside the document and
@@ -73,8 +74,7 @@ struct SignatureBlockView: View {
         .padding(.horizontal, 16)
         .padding(.top, 12)
         .padding(.bottom, 14)
-        // The card fills the width it's drawn at, so its edges line up with
-        // the text column (it used to hug its content and sit centred).
+        // Fill the width proposed by the document or confirmation screen.
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -262,7 +262,8 @@ extension NSMutableAttributedString {
     ///   party's block), so a box with no date of its own can't fill theirs.
     func stampSignature(_ stamp: SignatureStamp, width: CGFloat, slot: NSRange? = nil,
                         signedDate: Date? = nil, dateLimit: Int? = nil) {
-        let blockWidth = max(200, min(width, 420))
+        guard width > 0 else { return }
+        let blockWidth = min(width, SignatureBlockView.maxWidth)
 
         let renderer = ImageRenderer(
             content: SignatureBlockView(stamp: stamp).frame(width: blockWidth)

@@ -20,6 +20,8 @@ struct SigningView: View {
 
     @State private var attributedBody: NSMutableAttributedString
     @State private var editorHeight:   CGFloat = 300
+    @State private var signatureWidth: CGFloat = 0
+    @State private var signedDocument: GeneratedContract?
     @State private var textView:       UITextView? = nil
 
     @State private var signerName:  String
@@ -90,7 +92,7 @@ struct SigningView: View {
 
     init(contract: GeneratedContract) {
         self.contract   = contract
-        _attributedBody = State(initialValue: contract.displayBody())
+        _attributedBody = State(initialValue: contract.baseBody())
         _status         = State(initialValue: contract.status)
         let found = contract.signatureSlots()
         slots = found
@@ -276,6 +278,24 @@ struct SigningView: View {
                     )
                 }
                 .frame(height: editorHeight)
+                .onGeometryChange(for: CGFloat.self) {
+                    min($0.size.width.rounded(.down), SignatureBlockView.maxWidth)
+                } action: { width in
+                    guard width > 0 else { return }
+                    signatureWidth = width
+                    let document = signedDocument ?? contract
+                    guard !document.signatures.isEmpty else { return }
+                    attributedBody = document.displayBody(signatureWidth: width)
+                    // Replacing the text storage also clears its search decoration.
+                    if isSearching {
+                        DispatchQueue.main.async {
+                            if isSearching, let textView {
+                                DocumentSearch.decorate(textView, matches: searchMatches,
+                                                        current: searchMatches.isEmpty ? nil : searchIndex)
+                            }
+                        }
+                    }
+                }
             }
             .padding(.horizontal, 16)
             .padding(.top, 24)
@@ -714,7 +734,8 @@ struct SigningView: View {
             c.changeRequest = nil
         }
         if let updated = ContractStore.shared.contract(id: contract.id) {
-            attributedBody = updated.displayBody()
+            signedDocument = updated
+            if signatureWidth > 0 { attributedBody = updated.displayBody(signatureWidth: signatureWidth) }
         }
 
         status = .signed
@@ -770,7 +791,7 @@ struct SigningConfirmationView: View {
                 // The signature exactly as it now sits in the contract: the
                 // same card (signature, line, time, fingerprint, seal).
                 SignatureBlockView(stamp: stamp)
-                    .frame(maxWidth: 360)
+                    .frame(maxWidth: SignatureBlockView.maxWidth)
                     .padding(.horizontal, 24)
                     .environment(\.colorScheme, .light)
                     .accessibilityElement(children: .combine)
