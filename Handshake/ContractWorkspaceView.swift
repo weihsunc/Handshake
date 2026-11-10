@@ -31,6 +31,9 @@ struct ContractWorkspaceView: View {
     /// Put in the chat bar on open: a recipient's request for changes, ready
     /// to hand to the AI or to act on by hand.
     var prefillPrompt: String? = nil
+    /// Material from a Start-from sheet (a chat, a call, a paper contract).
+    /// The chat shows its short description; the AI gets the material too.
+    var source: DraftSource? = nil
 
     // ── AI state ──────────────────────────────────────────────────────────────
     @State private var messages:     [ChatMessage] = []
@@ -918,12 +921,12 @@ struct ContractWorkspaceView: View {
             return
         }
 
-        messages.append(ChatMessage(content: initialPrompt, isUser: true))
+        messages.append(ChatMessage(content: source?.bubble(note: initialPrompt) ?? initialPrompt, isUser: true))
         isLoading = true
         errorText = nil
 
         do {
-            let result = try await AIService.generateContract(for: initialPrompt)
+            let result = try await AIService.generateContract(for: source?.aiPrompt(note: initialPrompt) ?? initialPrompt)
             await MainActor.run {
                 isLoading      = false
                 contract       = result

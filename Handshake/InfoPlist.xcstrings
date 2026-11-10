@@ -1,6 +1,52 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "NSCameraUsageDescription": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 使用相機掃描紙本合約，讓你可以編輯並傳送。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 使用相机扫描纸质合同，让你可以编辑并发送。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshakeは紙の契約書をカメラでスキャンし、編集して送信できるようにします。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake는 카메라로 종이 계약서를 스캔해 편집하고 보낼 수 있게 합니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake usa la cámara para escanear un contrato en papel y que puedas editarlo y enviarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake utilise l'appareil photo pour numériser un contrat papier afin que vous puissiez le modifier et l'envoyer."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake verwendet die Kamera, um einen Papiervertrag zu scannen, damit du ihn bearbeiten und senden kannst."
+          }
+        }
+      }
+    },
     "NSFaceIDUsageDescription": {
       "localizations": {
         "zh-Hant": {
@@ -47,52 +93,6 @@
         }
       }
     },
-    "NSSpeechRecognitionUsageDescription": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Handshake 會將你說的話轉成你想要的合約描述。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Handshake 会将你说的话转成你想要的合同描述。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Handshakeは、話した内容を希望する契約の説明に変換するために使用します。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Handshake는 말씀하신 내용을 원하는 계약의 설명으로 바꾸는 데 사용해요."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Handshake convierte lo que dices en la descripción del contrato que quieres."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Handshake transforme ce que vous dites en description du contrat souhaité."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Handshake wandelt deine gesprochenen Worte in die Beschreibung des gewünschten Vertrags um."
-          }
-        }
-      }
-    },
     "NSMicrophoneUsageDescription": {
       "localizations": {
         "zh-Hant": {
@@ -135,6 +135,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Handshake hört zu, damit du einen Vertrag laut beschreiben kannst, statt zu tippen."
+          }
+        }
+      }
+    },
+    "NSSpeechRecognitionUsageDescription": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 會將你說的話轉成你想要的合約描述。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 会将你说的话转成你想要的合同描述。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshakeは、話した内容を希望する契約の説明に変換するために使用します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake는 말씀하신 내용을 원하는 계약의 설명으로 바꾸는 데 사용해요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake convierte lo que dices en la descripción del contrato que quieres."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake transforme ce que vous dites en description du contrat souhaité."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake wandelt deine gesprochenen Worte in die Beschreibung des gewünschten Vertrags um."
           }
         }
       }

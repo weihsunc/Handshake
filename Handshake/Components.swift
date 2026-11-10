@@ -604,7 +604,7 @@ struct HandshakeIllustration: View {
             let art = Image("oc-handshake")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 280)
+                .frame(maxWidth: 280)
             // Black line art on transparent is invisible on a black page.
             // Inverted, the hands draw in white and the grey icons stay grey.
             if colorScheme == .dark {

@@ -1,0 +1,246 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Create a contract with ${applicationName}": {
+      "localizations": {
+        "zh-Hant": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "用 ${applicationName} 製作合約"
+            ]
+          }
+        },
+        "zh-Hans": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "用 ${applicationName} 制作合同"
+            ]
+          }
+        },
+        "ja": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName}で契約書を作成"
+            ]
+          }
+        },
+        "ko": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName}로 계약서 작성해 줘"
+            ]
+          }
+        },
+        "es": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Haz un contrato con ${applicationName}"
+            ]
+          }
+        },
+        "fr": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Fais un contrat avec ${applicationName}"
+            ]
+          }
+        },
+        "de": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Mach einen Vertrag mit ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "Draft a contract in ${applicationName}": {
+      "localizations": {
+        "zh-Hant": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "在 ${applicationName} 擬一份合約"
+            ]
+          }
+        },
+        "zh-Hans": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "在 ${applicationName} 起草一份合同"
+            ]
+          }
+        },
+        "ja": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName}で契約書の下書きを作って"
+            ]
+          }
+        },
+        "ko": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName}에서 계약서 초안 만들어 줘"
+            ]
+          }
+        },
+        "es": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Redacta un contrato en ${applicationName}"
+            ]
+          }
+        },
+        "fr": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Rédige un contrat dans ${applicationName}"
+            ]
+          }
+        },
+        "de": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Entwirf einen Vertrag in ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "Make a contract with ${applicationName}": {
+      "localizations": {
+        "zh-Hant": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "用 ${applicationName} 建立合約"
+            ]
+          }
+        },
+        "zh-Hans": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "用 ${applicationName} 创建合同"
+            ]
+          }
+        },
+        "ja": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName}で契約書を作って"
+            ]
+          }
+        },
+        "ko": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName}로 계약서 만들어 줘"
+            ]
+          }
+        },
+        "es": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Crea un contrato con ${applicationName}"
+            ]
+          }
+        },
+        "fr": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Crée un contrat avec ${applicationName}"
+            ]
+          }
+        },
+        "de": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Erstelle einen Vertrag mit ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "Start a ${applicationName} contract": {
+      "localizations": {
+        "zh-Hant": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "開始一份 ${applicationName} 合約"
+            ]
+          }
+        },
+        "zh-Hans": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "开始一份 ${applicationName} 合同"
+            ]
+          }
+        },
+        "ja": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName}の契約書を始めて"
+            ]
+          }
+        },
+        "ko": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName} 계약서 시작해 줘"
+            ]
+          }
+        },
+        "es": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Empieza un contrato de ${applicationName}"
+            ]
+          }
+        },
+        "fr": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Commence un contrat ${applicationName}"
+            ]
+          }
+        },
+        "de": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Starte einen ${applicationName}-Vertrag"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

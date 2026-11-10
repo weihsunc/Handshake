@@ -22,6 +22,8 @@
 	<!-- Dictation in the chat bar. -->
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Handshake turns what you say into the description of the contract you want.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Handshake uses the camera to scan a paper contract so you can edit and send it.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Handshake listens so you can describe a contract out loud instead of typing.</string>
 

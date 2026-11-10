@@ -1,742 +1,6 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "Signed copy of %@": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "「%@」的已簽署副本"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "《%@》的已签署副本"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "「%@」の署名済みの控え"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "‘%@’의 서명된 사본"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copia firmada de %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copie signée de %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unterschriebene Kopie von %@"
-          }
-        }
-      }
-    },
-    "The signed copy of %@ is attached for your records.": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "隨附「%@」的已簽署副本，供你留存。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "随附《%@》的已签署副本，供你留存。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "保管用に「%@」の署名済みの控えを添付しています。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "보관하실 수 있도록 ‘%@’의 서명된 사본을 첨부합니다."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adjunto la copia firmada de «%@» para tus archivos."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vous trouverez en pièce jointe la copie signée de « %@ » pour vos dossiers."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die unterschriebene Kopie von „%@“ ist für deine Unterlagen beigefügt."
-          }
-        }
-      }
-    },
-    "Signed copy": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已簽署副本"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已签署副本"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "署名済みの控え"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "서명된 사본"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copia firmada"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copie signée"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unterschriebene Kopie"
-          }
-        }
-      }
-    },
-    "Open the signed contract and try again.": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "請開啟已簽署的合約後再試一次。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "请打开已签署的合同后重试。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "署名済みの契約書を開いて、もう一度お試しください。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "서명된 계약을 열고 다시 시도하세요."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abre el contrato firmado e inténtalo de nuevo."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ouvrez le contrat signé et réessayez."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Öffne den unterschriebenen Vertrag und versuche es erneut."
-          }
-        }
-      }
-    },
-    "Couldn't send the PDF": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "無法傳送 PDF"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "无法发送 PDF"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PDFを送信できませんでした"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PDF를 보낼 수 없음"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se pudo enviar el PDF"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impossible d’envoyer le PDF"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PDF konnte nicht gesendet werden"
-          }
-        }
-      }
-    },
-    "Only mark it sent if you shared the PDF with %@.": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "只有在你已將 PDF 傳給 %@ 時，才標記為已傳送。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "只有在你已将 PDF 发送给 %@ 时，才标记为已发送。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@にPDFを送った場合にのみ、送信済みにしてください。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@에게 PDF를 공유한 경우에만 보낸 것으로 표시하세요."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Márcalo como enviado solo si compartiste el PDF con %@."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Indiquez que la copie a été envoyée uniquement si vous avez partagé le PDF avec %@."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Markiere die Kopie nur als gesendet, wenn du das PDF mit %@ geteilt hast."
-          }
-        }
-      }
-    },
-    "Send signed copy to %@": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "將已簽署副本傳給 %@"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "将已签署副本发送给 %@"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@に署名済みの控えを送信"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@에게 서명된 사본 보내기"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enviar copia firmada a %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Envoyer la copie signée à %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unterschriebene Kopie an %@ senden"
-          }
-        }
-      }
-    },
-    "After everyone signs": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "所有人簽署後"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "所有人签署后"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "全員の署名後"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "모두가 서명한 후"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cuando todos hayan firmado"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quand tout le monde aura signé"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sobald alle unterschrieben haben"
-          }
-        }
-      }
-    },
-    "Send CC Copies": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "傳送已簽署副本"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "发送抄送副本"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CCに控えを送信"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "참조 사본 보내기"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enviar copias a CC"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Envoyer les copies en Cc"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CC-Kopien senden"
-          }
-        }
-      }
-    },
-    "Enter a valid email address or phone number.": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "請輸入有效的電子郵件地址或電話號碼。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "请输入有效的电子邮件地址或电话号码。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "有効なメールアドレスまたは電話番号を入力してください。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "유효한 이메일 주소나 전화번호를 입력하세요."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Introduce un correo electrónico o número de teléfono válido."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Saisissez une adresse e-mail ou un numéro de téléphone valide."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gib eine gültige E-Mail-Adresse oder Telefonnummer ein."
-          }
-        }
-      }
-    },
-    "Use a different address for each signer and CC recipient.": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "請為每位簽署人和副本收件人使用不同的電子郵件地址或電話號碼。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "请为每位签署人和抄送人使用不同的电子邮件地址或电话号码。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "署名者とCCの受信者には、それぞれ異なるメールアドレスまたは電話番号を使ってください。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "서명자와 참조 수신자마다 다른 이메일 주소나 전화번호를 사용하세요."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usa un correo o teléfono distinto para cada firmante y destinatario en CC."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Utilisez une adresse e-mail ou un numéro différent pour chaque signataire et destinataire en Cc."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verwende für jede unterschreibende Person und jeden CC-Empfänger eine andere E-Mail-Adresse oder Telefonnummer."
-          }
-        }
-      }
-    },
-    "You can send them the completed PDF after everyone signs.": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "所有人簽署後，你可以將完成的 PDF 傳給他們。"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "所有人签署后，你可以将完成的 PDF 发送给他们。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "全員が署名した後、完成したPDFを送れます。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "모두가 서명하면 완성된 PDF를 보낼 수 있어요."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podrás enviarles el PDF final cuando todos hayan firmado."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vous pourrez leur envoyer le PDF final quand tout le monde aura signé."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sobald alle unterschrieben haben, kannst du ihnen das fertige PDF senden."
-          }
-        }
-      }
-    },
-    "Remove CC": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "移除副本收件人"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "移除抄送人"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CCを削除"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "참조 삭제"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quitar CC"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Retirer du Cc"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CC entfernen"
-          }
-        }
-      }
-    },
-    "Edit CC": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "編輯副本收件人"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "编辑抄送人"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CCを編集"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "참조 편집"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Editar CC"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Modifier le Cc"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CC bearbeiten"
-          }
-        }
-      }
-    },
-    "Add CC": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新增副本收件人"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "添加抄送人"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CCを追加"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "참조 추가"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Añadir CC"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ajouter en Cc"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CC hinzufügen"
-          }
-        }
-      }
-    },
-    "CC · Signed copy only": {
-      "localizations": {
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "副本收件人 · 僅接收已簽署副本"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "抄送 · 仅接收已签署副本"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CC · 署名済みの控えのみ"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "참조 · 서명된 사본만"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CC · Solo copia firmada"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cc · Copie signée uniquement"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CC · Nur unterschriebene Kopie"
-          }
-        }
-      }
-    },
     "%@\n\nOpen in Handshake to record it:\n%@": {
       "localizations": {
         "zh-Hant": {
@@ -1611,6 +875,144 @@
         }
       }
     },
+    "A call": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一通電話"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一通电话"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通話"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "통화"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una llamada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un appel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Anruf"
+          }
+        }
+      }
+    },
+    "A chat": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一段對話"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一段对话"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チャット"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "대화"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un chat"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une conversation"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Chat"
+          }
+        }
+      }
+    },
+    "A paper contract": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "紙本合約"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "纸质合同"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "紙の契約書"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "종이 계약서"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un contrato en papel"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un contrat papier"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Papiervertrag"
+          }
+        }
+      }
+    },
     "A signature box for them is added at the end of the contract.": {
       "localizations": {
         "zh-Hant": {
@@ -1837,6 +1239,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adresse hinzufügen"
+          }
+        }
+      }
+    },
+    "Add CC": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新增副本收件人"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加抄送人"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CCを追加"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "참조 추가"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir CC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter en Cc"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CC hinzufügen"
           }
         }
       }
@@ -2347,6 +1795,98 @@
         }
       }
     },
+    "After everyone signs": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有人簽署後"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有人签署后"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全員の署名後"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모두가 서명한 후"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando todos hayan firmado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quand tout le monde aura signé"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobald alle unterschrieben haben"
+          }
+        }
+      }
+    },
+    "Alex is moving into my spare room. $900 a month, utilities split 50/50.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "阿倫要搬進我家的空房間，月租 NT$15,000，水電對半分。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小林要搬进我家的空房间，月租 3,500 元，水电对半分。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ユウキがうちの空き部屋に引っ越してきます。家賃は月6万円、光熱費は折半。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "민수가 우리 집 빈방으로 들어와요. 월세 60만 원, 공과금은 반반."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Álex se muda a mi cuarto libre. 450 € al mes y los gastos a medias."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alex emménage dans ma chambre d'amis. 500 € par mois, charges partagées 50/50."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alex zieht in mein Gästezimmer. 550 € im Monat, Nebenkosten 50/50."
+          }
+        }
+      }
+    },
     "Align center": {
       "localizations": {
         "zh-Hant": {
@@ -2527,6 +2067,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alle Lücken ausgefüllt"
+          }
+        }
+      }
+    },
+    "Anything to add? (optional)": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要補充什麼嗎？（選填）"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要补充什么吗？（选填）"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "補足はありますか？（任意）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "덧붙일 내용이 있나요? (선택)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Algo que añadir? (opcional)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quelque chose à ajouter ? (facultatif)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch etwas? (optional)"
           }
         }
       }
@@ -2853,6 +2439,52 @@
         }
       }
     },
+    "Band agreement": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "樂團協議"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "乐队协议"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バンドの取り決め"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "밴드 계약"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acuerdo de grupo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accord de groupe"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bandvertrag"
+          }
+        }
+      }
+    },
     "Billing is handled by Apple. Payments, renewals, cancellations and refunds are managed in your Apple Account.": {
       "localizations": {
         "zh-Hant": {
@@ -2991,6 +2623,52 @@
         }
       }
     },
+    "Buying together": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共同購買"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共同购买"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共同購入"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "공동 구매"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra conjunta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Achat à deux"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gemeinsamer Kauf"
+          }
+        }
+      }
+    },
     "By signing you agree to this contract and to doing business electronically.": {
       "localizations": {
         "zh-Hant": {
@@ -3033,6 +2711,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mit deiner Signatur stimmst du diesem Vertrag und dem elektronischen Geschäftsverkehr zu."
+          }
+        }
+      }
+    },
+    "CC · Signed copy only": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "副本收件人 · 僅接收已簽署副本"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "抄送 · 仅接收已签署副本"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CC · 署名済みの控えのみ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "참조 · 서명된 사본만"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CC · Solo copia firmada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cc · Copie signée uniquement"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CC · Nur unterschriebene Kopie"
           }
         }
       }
@@ -3359,6 +3083,98 @@
         }
       }
     },
+    "Choose a PDF": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇 PDF"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择 PDF"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDFを選ぶ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF 선택"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un PDF"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir un PDF"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF auswählen"
+          }
+        }
+      }
+    },
+    "Choose a text file": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇文字檔"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择文本文件"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "テキストファイルを選ぶ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "텍스트 파일 선택"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un archivo de texto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir un fichier texte"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Textdatei auswählen"
+          }
+        }
+      }
+    },
     "Choose from Contacts": {
       "localizations": {
         "zh-Hant": {
@@ -3401,6 +3217,98 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aus Kontakten wählen"
+          }
+        }
+      }
+    },
+    "Choose photos": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇照片"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择照片"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真を選ぶ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사진 선택"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir fotos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir des photos"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotos auswählen"
+          }
+        }
+      }
+    },
+    "Choose screenshots": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇截圖"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择截图"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スクリーンショットを選ぶ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스크린샷 선택"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir capturas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir des captures"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screenshots auswählen"
           }
         }
       }
@@ -3907,6 +3815,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Registrierung beim Signaturanbieter fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "Couldn't send the PDF": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法傳送 PDF"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法发送 PDF"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDFを送信できませんでした"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF를 보낼 수 없음"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo enviar el PDF"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d’envoyer le PDF"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF konnte nicht gesendet werden"
           }
         }
       }
@@ -4555,6 +4509,144 @@
         }
       }
     },
+    "Describe a deal and Handshake drafts the contract.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "描述一個約定，Handshake 就會擬出合約。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "描述一个约定，Handshake 就会起草合同。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取り決めを伝えると、Handshakeが契約書を作成します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "약속을 설명하면 Handshake가 계약서를 작성합니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Describe un acuerdo y Handshake redacta el contrato."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Décrivez un accord et Handshake rédige le contrat."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beschreib eine Vereinbarung und Handshake entwirft den Vertrag."
+          }
+        }
+      }
+    },
+    "Describe your deal…": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "描述你的約定…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "描述你的约定…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取り決めの内容を入力…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "약속 내용을 설명해 주세요…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Describe tu acuerdo…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Décrivez votre accord…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beschreib deine Vereinbarung…"
+          }
+        }
+      }
+    },
+    "Design project": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設計案"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设计项目"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デザイン案件"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디자인 프로젝트"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proyecto de diseño"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projet de design"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Designauftrag"
+          }
+        }
+      }
+    },
     "Dictate": {
       "localizations": {
         "zh-Hant": {
@@ -4693,6 +4785,52 @@
         }
       }
     },
+    "Dog walking": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "遛狗"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "遛狗"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "犬の散歩"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "반려견 산책"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paseo de perros"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Promenade de chien"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gassigehen"
+          }
+        }
+      }
+    },
     "Done": {
       "localizations": {
         "zh-Hant": {
@@ -4744,43 +4882,43 @@
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "草稿"
+            "value": "擬稿"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "草稿"
+            "value": "起草"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "下書き"
+            "value": "作成"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "임시 저장"
+            "value": "초안 작성"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Borrador"
+            "value": "Redactar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Brouillon"
+            "value": "Rédiger"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Entwurf"
+            "value": "Entwerfen"
           }
         }
       }
@@ -4827,6 +4965,190 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verfasse einen umfassenden Arbeitsvertrag mit Stellenbezeichnung, Vergütung, Zusatzleistungen, Arbeitszeiten, Vertraulichkeit, Wettbewerbsverbot und Kündigungsbedingungen."
+          }
+        }
+      }
+    },
+    "Draft a contract from this call.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "根據這通電話擬一份合約。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "根据这通电话起草一份合同。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この通話から契約書を作成してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 통화로 계약서 초안을 만들어 주세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redacta un contrato a partir de esta llamada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rédige un contrat à partir de cet appel."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entwirf einen Vertrag aus diesem Anruf."
+          }
+        }
+      }
+    },
+    "Draft a contract from this chat (%lld screenshots).": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "根據這段對話擬一份合約（%lld 張截圖）。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "根据这段对话起草一份合同（%lld 张截图）。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このチャットから契約書を作成してください（スクリーンショット%lld枚）。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 대화로 계약서 초안을 만들어 주세요(스크린샷 %lld장)."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redacta un contrato a partir de este chat (%lld capturas)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rédige un contrat à partir de cette conversation (%lld captures)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entwirf einen Vertrag aus diesem Chat (%lld Screenshots)."
+          }
+        }
+      }
+    },
+    "Draft a contract from this chat.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "根據這段對話擬一份合約。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "根据这段对话起草一份合同。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このチャットから契約書を作成してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 대화로 계약서 초안을 만들어 주세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redacta un contrato a partir de este chat."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rédige un contrat à partir de cette conversation."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entwirf einen Vertrag aus diesem Chat."
+          }
+        }
+      }
+    },
+    "Draft a contract from this.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "根據這些內容擬一份合約。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "根据这些内容起草一份合同。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この内容から契約書を作成してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 내용으로 계약서 초안을 만들어 주세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redacta un contrato a partir de esto."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rédige un contrat à partir de ceci."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entwirf daraus einen Vertrag."
           }
         }
       }
@@ -5061,6 +5383,52 @@
         }
       }
     },
+    "Edit CC": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "編輯副本收件人"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑抄送人"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CCを編集"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "참조 편집"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar CC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier le Cc"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CC bearbeiten"
+          }
+        }
+      }
+    },
     "Edit with HandShake": {
       "localizations": {
         "zh-Hant": {
@@ -5287,6 +5655,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Arbeitsvertrag"
+          }
+        }
+      }
+    },
+    "Enter a valid email address or phone number.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請輸入有效的電子郵件地址或電話號碼。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请输入有效的电子邮件地址或电话号码。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有効なメールアドレスまたは電話番号を入力してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "유효한 이메일 주소나 전화번호를 입력하세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce un correo electrónico o número de teléfono válido."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez une adresse e-mail ou un numéro de téléphone valide."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib eine gültige E-Mail-Adresse oder Telefonnummer ein."
           }
         }
       }
@@ -5981,6 +6395,52 @@
         }
       }
     },
+    "From a call recording's transcript": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "從通話錄音的逐字稿"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从通话录音的文字记录"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通話録音の文字起こしから"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "통화 녹음의 텍스트로"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desde la transcripción de una llamada grabada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À partir de la transcription d'un appel enregistré"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus dem Transkript einer Anrufaufnahme"
+          }
+        }
+      }
+    },
     "Full name": {
       "localizations": {
         "zh-Hant": {
@@ -6211,6 +6671,236 @@
         }
       }
     },
+    "Handshake couldn't find any text in that. Try a clearer photo, or paste the text instead.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 找不到任何文字。試試更清楚的照片，或改為貼上文字。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 找不到任何文字。试试更清晰的照片，或改为粘贴文字。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "テキストが見つかりませんでした。もっと鮮明な写真を試すか、テキストをペーストしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "텍스트를 찾지 못했습니다. 더 선명한 사진을 쓰거나 텍스트를 붙여넣어 보세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake no encontró texto. Prueba con una foto más nítida o pega el texto."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake n'a trouvé aucun texte. Essayez une photo plus nette ou collez le texte."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake hat darin keinen Text gefunden. Versuch ein schärferes Foto oder setz den Text ein."
+          }
+        }
+      }
+    },
+    "Handshake drafts the agreement from what was said. Only the text is sent to the AI.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 會根據通話內容擬出合約。只有文字會傳給 AI。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 会根据通话内容起草合同。只有文字会发送给 AI。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshakeが話した内容から契約書を作成します。AIに送られるのはテキストだけです。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake가 통화 내용으로 계약서를 작성합니다. AI에는 텍스트만 전송됩니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake redacta el acuerdo a partir de lo que se dijo. Solo se envía el texto a la IA."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake rédige l'accord à partir de ce qui a été dit. Seul le texte est envoyé à l'IA."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake entwirft die Vereinbarung aus dem Gesagten. Nur der Text geht an die KI."
+          }
+        }
+      }
+    },
+    "Handshake read what you shared. Add a note if it helps, then draft. Only the text is sent to the AI.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 已讀取你分享的內容。需要的話可以補充說明，再開始擬稿。只有文字會傳給 AI。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 已读取你分享的内容。需要的话可以补充说明，再开始起草。只有文字会发送给 AI。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshakeが共有された内容を読み取りました。必要ならメモを添えて作成してください。AIに送られるのはテキストだけです。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake가 공유한 내용을 읽었습니다. 필요하면 메모를 덧붙인 뒤 초안을 만드세요. AI에는 텍스트만 전송됩니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake ha leído lo que compartiste. Añade una nota si ayuda y redacta. Solo se envía el texto a la IA."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake a lu ce que vous avez partagé. Ajoutez une note si besoin, puis rédigez. Seul le texte est envoyé à l'IA."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake hat gelesen, was du geteilt hast. Füg bei Bedarf eine Notiz hinzu und entwirf dann. Nur der Text geht an die KI."
+          }
+        }
+      }
+    },
+    "Handshake reads the contract and turns it into one you can edit and send. Photos stay on your phone; only the text is sent to the AI.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 會讀取合約，轉成可以編輯和傳送的版本。照片只會留在你的手機上，只有文字會傳給 AI。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 会读取合同，转成可以编辑和发送的版本。照片只会留在你的手机上，只有文字会发送给 AI。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshakeが契約書を読み取り、編集・送信できる形にします。写真は端末内に残り、AIに送られるのはテキストだけです。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake가 계약서를 읽어 편집하고 보낼 수 있게 바꿉니다. 사진은 휴대폰에만 남고, AI에는 텍스트만 전송됩니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake lee el contrato y lo convierte en uno que puedes editar y enviar. Las fotos se quedan en tu teléfono; solo se envía el texto a la IA."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake lit le contrat et en fait une version que vous pouvez modifier et envoyer. Les photos restent sur votre téléphone ; seul le texte est envoyé à l'IA."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake liest den Vertrag und macht daraus einen, den du bearbeiten und senden kannst. Fotos bleiben auf deinem iPhone; nur der Text geht an die KI."
+          }
+        }
+      }
+    },
+    "Handshake reads the conversation and drafts the agreement in it. Screenshots stay on your phone; only the text is sent to the AI.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 會讀取對話，並把其中談好的事擬成合約。截圖只會留在你的手機上，只有文字會傳給 AI。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 会读取对话，并把其中谈好的事起草成合同。截图只会留在你的手机上，只有文字会发送给 AI。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshakeが会話を読み取り、その中の取り決めを契約書にします。スクリーンショットは端末内に残り、AIに送られるのはテキストだけです。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake가 대화를 읽고 그 안의 약속을 계약서로 작성합니다. 스크린샷은 휴대폰에만 남고, AI에는 텍스트만 전송됩니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake lee la conversación y redacta el acuerdo que contiene. Las capturas se quedan en tu teléfono; solo se envía el texto a la IA."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake lit la conversation et rédige l'accord qu'elle contient. Les captures restent sur votre téléphone ; seul le texte est envoyé à l'IA."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake liest das Gespräch und entwirft die Vereinbarung darin. Screenshots bleiben auf deinem iPhone; nur der Text geht an die KI."
+          }
+        }
+      }
+    },
     "Heading 1": {
       "localizations": {
         "zh-Hant": {
@@ -6303,6 +6993,52 @@
         }
       }
     },
+    "Hi %@, what are we shaking on today?": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "嗨 %@，今天要談定什麼？"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "嗨 %@，今天要谈定什么？"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@さん、今日は何を取り決めますか？"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 님, 오늘은 어떤 약속을 정할까요?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hola, %@. ¿Qué cerramos hoy?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bonjour %@, on se met d'accord sur quoi aujourd'hui ?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hallo %@, worauf einigen wir uns heute?"
+          }
+        }
+      }
+    },
     "Hi,\n\n%@\n\n%@\n\nTap the link below to open it in the Handshake app and sign with Face ID:\n%@\n\nThe link opens in Handshake, so you'll need the app installed on your iPhone or iPad.": {
       "localizations": {
         "zh-Hant": {
@@ -6391,6 +7127,466 @@
           "stringUnit": {
             "state": "translated",
             "value": "Start"
+          }
+        }
+      }
+    },
+    "House cleaning": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "居家清潔"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "家政保洁"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ハウスクリーニング"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "가사 청소"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limpieza del hogar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ménage"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hausreinigung"
+          }
+        }
+      }
+    },
+    "I'm building a website for a local gym. $4,000 over six weeks.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我要幫附近的健身房做網站，NT$120,000，六週完成。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我要给附近的健身房做网站，2.5 万元，六周完成。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "近所のジムのウェブサイトを作ります。6週間で50万円。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "동네 헬스장 웹사이트를 만들어요. 6주 동안 500만 원."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hago la web de un gimnasio del barrio. 3.500 € en seis semanas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je crée le site d'une salle de sport du quartier. 3 500 € sur six semaines."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich baue die Website für ein Fitnessstudio um die Ecke. 3.500 € über sechs Wochen."
+          }
+        }
+      }
+    },
+    "I'm designing a logo for Acme Bakery. $1,500, half up front, two rounds of changes.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我要幫「好日子烘焙」設計 Logo，NT$45,000，先付一半，可以修改兩次。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我要给“好日子烘焙”设计 Logo，1 万元，先付一半，可以改两轮。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「あさひベーカリー」のロゴをデザインします。20万円、半額前払い、修正は2回まで。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "'햇살 베이커리' 로고를 디자인해요. 200만 원, 절반 선불, 수정은 두 번까지."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diseño el logo de la Panadería Sol. 1.400 €, la mitad por adelantado, dos rondas de cambios."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je crée le logo de la Boulangerie Soleil. 1 400 €, moitié à l'avance, deux séries de retouches."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich entwerfe ein Logo für die Bäckerei Sonne. 1.400 €, die Hälfte vorab, zwei Korrekturrunden."
+          }
+        }
+      }
+    },
+    "I'm lending my camera to Jamie for two weeks. If it breaks, they cover the repair.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我要把相機借給小傑兩個禮拜，如果弄壞了，修理費由他負責。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我要把相机借给小杰两周，如果弄坏了，修理费由他负责。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カメラを2週間ハルトに貸します。壊れたら修理代は向こう持ちで。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "카메라를 지훈이에게 2주 동안 빌려줘요. 고장 나면 수리비는 지훈이가 내기로 했어요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le presto mi cámara a Jaime dos semanas. Si se rompe, él paga la reparación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je prête mon appareil photo à Julien pour deux semaines. S'il le casse, il paie la réparation."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich leihe Jonas meine Kamera für zwei Wochen. Wenn sie kaputtgeht, zahlt er die Reparatur."
+          }
+        }
+      }
+    },
+    "I'm lending my friend Sam $2,000. They'll pay me back $200 a month.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我借朋友阿明 NT$60,000，他每個月還我 NT$6,000。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我借给朋友小明 1 万元，他每个月还我 1,000 元。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "友達のケンに20万円貸します。毎月2万円ずつ返してもらいます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "친구 준호에게 200만 원을 빌려줘요. 매달 20만 원씩 갚기로 했어요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le presto 2.000 € a mi amigo Sam. Me devuelve 200 € al mes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je prête 2 000 € à mon ami Sam. Il me rembourse 200 € par mois."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich leihe meinem Freund Sam 2.000 €. Er zahlt mir 200 € im Monat zurück."
+          }
+        }
+      }
+    },
+    "I'm pitching my app idea to a developer next week and want them to keep it to themselves.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下禮拜要跟一位工程師分享我的 App 點子，希望他不要外流。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下周要跟一位开发者聊我的 App 点子，希望他不要外传。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来週、開発者にアプリのアイデアを話すので、口外しないと約束してほしい。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다음 주에 개발자에게 앱 아이디어를 설명하는데, 외부에 말하지 않았으면 해요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La semana que viene le presento mi idea de app a un desarrollador y quiero que no la comparta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je présente mon idée d'appli à un développeur la semaine prochaine et je veux qu'il la garde pour lui."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich stelle nächste Woche einer Entwicklerin meine App-Idee vor und will, dass sie sie für sich behält."
+          }
+        }
+      }
+    },
+    "I'm selling my couch to Taylor for $350, as is, picked up on Saturday.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我把沙發用 NT$8,000 賣給小婷，現況交易，禮拜六來搬。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我把沙发以 2,000 元卖给小婷，按现状交易，周六来搬。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ソファを現状のままアオイに3万円で売ります。土曜に引き取り。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "소파를 현재 상태 그대로 서연에게 30만 원에 팔아요. 토요일에 가져가기로."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le vendo mi sofá a Lucía por 300 €, tal cual, y lo recoge el sábado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je vends mon canapé à Chloé pour 300 €, en l'état, enlevé samedi."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich verkaufe mein Sofa für 300 € an Lena, wie gesehen, Abholung am Samstag."
+          }
+        }
+      }
+    },
+    "I'm shooting Mia and Leo's wedding on June 14. $3,200 for 300 edited photos.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我要拍小美和阿哲 6 月 14 日的婚禮，NT$80,000，交 300 張修好的照片。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我要拍小美和阿哲 6 月 14 日的婚礼，2 万元，交 300 张修好的照片。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6月14日、ミアとレオの結婚式を撮影します。30万円で編集済み写真300枚。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6월 14일 미아와 레오의 결혼식을 촬영해요. 보정 사진 300장에 300만 원."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotografío la boda de Mía y Leo el 14 de junio. 2.800 € por 300 fotos editadas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je photographie le mariage de Mia et Léo le 14 juin. 2 800 € pour 300 photos retouchées."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich fotografiere am 14. Juni die Hochzeit von Mia und Leo. 2.800 € für 300 bearbeitete Fotos."
+          }
+        }
+      }
+    },
+    "In Messages, take screenshots, then tap Share › Handshake.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在「訊息」中截圖，然後點「分享」›「Handshake」。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在“信息”中截图，然后轻点“共享”›“Handshake”。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「メッセージ」でスクリーンショットを撮り、「共有」›「Handshake」をタップ。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "메시지에서 스크린샷을 찍은 뒤 공유 › Handshake를 탭하세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En Mensajes, haz capturas y toca Compartir › Handshake."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans Messages, faites des captures, puis touchez Partager › Handshake."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mach in Nachrichten Screenshots und tippe dann auf Teilen › Handshake."
+          }
+        }
+      }
+    },
+    "In WhatsApp or LINE, open the chat's settings, tap Export Chat, then choose Handshake.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 WhatsApp 或 LINE 打開聊天室設定，點「匯出聊天紀錄」，再選擇 Handshake。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 WhatsApp 或 LINE 打开聊天设置，轻点“导出聊天记录”，再选择 Handshake。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WhatsAppやLINEでトークの設定を開き、「トークを送信／書き出し」をタップしてHandshakeを選びます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WhatsApp이나 LINE에서 채팅 설정을 열고 대화 내보내기를 탭한 뒤 Handshake를 선택하세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En WhatsApp o LINE, abre los ajustes del chat, toca Exportar chat y elige Handshake."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans WhatsApp ou LINE, ouvrez les réglages de la discussion, touchez Exporter la discussion, puis choisissez Handshake."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne in WhatsApp oder LINE die Chat-Einstellungen, tippe auf Chat exportieren und wähle Handshake."
           }
         }
       }
@@ -6621,6 +7817,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rechtliches"
+          }
+        }
+      }
+    },
+    "Lending gear": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "借用器材"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "借用器材"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "機材の貸し借り"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "장비 대여"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préstamo de equipo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prêt de matériel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausleihe"
           }
         }
       }
@@ -6901,6 +8143,98 @@
         }
       }
     },
+    "Make a contract": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建立合約"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "创建合同"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "契約書を作成"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "계약서 만들기"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear un contrato"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créer un contrat"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertrag erstellen"
+          }
+        }
+      }
+    },
+    "Make one hands-free": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不用動手就能建立"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不用动手就能创建"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ハンズフリーで作成"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "손을 쓰지 않고 만들기"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea uno sin manos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créez-en un sans les mains"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freihändig erstellen"
+          }
+        }
+      }
+    },
     "Manage Subscription": {
       "localizations": {
         "zh-Hant": {
@@ -7127,6 +8461,98 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mehr"
+          }
+        }
+      }
+    },
+    "My neighbor is walking Biscuit on weekdays for $20 a walk.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "鄰居平日幫我遛「餅乾」，一次 NT$300。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "邻居工作日帮我遛“饼干”，一次 50 元。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "お隣さんが平日にビスケットの散歩をしてくれます。1回2,000円。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이웃이 평일마다 '비스킷'을 산책시켜 줘요. 한 번에 2만 원."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mi vecina saca a pasear a Galleta entre semana por 15 € el paseo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ma voisine promène Biscuit en semaine pour 15 € la sortie."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meine Nachbarin geht werktags mit Keks Gassi, 15 € pro Runde."
+          }
+        }
+      }
+    },
+    "My sister and I are buying a van 50/50 and need a plan if one of us wants out.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我和姊姊要一人一半合買一台露營車，想先講好如果有人想退出怎麼辦。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我和姐姐要一人一半合买一辆露营车，想先说好如果有人想退出怎么办。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "姉とキャンピングカーを半分ずつ出して買います。どちらかが抜けたい時の決まりが必要。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "언니랑 캠핑카를 반반 내서 사요. 한 명이 빠지고 싶을 때의 규칙이 필요해요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mi hermana y yo compramos una furgoneta a medias y necesitamos un plan si una quiere salirse."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ma sœur et moi achetons un van à 50/50 et il nous faut un plan si l'une veut se retirer."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meine Schwester und ich kaufen einen Van 50/50 und brauchen einen Plan, falls eine aussteigen will."
           }
         }
       }
@@ -7959,48 +9385,94 @@
         }
       }
     },
-    "Your signers will send the signed copy back to you.": {
+    "Only mark it sent if you shared the PDF with %@.": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "簽署人會將已簽署的副本傳回給你。"
+            "value": "只有在你已將 PDF 傳給 %@ 時，才標記為已傳送。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "签署人会将已签署的副本发回给你。"
+            "value": "只有在你已将 PDF 发送给 %@ 时，才标记为已发送。"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "署名者が署名済みの控えをあなたに返送します。"
+            "value": "%@にPDFを送った場合にのみ、送信済みにしてください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "서명자가 서명된 사본을 다시 보내 드립니다."
+            "value": "%@에게 PDF를 공유한 경우에만 보낸 것으로 표시하세요."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los firmantes te devolverán la copia firmada."
+            "value": "Márcalo como enviado solo si compartiste el PDF con %@."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les signataires vous renverront la copie signée."
+            "value": "Indiquez que la copie a été envoyée uniquement si vous avez partagé le PDF avec %@."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Unterzeichnenden senden dir die unterschriebene Kopie zurück."
+            "value": "Markiere die Kopie nur als gesendet, wenn du das PDF mit %@ geteilt hast."
+          }
+        }
+      }
+    },
+    "Open the signed contract and try again.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請開啟已簽署的合約後再試一次。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请打开已签署的合同后重试。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名済みの契約書を開いて、もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명된 계약을 열고 다시 시도하세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre el contrato firmado e inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrez le contrat signé et réessayez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne den unterschriebenen Vertrag und versuche es erneut."
           }
         }
       }
@@ -8047,6 +9519,144 @@
           "stringUnit": {
             "state": "translated",
             "value": "Optic ID"
+          }
+        }
+      }
+    },
+    "Or say it your way": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "或用你自己的話說"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "或用你自己的话说"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "または自分の言葉で"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "또는 편하게 말해 보세요"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O dilo a tu manera"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ou dites-le à votre façon"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oder sag es mit deinen Worten"
+          }
+        }
+      }
+    },
+    "Other ways": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他方式"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他方式"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ほかの方法"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다른 방법"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otras formas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autres façons"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weitere Wege"
+          }
+        }
+      }
+    },
+    "Our band splits gig money four ways. We need rules for who owns the songs.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我們樂團演出費四個人平分，需要講清楚歌曲版權歸誰。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我们乐队演出费四个人平分，需要讲清楚歌曲版权归谁。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "うちのバンドはライブのギャラを4人で山分け。曲の権利を誰が持つか決めたい。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "우리 밴드는 공연비를 넷이서 똑같이 나눠요. 곡의 권리를 누가 갖는지 정해야 해요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mi grupo reparte lo de los conciertos entre cuatro. Necesitamos reglas sobre de quién son las canciones."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notre groupe partage les cachets en quatre. Il nous faut des règles sur qui possède les chansons."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unsere Band teilt die Gagen durch vier. Wir brauchen Regeln, wem die Songs gehören."
           }
         }
       }
@@ -8139,6 +9749,98 @@
           "stringUnit": {
             "state": "translated",
             "value": "Partei %lld"
+          }
+        }
+      }
+    },
+    "Paste a message": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "貼上訊息"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "粘贴消息"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メッセージをペースト"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "메시지 붙여넣기"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pegar un mensaje"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coller un message"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachricht einsetzen"
+          }
+        }
+      }
+    },
+    "Paste the transcript": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "貼上逐字稿"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "粘贴文字记录"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文字起こしをペースト"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "녹취록 붙여넣기"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pegar la transcripción"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coller la transcription"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkript einsetzen"
           }
         }
       }
@@ -8277,6 +9979,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Personen, an die du gesendet hast"
+          }
+        }
+      }
+    },
+    "Personal loan": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "個人借款"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "个人借款"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "個人間の貸し借り"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개인 간 대출"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préstamo personal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prêt entre particuliers"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privatdarlehen"
           }
         }
       }
@@ -8695,6 +10443,52 @@
         }
       }
     },
+    "Reading…": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "讀取中…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "读取中…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "読み取り中…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "읽는 중…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leyendo…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lecture…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird gelesen…"
+          }
+        }
+      }
+    },
     "Reason (optional)": {
       "localizations": {
         "zh-Hant": {
@@ -8921,6 +10715,98 @@
           "stringUnit": {
             "state": "translated",
             "value": "Antworten der Empfänger öffnen sich bereits an dich adressiert. Optional."
+          }
+        }
+      }
+    },
+    "Recorded a call? Open the recording in Notes, tap ⋯ › Copy Transcript, then paste it here. Or share the note to Handshake.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "錄了通話嗎？在「備忘錄」打開錄音，點 ⋯ ›「拷貝逐字稿」，再貼到這裡。也可以把備忘錄分享到 Handshake。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "录了通话吗？在“备忘录”打开录音，轻点 ⋯ ›“拷贝文字记录”，再粘贴到这里。也可以把备忘录共享到 Handshake。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通話を録音しましたか？「メモ」で録音を開き、⋯ ›「文字起こしをコピー」をタップしてここにペーストします。メモをHandshakeに共有することもできます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "통화를 녹음했나요? 메모에서 녹음을 열고 ⋯ › 녹취록 복사를 탭한 뒤 여기에 붙여넣으세요. 메모를 Handshake로 공유해도 됩니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Grabaste una llamada? Abre la grabación en Notas, toca ⋯ › Copiar transcripción y pégala aquí. O comparte la nota con Handshake."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous avez enregistré un appel ? Ouvrez l'enregistrement dans Notes, touchez ⋯ › Copier la transcription, puis collez-la ici. Ou partagez la note avec Handshake."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anruf aufgenommen? Öffne die Aufnahme in Notizen, tippe auf ⋯ › Transkript kopieren und setze es hier ein. Oder teile die Notiz mit Handshake."
+          }
+        }
+      }
+    },
+    "Remove CC": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除副本收件人"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除抄送人"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CCを削除"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "참조 삭제"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar CC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer du Cc"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CC entfernen"
           }
         }
       }
@@ -9201,6 +11087,98 @@
         }
       }
     },
+    "Roommate agreement": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "室友協議"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "室友协议"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ルームシェア契約"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "룸메이트 계약"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acuerdo de convivencia"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accord de colocation"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mitbewohnervereinbarung"
+          }
+        }
+      }
+    },
+    "Rosa cleans my apartment every other Friday for $120.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "阿玉每隔一個禮拜五來打掃我家，一次 NT$2,500。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "王阿姨每隔一周的周五来打扫我家，一次 300 元。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サチコさんが隔週金曜に部屋を掃除してくれます。1回1万2千円。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "영희 씨가 격주 금요일마다 집을 청소해 줘요. 한 번에 12만 원."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rosa limpia mi piso cada dos viernes por 100 €."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rosa fait le ménage chez moi un vendredi sur deux pour 100 €."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rosa putzt jeden zweiten Freitag meine Wohnung für 100 €."
+          }
+        }
+      }
+    },
     "Save": {
       "localizations": {
         "zh-Hant": {
@@ -9243,6 +11221,144 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sichern"
+          }
+        }
+      }
+    },
+    "Say “Make a contract with Handshake”. Siri asks what it's for, then opens your draft here.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "說「用 Handshake 建立合約」。Siri 會問你合約的用途，然後在這裡打開你的草稿。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "说“用 Handshake 创建合同”。Siri 会问你合同的用途，然后在这里打开你的草稿。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「Handshakeで契約書を作って」と話しかけてください。Siriが用途を尋ね、ここで下書きを開きます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Handshake로 계약서 만들어 줘”라고 말하세요. Siri가 용도를 물은 뒤 여기에서 초안을 엽니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di «Crea un contrato con Handshake». Siri te pregunta para qué es y abre tu borrador aquí."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dites « Crée un contrat avec Handshake ». Siri vous demande à quoi il sert, puis ouvre votre brouillon ici."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sag „Erstelle einen Vertrag mit Handshake“. Siri fragt, wofür er ist, und öffnet dann hier deinen Entwurf."
+          }
+        }
+      }
+    },
+    "Scan it into an editable draft": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "掃描成可編輯的草稿"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "扫描成可编辑的草稿"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スキャンして編集できる下書きに"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스캔해서 편집 가능한 초안으로"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escanéalo y conviértelo en un borrador editable"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numérisez-le en brouillon modifiable"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanne ihn als bearbeitbaren Entwurf"
+          }
+        }
+      }
+    },
+    "Scan with the camera": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用相機掃描"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用相机扫描"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カメラでスキャン"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "카메라로 스캔"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escanear con la cámara"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numériser avec l'appareil photo"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit der Kamera scannen"
           }
         }
       }
@@ -9339,6 +11455,52 @@
         }
       }
     },
+    "Selling an item": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "物品買賣"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "物品买卖"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "品物の売買"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "물건 판매"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venta de un artículo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vente d'un objet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privatverkauf"
+          }
+        }
+      }
+    },
     "Send": {
       "localizations": {
         "zh-Hant": {
@@ -9427,6 +11589,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Trotzdem senden"
+          }
+        }
+      }
+    },
+    "Send CC Copies": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "傳送已簽署副本"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发送抄送副本"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CCに控えを送信"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "참조 사본 보내기"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar copias a CC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer les copies en Cc"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CC-Kopien senden"
           }
         }
       }
@@ -9565,6 +11773,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Signierte Kopie zurücksenden"
+          }
+        }
+      }
+    },
+    "Send signed copy to %@": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "將已簽署副本傳給 %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将已签署副本发送给 %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@に署名済みの控えを送信"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@에게 서명된 사본 보내기"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar copia firmada a %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer la copie signée à %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unterschriebene Kopie an %@ senden"
           }
         }
       }
@@ -9749,6 +12003,98 @@
           "stringUnit": {
             "state": "translated",
             "value": "An %@ gesendet"
+          }
+        }
+      }
+    },
+    "Share screenshots or an exported chat": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分享截圖或匯出的聊天紀錄"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分享截图或导出的聊天记录"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スクリーンショットや書き出したトークを共有"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스크린샷이나 내보낸 대화를 공유"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparte capturas o un chat exportado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partagez des captures ou une discussion exportée"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teile Screenshots oder einen exportierten Chat"
+          }
+        }
+      }
+    },
+    "Shared with Handshake": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分享到 Handshake"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分享到 Handshake"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshakeに共有"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake로 공유됨"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartido con Handshake"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partagé avec Handshake"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit Handshake geteilt"
           }
         }
       }
@@ -10489,6 +12835,52 @@
         }
       }
     },
+    "Signed copy": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已簽署副本"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已签署副本"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名済みの控え"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명된 사본"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia firmada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copie signée"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unterschriebene Kopie"
+          }
+        }
+      }
+    },
     "Signed copy comes back": {
       "localizations": {
         "zh-Hant": {
@@ -10531,6 +12923,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Die signierte Kopie kommt zurück"
+          }
+        }
+      }
+    },
+    "Signed copy of %@": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」的已簽署副本"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "《%@》的已签署副本"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」の署名済みの控え"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‘%@’의 서명된 사본"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia firmada de %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copie signée de %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unterschriebene Kopie von %@"
           }
         }
       }
@@ -10857,6 +13295,52 @@
         }
       }
     },
+    "Siri": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siri"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siri"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siri"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siri"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siri"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siri"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siri"
+          }
+        }
+      }
+    },
     "Someone else": {
       "localizations": {
         "zh-Hant": {
@@ -10991,6 +13475,98 @@
           "stringUnit": {
             "state": "translated",
             "value": "Die Spracherkennung ist momentan nicht verfügbar."
+          }
+        }
+      }
+    },
+    "Start from": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "從這裡開始"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从这里开始"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ここから始める"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "여기서 시작하기"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar desde"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partir de"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgehend von"
+          }
+        }
+      }
+    },
+    "Start over": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新開始"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新开始"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "やり直す"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 시작"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar de nuevo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recommencer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neu beginnen"
           }
         }
       }
@@ -11501,6 +14077,52 @@
         }
       }
     },
+    "The signed copy of %@ is attached for your records.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隨附「%@」的已簽署副本，供你留存。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "随附《%@》的已签署副本，供你留存。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保管用に「%@」の署名済みの控えを添付しています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보관하실 수 있도록 ‘%@’의 서명된 사본을 첨부합니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjunto la copia firmada de «%@» para tus archivos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous trouverez en pièce jointe la copie signée de « %@ » pour vos dossiers."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die unterschriebene Kopie von „%@“ ist für deine Unterlagen beigefügt."
+          }
+        }
+      }
+    },
     "This contract has %lld signature boxes, one per signer. Remove a recipient, or add a box for them.": {
       "localizations": {
         "zh-Hant": {
@@ -11869,6 +14491,52 @@
         }
       }
     },
+    "Turn this paper contract into an editable one.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把這份紙本合約轉成可編輯的版本。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把这份纸质合同转成可编辑的版本。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この紙の契約書を編集できる形にしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 종이 계약서를 편집할 수 있게 바꿔 주세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Convierte este contrato en papel en uno editable."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transforme ce contrat papier en version modifiable."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mach aus diesem Papiervertrag einen bearbeitbaren."
+          }
+        }
+      }
+    },
     "Underline": {
       "localizations": {
         "zh-Hant": {
@@ -12095,6 +14763,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dokument wird aktualisiert"
+          }
+        }
+      }
+    },
+    "Use a different address for each signer and CC recipient.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請為每位簽署人和副本收件人使用不同的電子郵件地址或電話號碼。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请为每位签署人和抄送人使用不同的电子邮件地址或电话号码。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名者とCCの受信者には、それぞれ異なるメールアドレスまたは電話番号を使ってください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명자와 참조 수신자마다 다른 이메일 주소나 전화번호를 사용하세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa un correo o teléfono distinto para cada firmante y destinatario en CC."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilisez une adresse e-mail ou un numéro différent pour chaque signataire et destinataire en Cc."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwende für jede unterschreibende Person und jeden CC-Empfänger eine andere E-Mail-Adresse oder Telefonnummer."
           }
         }
       }
@@ -12421,6 +15135,98 @@
         }
       }
     },
+    "Website build": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "網站製作"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网站制作"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ウェブサイト制作"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "웹사이트 제작"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diseño web"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Création de site"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Website-Erstellung"
+          }
+        }
+      }
+    },
+    "Wedding photography": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "婚禮攝影"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "婚礼摄影"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ウェディング撮影"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "웨딩 촬영"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotografía de boda"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo de mariage"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hochzeitsfotografie"
+          }
+        }
+      }
+    },
     "Welcome back! Keep editing directly on the contract, or ask me to update it for you.": {
       "localizations": {
         "zh-Hant": {
@@ -12509,6 +15315,236 @@
           "stringUnit": {
             "state": "translated",
             "value": "Willkommen bei Handshake!"
+          }
+        }
+      }
+    },
+    "What Handshake read": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 讀到的內容"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake 读到的内容"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshakeが読み取った内容"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake가 읽은 내용"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que leyó Handshake"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce que Handshake a lu"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was Handshake gelesen hat"
+          }
+        }
+      }
+    },
+    "What are we shaking on today?": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天要談定什麼？"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天要谈定什么？"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日は何を取り決めますか？"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘은 어떤 약속을 정할까요?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Qué cerramos hoy?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On se met d'accord sur quoi aujourd'hui ?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Worauf einigen wir uns heute?"
+          }
+        }
+      }
+    },
+    "What it's for": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用途"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用途"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用途"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "용도"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para qué es"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Objet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wofür"
+          }
+        }
+      }
+    },
+    "What's the contract for?": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這份合約是要做什麼的？"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这份合同是做什么用的？"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "何の契約ですか？"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어떤 계약인가요?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Para qué es el contrato?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À quoi sert le contrat ?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wofür ist der Vertrag?"
+          }
+        }
+      }
+    },
+    "Where to find it": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在哪裡找"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在哪里找"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "見つけ方"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "찾는 방법"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dónde encontrarla"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Où la trouver"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wo du es findest"
           }
         }
       }
@@ -12739,6 +15775,98 @@
           "stringUnit": {
             "state": "translated",
             "value": "Du"
+          }
+        }
+      }
+    },
+    "You can change everything once the draft is ready.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "草稿完成後，所有內容都可以再修改。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "草稿完成后，所有内容都可以再修改。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下書きができたら、すべて変更できます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "초안이 완성되면 모든 내용을 바꿀 수 있습니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podrás cambiarlo todo cuando el borrador esté listo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous pourrez tout modifier une fois le brouillon prêt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobald der Entwurf fertig ist, kannst du alles ändern."
+          }
+        }
+      }
+    },
+    "You can send them the completed PDF after everyone signs.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有人簽署後，你可以將完成的 PDF 傳給他們。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有人签署后，你可以将完成的 PDF 发送给他们。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全員が署名した後、完成したPDFを送れます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모두가 서명하면 완성된 PDF를 보낼 수 있어요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podrás enviarles el PDF final cuando todos hayan firmado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous pourrez leur envoyer le PDF final quand tout le monde aura signé."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobald alle unterschrieben haben, kannst du ihnen das fertige PDF senden."
           }
         }
       }
@@ -13291,6 +16419,144 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deine Eingaben und der Vertragstext werden an Anthropic gesendet, um Verträge zu entwerfen und zu überarbeiten. %@ Entwürfe werden von KI erstellt und sind keine Rechtsberatung."
+          }
+        }
+      }
+    },
+    "Your signers will send the signed copy back to you.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "簽署人會將已簽署的副本傳回給你。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "签署人会将已签署的副本发回给你。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名者が署名済みの控えをあなたに返送します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명자가 서명된 사본을 다시 보내 드립니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los firmantes te devolverán la copia firmada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les signataires vous renverront la copie signée."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Unterzeichnenden senden dir die unterschriebene Kopie zurück."
+          }
+        }
+      }
+    },
+    "e.g. I'm the one renting out the room": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "例如：我是出租房間的人"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "例如：我是出租房间的人"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "例：部屋を貸すのは私です"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "예: 방을 빌려주는 사람이 저예요"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "p. ej.: yo soy quien alquila la habitación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ex. : c'est moi qui loue la chambre"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "z. B. Ich bin derjenige, der das Zimmer vermietet"
+          }
+        }
+      }
+    },
+    "e.g. I'm the tenant, update the rent to $1,200": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "例如：我是房客，租金改成 NT$20,000"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "例如：我是租客，租金改成 4,000 元"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "例：私は借主です。家賃を7万円に変更"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "예: 저는 세입자예요. 월세를 70만 원으로 바꿔 주세요"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "p. ej.: soy el inquilino, cambia el alquiler a 600 €"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ex. : je suis le locataire, passez le loyer à 600 €"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "z. B. Ich bin der Mieter, Miete auf 600 € ändern"
           }
         }
       }

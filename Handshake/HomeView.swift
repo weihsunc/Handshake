@@ -11,36 +11,44 @@ struct ContractTemplate: Identifiable {
     let prompt: String
 }
 
+// First person, real people, real amounts: what someone would actually say.
+// Shown as the swipeable "Or say it your way" row and used for autocomplete.
 private let templates: [ContractTemplate] = [
-    ContractTemplate(
-        emoji: "📄", title: String(localized: "Consulting Agreement"),
-        prompt: String(localized: "Create a contract for a freelance web development project that includes project scope, timeline, payment terms, deliverables, and confidentiality agreements.")
-    ),
-    ContractTemplate(
-        emoji: "🔏", title: String(localized: "Non-Disclosure Agreement"),
-        prompt: String(localized: "Generate a clear, professional Non-Disclosure Agreement (NDA) covering parties, confidential information, obligations, duration, exclusions, remedies, and jurisdiction.")
-    ),
-    ContractTemplate(
-        emoji: "🏰", title: String(localized: "Apartment Rental Agreement"),
-        prompt: String(localized: "Create a lease agreement for an apartment with monthly rent, security deposit, lease term, utilities included, maintenance responsibilities, and standard rights and obligations.")
-    ),
-    ContractTemplate(
-        emoji: "💼", title: String(localized: "Employment Contract"),
-        prompt: String(localized: "Draft a comprehensive employment contract covering job title, compensation, benefits, working hours, confidentiality, non-compete clauses, and termination conditions.")
-    ),
-    ContractTemplate(
-        emoji: "🤝", title: String(localized: "Partnership Agreement"),
-        prompt: String(localized: "Create a partnership agreement outlining roles, profit sharing, decision-making authority, capital contributions, dispute resolution, and exit procedures.")
-    ),
+    ContractTemplate(emoji: "📷", title: String(localized: "Lending gear"),
+        prompt: String(localized: "I'm lending my camera to Jamie for two weeks. If it breaks, they cover the repair.")),
+    ContractTemplate(emoji: "🏠", title: String(localized: "Roommate agreement"),
+        prompt: String(localized: "Alex is moving into my spare room. $900 a month, utilities split 50/50.")),
+    ContractTemplate(emoji: "🎨", title: String(localized: "Design project"),
+        prompt: String(localized: "I'm designing a logo for Acme Bakery. $1,500, half up front, two rounds of changes.")),
+    ContractTemplate(emoji: "🤫", title: String(localized: "Non-Disclosure Agreement"),
+        prompt: String(localized: "I'm pitching my app idea to a developer next week and want them to keep it to themselves.")),
+    ContractTemplate(emoji: "🐕", title: String(localized: "Dog walking"),
+        prompt: String(localized: "My neighbor is walking Biscuit on weekdays for $20 a walk.")),
+    ContractTemplate(emoji: "💸", title: String(localized: "Personal loan"),
+        prompt: String(localized: "I'm lending my friend Sam $2,000. They'll pay me back $200 a month.")),
+    ContractTemplate(emoji: "💍", title: String(localized: "Wedding photography"),
+        prompt: String(localized: "I'm shooting Mia and Leo's wedding on June 14. $3,200 for 300 edited photos.")),
+    ContractTemplate(emoji: "🚐", title: String(localized: "Buying together"),
+        prompt: String(localized: "My sister and I are buying a van 50/50 and need a plan if one of us wants out.")),
+    ContractTemplate(emoji: "💻", title: String(localized: "Website build"),
+        prompt: String(localized: "I'm building a website for a local gym. $4,000 over six weeks.")),
+    ContractTemplate(emoji: "🛋️", title: String(localized: "Selling an item"),
+        prompt: String(localized: "I'm selling my couch to Taylor for $350, as is, picked up on Saturday.")),
+    ContractTemplate(emoji: "🎸", title: String(localized: "Band agreement"),
+        prompt: String(localized: "Our band splits gig money four ways. We need rules for who owns the songs.")),
+    ContractTemplate(emoji: "🧹", title: String(localized: "House cleaning"),
+        prompt: String(localized: "Rosa cleans my apartment every other Friday for $120.")),
 ]
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MARK: - HomeView
 //
 // Three states, one screen (Figma 2160:6597 → 2160:6694):
 //
-//   idle      illustration + welcome, then the example cards as a vertical
-//             list scrolling under the chat bar
+//   idle      illustration + greeting, "Start from" (chat, call, paper,
+//             Siri), then "Or say it your way": example cards in a row
+//             that swipes sideways
 //   focused   hero collapses; the cards pin to the top, chat bar rides the
 //             keyboard. Tapping a card launches generation.
 //   typing    the cards become autocomplete suggestions — templates ranked
@@ -50,11 +58,19 @@ private let templates: [ContractTemplate] = [
 
 struct HomeView: View {
     @State private var prompt      = ""
-    @State private var showSheet   = false
+    /// The draft being written (the workspace cover). Item-driven, not a
+    /// Bool: with isPresented, the cover could be built from the state before
+    /// the change and open with no source.
+    @State private var workspace: PendingDraft? = nil
     @State private var showHistory = false
     @State private var showProfile = false
     @State private var isFocused   = false
+    /// A Start-from row that was tapped (its sheet is up).
+    @State private var startSource: StartSource? = nil
+    /// Something shared to Handshake, shown in the Start-from sheet first.
+    @State private var importReview: PendingDraft? = nil
     private var router = DeepLinkRouter.shared
+    private var draftRouter = NewDraftRouter.shared
 
     // ── AI autocomplete ──────────────────────────────────────────────────────
     @State private var aiSuggestions: [PromptSuggestion] = []
@@ -100,10 +116,14 @@ struct HomeView: View {
                     if showHero {
                         hero
                             .transition(.opacity.combined(with: .move(edge: .top)))
+                        startFrom
+                            .transition(.opacity)
+                        examplesRow
+                            .transition(.opacity)
+                    } else {
+                        cards
+                            .id("cards")
                     }
-
-                    cards
-                        .id("cards")
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, showHero ? 16 : 8)
@@ -114,7 +134,8 @@ struct HomeView: View {
             // Collapsing the hero removes ~400pt above the cards, but the scroll
             // view keeps its offset — so the first card would slide up behind
             // the toolbar. Pin the list to the top whenever focus changes.
-            .onChange(of: showHero) { _, _ in
+            .onChange(of: showHero) { _, idle in
+                guard !idle else { return }
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                     proxy.scrollTo("cards", anchor: .top)
                 }
@@ -124,9 +145,9 @@ struct HomeView: View {
         // The chat bar is a bottom safe-area inset, so the list scrolls under
         // it and it rides the keyboard automatically when focused.
         .safeAreaInset(edge: .bottom) {
-            ChatBar(prompt: $prompt, onSend: {
+            ChatBar(prompt: $prompt, placeholder: String(localized: "Describe your deal…"), onSend: {
                 guard !trimmed.isEmpty else { return }
-                showSheet = true
+                workspace = PendingDraft(prompt: trimmed)
             }, onFocusChange: { focused in
                 isFocused = focused
             })
@@ -155,9 +176,42 @@ struct HomeView: View {
             }
         }
         // ── Contract workspace (full-screen, AI panel always on top) ─────
-        .fullScreenCover(isPresented: $showSheet, onDismiss: { prompt = "" }) {
+        .fullScreenCover(item: $workspace, onDismiss: { prompt = "" }) { draft in
             NavigationStack {
-                ContractWorkspaceView(initialPrompt: prompt)
+                ContractWorkspaceView(initialPrompt: draft.prompt, source: draft.source)
+            }
+        }
+        // ── Start from: chat / call / paper / Siri ───────────────────────
+        .sheet(item: $startSource) { source in
+            if source == .siri {
+                SiriStartSheet()
+            } else {
+                StartFromSheet(source: source) { material, note in
+                    // Open once the sheet is down: one presentation at a time.
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(450))
+                        launch(PendingDraft(prompt: note, source: material))
+                    }
+                }
+            }
+        }
+        .sheet(item: $importReview) { pending in
+            StartFromSheet(source: pending.source?.kind.startSource ?? .chat, preset: pending) { material, note in
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(450))
+                    launch(PendingDraft(prompt: note, source: material))
+                }
+            }
+        }
+        // ── Siri or a share asked for a new draft ────────────────────────
+        .onChange(of: draftRouter.pending) { _, pending in
+            guard let pending else { return }
+            draftRouter.pending = nil
+            let busy = workspace != nil || showHistory || showProfile || startSource != nil || importReview != nil
+            workspace = nil; showHistory = false; showProfile = false; startSource = nil; importReview = nil
+            Task { @MainActor in
+                if busy { try? await Task.sleep(for: .milliseconds(500)) }
+                if pending.review { importReview = pending } else { launch(pending) }
             }
         }
         // ── Contract history (hamburger menu) ────────────────────────────
@@ -171,10 +225,17 @@ struct HomeView: View {
         // ── Deep link arriving: close our presentations so RootView can
         //    present the signing screen (see DeepLinkRouter).
         .onChange(of: router.dismissTick) { _, _ in
-            showSheet   = false
+            workspace   = nil
             showHistory = false
             showProfile = false
+            startSource = nil
+            importReview = nil
         }
+    }
+
+    private func launch(_ draft: PendingDraft) {
+        prompt    = draft.prompt
+        workspace = draft
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -182,26 +243,116 @@ struct HomeView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var hero: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 12) {
             HandshakeIllustration()
-                .frame(height: 240)
+                .frame(height: 130)
 
-            VStack(spacing: 16) {
-                Text("Welcome to Handshake!")
-                    .font(.title.weight(.semibold))
-                    .tracking(-0.75)
-                    .foregroundStyle(Color(.label))
-
-                Text("We automate the contract and deal-making process.")
-                    .font(.title3)
-                    .foregroundStyle(Color(.label))
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(2)
-            }
+            Text(greeting)
+                .font(.title2.weight(.semibold))
+                .tracking(-0.5)
+                .foregroundStyle(Color(.label))
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 8)
-        .padding(.bottom, 8)
+        .padding(.top, 4)
+    }
+
+    private var greeting: String {
+        let first = AccountStore.shared.name?
+            .split(separator: " ").first.map(String.init) ?? ""
+        return first.isEmpty
+            ? String(localized: "What are we shaking on today?")
+            : String(localized: "Hi \(first), what are we shaking on today?")
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Start from  (chat · call · paper · Siri)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private var startFrom: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionLabel(String(localized: "Start from"))
+            VStack(spacing: 0) {
+                ForEach(StartSource.allCases) { source in
+                    Button { startSource = source } label: {
+                        HStack(spacing: 14) {
+                            Image(systemName: source.symbol)
+                                .font(.system(size: 20, weight: .light))
+                                .foregroundStyle(Color.primaryInk)
+                                .frame(width: 28)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(source.title)
+                                    .font(.body)
+                                    .foregroundStyle(Color.primaryInk)
+                                Text(source.subtitle)
+                                    .font(.footnote)
+                                    .foregroundStyle(Color.secondaryInk)
+                            }
+                            Spacer(minLength: 8)
+                            Image(systemName: "chevron.right")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(Color(.tertiaryLabel))
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    if source != StartSource.allCases.last {
+                        Divider().padding(.leading, 58)
+                    }
+                }
+            }
+            .background(Color.cardFill, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Or say it your way  (examples, swiped sideways)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private var examplesRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionLabel(String(localized: "Or say it your way"))
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(alignment: .top, spacing: 10) {
+                    ForEach(templates) { t in
+                        Button {
+                            lastPicked = t.prompt
+                            launch(PendingDraft(prompt: t.prompt))
+                        } label: {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text(t.prompt)
+                                    .font(.callout)
+                                    .foregroundStyle(Color.primaryInk)
+                                    .multilineTextAlignment(.leading)
+                                    .lineLimit(3, reservesSpace: true)
+                                Text(verbatim: "\(t.emoji) \(t.title)")
+                                    .font(.footnote)
+                                    .foregroundStyle(Color.secondaryInk)
+                                    .lineLimit(1)
+                            }
+                            .padding(14)
+                            .frame(width: 230, alignment: .leading)
+                            .background(Color.cardFill, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                            .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .scrollTargetLayout()
+            }
+            .scrollTargetBehavior(.viewAligned)
+            .contentMargins(.horizontal, 16, for: .scrollContent)
+            .padding(.horizontal, -16)
+        }
+    }
+
+    private func sectionLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.subheadline)
+            .foregroundStyle(Color.secondaryInk)
+            .padding(.leading, 4)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -232,7 +383,7 @@ struct HomeView: View {
                         let isExample = !hasText
                         lastPicked = t.prompt
                         prompt     = t.prompt
-                        if isExample { showSheet = true }
+                        if isExample { workspace = PendingDraft(prompt: t.prompt) }
                     }
                     .transition(.opacity)
                 }
