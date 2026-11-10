@@ -25,12 +25,14 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Handshake listens so you can describe a contract out loud instead of typing.</string>
 
-	<!-- Bundled fonts (Handshake/Fonts, copied to the bundle root by the
-	     synchronized group). Mrs Saint Delafield draws signatures; SIL OFL
-	     1.1, licence in Fonts/OFL-MrsSaintDelafield.txt. -->
+	<!-- Signature fonts (Handshake/Fonts, copied to the bundle root by the
+	     synchronized group). SIL OFL notices are alongside the fonts. -->
 	<key>UIAppFonts</key>
 	<array>
 		<string>MrsSaintDelafield-Regular.ttf</string>
+		<string>LXGWWenKaiTC-Regular.ttf</string>
+		<string>LXGWWenKai-Regular.ttf</string>
+		<string>KleeOne-Regular.ttf</string>
 	</array>
 
 	<key>CFBundleURLTypes</key>

@@ -5,8 +5,8 @@ import UIKit
 // MARK: - SignatureBlockView
 //
 // The stamp that replaces the [Signature] placeholder once a contract is
-// signed, in the app's doodle style: an ink ✕, the signer's name in Mrs
-// Saint Delafield over a hand-drawn line, the local time and a short fingerprint of the
+// signed, in the app's doodle style: an ink ✕, the signer's name in handwriting
+// over a hand-drawn line, the local time and a short fingerprint of the
 // SHA256 hash, and a small tilted rubber-stamp seal ("SIGNED · FACE ID ·
 // date" around a doodled Face ID face).
 //
@@ -24,6 +24,8 @@ struct SignatureBlockView: View {
     private let ink = Color(red: 0x1F / 255, green: 0x1E / 255, blue: 0x1C / 255)
 
     var body: some View {
+        let typeface = SignatureTypeface.forName(stamp.signerName)
+        let isLatin = typeface == .latin
         // "Signed on the line" (owner's pick, Nov 9) — an ink ✕, the name over
         // a hand-drawn line, the date and fingerprint underneath, a small seal
         // beside it — inside a quiet card with a header, so it reads as
@@ -39,17 +41,14 @@ struct SignatureBlockView: View {
                     InkCross()
                         .stroke(ink, style: StrokeStyle(lineWidth: 1.8, lineCap: .round))
                         .frame(width: 11, height: 11)
-                    // Mrs Saint Delafield (bundled, SIL OFL — Handshake/Fonts).
-                    // Fine strokes, so it's set larger than a system face.
                     Text(stamp.signerName)
-                        .font(.custom("MrsSaintDelafield-Regular", size: 40))
+                        .font(.custom(typeface.rawValue, size: isLatin ? 40 : 34))
                         .foregroundStyle(ink)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                 }
-                // The face keeps a deep descender; without this the line
-                // floats well below the name instead of sitting under it.
-                .padding(.bottom, -14)
+                // Mrs Saint Delafield has a deeper descender than the CJK faces.
+                .padding(.bottom, isLatin ? -14 : -5)
                 InkLine()
                     .stroke(ink.opacity(0.85), style: StrokeStyle(lineWidth: 1.3, lineCap: .round))
                     .frame(height: 6)
