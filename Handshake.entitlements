@@ -11,5 +11,10 @@
 	<array>
 		<string>Default</string>
 	</array>
+	<!-- Shared with the share extension: where shared items wait (ImportInbox). -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.weihsun.Handshake</string>
+	</array>
 </dict>
 </plist>

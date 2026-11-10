@@ -7,6 +7,13 @@
 
 **Build & run:** open `Handshake.xcodeproj`, scheme `Handshake`, iOS 26 simulator (iPhone 17 Pro). `Handshake/Secrets.swift` is gitignored and holds the Anthropic key — never commit it; before any push: `git log origin/main..HEAD -p | grep -cE 'sk-ant-api0[3][A-Za-z0-9_-]{20}'` must be 0 (written with `[3]` so this line doesn't match itself) and `git ls-files Handshake/Secrets.swift` empty. UI copy must never say "legally binding" (any language). Strings live in `Localizable.xcstrings` (7 languages: zh-Hant, zh-Hans, ja, ko, es, fr, de) — add every new UI string there.
 
+**New Home + "Start from" (Nov 9, evening)** — built and verified on iPhone 17 Pro (iOS 26.5):
+- *Home:* smaller illustration, a greeting ("Hi <first name>, what are we shaking on today?"), a **Start from** list (A chat · A call · A paper contract · Siri), then **Or say it your way**: 12 first-person example prompts in a row that swipes sideways (`templates` in `HomeView.swift`; translated with local names and currencies). Focusing the chat bar still collapses to the vertical list / autocomplete. The workspace cover is now item-driven (`workspace: PendingDraft?`) — with `isPresented` it opened with stale state and sent an empty prompt (API 400).
+- *Start-from sheets* (`StartFrom.swift`): bring material (pick screenshots/photos/PDF, scan with VisionKit, or the system `PasteButton`), see "What Handshake read", add an optional note, **Draft**. Text is read on the phone (Vision `RecognizeTextRequest`); only text goes to the AI. Chat screenshots become `Me:` / `Them:` lines from bubble position, plus a `Chat with:` line for the name at the top. Documents are rebuilt line by line from text positions, and wide gaps become `____` (the paragraph API shuffled lines that contain fill-in blanks). `DraftSource.aiPrompt` holds the per-source instructions; the chat panel shows a short `bubble` instead. Verified: chat screenshot → room-rental draft with the rent, dates, deposit and no-smoking terms; photographed contract → faithful editable copy with blanks as [brackets].
+- *Share extension* (`HandshakeShare/` target, `com.weihsun.Handshake.Share`): shows up in the share sheet for up to 10 images, text, or one file (PDF, WhatsApp `.zip`, LINE `.txt`). It copies the material into the App Group `group.com.weihsun.Handshake` (`Shared/ImportInbox.swift`, compiled into both targets) and opens `handshake://import/<id>`. The app reads it (`ImportHandling.swift`, which has a small zip reader) and shows the Start-from sheet filled in. If the open doesn't work, the app picks up the share the next time it becomes active (shares expire after 1 hour). Verified Photos → Share → Handshake → filled sheet → draft. **Before App Store submission:** opening the containing app from a share extension isn't an official API (it goes through the responder chain to `openURL:options:completionHandler:`). If review objects, drop `openApp` — the extension already falls back to "Added to Handshake — open Handshake to finish". **On a device:** the App Group must be registered with the team (Xcode automatic signing does it); the DeviceQA personal-team build would need the group removed.
+- *Siri:* `CreateContractIntent` + `HandshakeShortcuts` ("Make a contract with Handshake"; phrases translated in `AppShortcuts.xcstrings`). Siri asks what it's for and opens a draft through `NewDraftRouter`. **Not yet tried with Siri itself** (simulator); try on the device. The iOS 27 work (onscreen awareness, App Schemas) comes later.
+- *Not built / open:* WhatsApp and LINE logos in the chat sheet's tip. The code shows `logo-whatsapp` / `logo-line` from the asset catalog if they exist; it's waiting on the owner to OK downloading the official brand assets and to check the brand guidelines. Doodle versions of the four Start-from icons (SF Symbols for now). The chat bar's **+** doesn't offer the Start-from sources yet. Audio files → transcript (Speech framework) was phase 2.
+
 **Next up, in order:**
 1. **Backend (parked, owner first).** Owner: DocuSeal sign-up (wei@studiolofi.com, test key ending `+test`); new Supabase project "handshake" in the existing account; `supabase login`; from `backend/`: `supabase secrets set ANTHROPIC_API_KEY=… DOCUSEAL_API_KEY=…`. Then: `supabase link`, `supabase functions deploy handshake --no-verify-jwt`, set `backendURL` + `signingBackend = .docuseal` in Secrets.swift, run the first end-to-end test (never run against real accounts — expect fixes). Setting `backendURL` routes ALL AI calls through the server, so the Anthropic key must be there first. Supabase CLI 3.1.0 is installed.
 2. **AI tables — done.** The shared draft and revision prompt asks for numbered lists with labels for each value. Revisions ask the AI to convert existing tables and preserve their details. Saved tables still display as raw text until revised. Built on iPhone 17 Pro (iOS 26.5). One direct request through `AIService` converted a test milestone table into a numbered list and kept both amounts, the dates (including the requested update), and the signature/date fields. Viewed the generated milestone section on the simulator signing screen.
@@ -211,7 +218,12 @@ A native iOS app that turns a plain-English prompt into a legally formatted cont
 | File | Purpose |
 |---|---|
 | `HandshakeApp.swift` | App entry + `RootView` (deep-link routing, §4f) + `DeepLinkRouter` |
-| `HomeView.swift` | Landing screen — illustration, template cards, chat bar |
+| `HomeView.swift` | Landing screen — greeting, Start from list, swipeable example prompts, chat bar; presents the workspace from a `PendingDraft` |
+| `StartFrom.swift` | Start-from sources, `DraftSource` (bubble + AI prompt per source), on-device OCR (`TextReader`), VisionKit scanner, the Start-from and Siri sheets |
+| `SiriIntents.swift` | `CreateContractIntent`, App Shortcut phrases, `NewDraftRouter` / `PendingDraft` (Siri and shares → Home) |
+| `ImportHandling.swift` | Share-extension items → draft sources (screenshots, PDFs, chat exports; `ZipReader`) |
+| `../Shared/ImportInbox.swift` | *(both targets)* App Group inbox the share extension writes to |
+| `../HandshakeShare/ShareViewController.swift` | *(extension target)* copies shared items into the inbox and opens the app |
 | `ContractWorkspaceView.swift` | **The main screen.** Contract + AI panel + editor |
 | `Components.swift` | Shared UI: ChatBar, toolbars, `GlassIconButton` / `ToolbarPillButton` (system glass) / `PrimaryPillButton` (custom, full-width only), illustration, `MessageBubble` |
 | `RichTextEditor.swift` | `RichTextEditorImpl` — the `UITextView` ↔ SwiftUI bridge |
@@ -234,7 +246,8 @@ A native iOS app that turns a plain-English prompt into a legally formatted cont
 | `Models.swift` | `GeneratedContract`, `ChatMessage`, `Recipient`, `ContractStatus` |
 | `Config.swift` | Forwards to `Secrets.swift` |
 | `Secrets.swift` | **Gitignored.** The API key. Copy from `Secrets.example.swift` |
-| `Info.plist` | *(repo root)* URL scheme + Face ID usage string |
+| `Info.plist` | *(repo root)* URL scheme + Face ID / camera / mic usage strings |
+| `HandshakeShare-Info.plist`, `HandshakeShare.entitlements` | *(repo root)* the share extension's activation rules and App Group |
 
 `ChatSheetView.swift` and the `ContractEditorView` struct were deleted — both were dead. `MessageBubble` moved out of `ChatSheetView` into `Components.swift`, since the workspace's AI panel still uses it.
 

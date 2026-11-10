@@ -26,12 +26,17 @@ struct RootView: View {
     @State private var signingTarget: SigningTarget? = nil
     @State private var viewTarget:    SigningTarget? = nil
     @State private var linkError:     LinkError?     = nil
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationStack {
             HomeView()
         }
         .onOpenURL { open($0) }
+        // Something shared to Handshake whose extension couldn't open the app.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { ImportHandling.checkInbox() }
+        }
         .fullScreenCover(item: $signingTarget) { target in
             SigningView(contract: target.contract)
         }
@@ -50,6 +55,14 @@ struct RootView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private func open(_ url: URL) {
+        // handshake://import/<id> — from the share extension, not a signing link.
+        if url.scheme?.lowercased() == "handshake", url.host?.lowercased() == "import" {
+            if let id = UUID(uuidString: url.lastPathComponent) {
+                signingTarget = nil; viewTarget = nil
+                ImportHandling.open(id)
+            }
+            return
+        }
         guard let route = Self.route(for: url) else { return }   // not our scheme
 
         // Everything presented anywhere has to come down before we can
