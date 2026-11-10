@@ -511,7 +511,7 @@ struct StartFromSheet: View {
             Section(String(localized: "Other ways")) {
                 tip(String(localized: "In Messages, take screenshots, then tap Share › Handshake."))
                 tip(String(localized: "In WhatsApp, open the contact's info, tap Export Chat, then choose Handshake."),
-                    logo: "logo-whatsapp", name: "WhatsApp", inset: 3)
+                    logo: "logo-whatsapp", name: "WhatsApp", inset: 1.5)
                 tip(String(localized: "In LINE, open the chat menu › Settings › Export chat history, then choose Handshake."),
                     logo: "logo-line", name: "LINE")
             }
@@ -525,29 +525,29 @@ struct StartFromSheet: View {
     }
 
     /// A how-to line, with the app's own icon when it's in the asset catalog.
+    /// A Label, so the icon and text line up with the rows above it.
     /// Brand rules (LINE, WhatsApp): the official file unaltered — no
-    /// cropping, outline or overlap with another logo — at 40 pt or more,
-    /// with clear space around it.
-    /// `inset`: WhatsApp's glyph runs edge to edge where LINE's icon is a
-    /// filled tile; a little inset makes them read the same size.
+    /// cropping, outline or overlap with another logo; LINE's minimum is
+    /// 40 px, and 24 pt is 48–72 px. `inset`: WhatsApp's glyph runs edge to
+    /// edge where LINE's icon is a filled tile, so it's drawn a little
+    /// smaller to read the same size.
     private func tip(_ text: String, logo: String? = nil, name: String = "", inset: CGFloat = 0) -> some View {
-        HStack(alignment: .center, spacing: 14) {
-            if let logo, UIImage(named: logo) != nil {
-                Image(logo).resizable().scaledToFit()
-                    .padding(inset)
-                    .frame(width: 40, height: 40)
-                    .accessibilityLabel(Text(verbatim: name))
-            } else {
-                Image(systemName: "lightbulb")
-                    .foregroundStyle(.secondary)
-                    .frame(width: 40)
-            }
+        Label {
             Text(text)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            if let logo, UIImage(named: logo) != nil {
+                Image(logo).resizable().scaledToFit()
+                    .padding(inset)
+                    .frame(width: 24, height: 24)
+                    .accessibilityLabel(Text(verbatim: name))
+            } else {
+                Image(systemName: "lightbulb")
+                    .foregroundStyle(.secondary)
+            }
         }
-        .padding(.vertical, 2)
     }
 
     // ── Step 2: what was read, a note, Draft ───────────────────────────────
