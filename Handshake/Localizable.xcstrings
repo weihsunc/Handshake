@@ -7499,6 +7499,52 @@
         }
       }
     },
+    "In LINE, open the chat menu › Settings › Export chat history, then choose Handshake.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 LINE 打開聊天室選單 › 設定 › 傳送聊天記錄，再選擇 Handshake。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 LINE 打开聊天菜单 › 设置 › 导出聊天记录，再选择 Handshake。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LINEでトークのメニュー › 設定 › トーク履歴を送信 を開き、Handshakeを選びます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LINE에서 채팅 메뉴 › 설정 › 대화 내용 내보내기를 연 뒤 Handshake를 선택하세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En LINE, abre el menú del chat › Ajustes › Exportar historial de chat y elige Handshake."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans LINE, ouvrez le menu de la discussion › Réglages › Exporter l'historique, puis choisissez Handshake."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne in LINE das Chat-Menü › Einstellungen › Chatverlauf exportieren und wähle Handshake."
+          }
+        }
+      }
+    },
     "In Messages, take screenshots, then tap Share › Handshake.": {
       "localizations": {
         "zh-Hant": {
@@ -7545,48 +7591,48 @@
         }
       }
     },
-    "In WhatsApp or LINE, open the chat's settings, tap Export Chat, then choose Handshake.": {
+    "In WhatsApp, open the contact's info, tap Export Chat, then choose Handshake.": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "在 WhatsApp 或 LINE 打開聊天室設定，點「匯出聊天紀錄」，再選擇 Handshake。"
+            "value": "在 WhatsApp 打開聯絡人資訊，點「匯出對話」，再選擇 Handshake。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在 WhatsApp 或 LINE 打开聊天设置，轻点“导出聊天记录”，再选择 Handshake。"
+            "value": "在 WhatsApp 打开联系人信息，轻点“导出聊天”，再选择 Handshake。"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "WhatsAppやLINEでトークの設定を開き、「トークを送信／書き出し」をタップしてHandshakeを選びます。"
+            "value": "WhatsAppで連絡先情報を開き、「チャットをエクスポート」をタップしてHandshakeを選びます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "WhatsApp이나 LINE에서 채팅 설정을 열고 대화 내보내기를 탭한 뒤 Handshake를 선택하세요."
+            "value": "WhatsApp에서 연락처 정보를 열고 채팅 내보내기를 탭한 뒤 Handshake를 선택하세요."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "En WhatsApp o LINE, abre los ajustes del chat, toca Exportar chat y elige Handshake."
+            "value": "En WhatsApp, abre la info del contacto, toca Exportar chat y elige Handshake."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dans WhatsApp ou LINE, ouvrez les réglages de la discussion, touchez Exporter la discussion, puis choisissez Handshake."
+            "value": "Dans WhatsApp, ouvrez les infos du contact, touchez Exporter la discussion, puis choisissez Handshake."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Öffne in WhatsApp oder LINE die Chat-Einstellungen, tippe auf Chat exportieren und wähle Handshake."
+            "value": "Öffne in WhatsApp die Kontaktinfo, tippe auf Chat exportieren und wähle Handshake."
           }
         }
       }

@@ -244,7 +244,7 @@ struct HomeView: View {
 
     private var hero: some View {
         VStack(spacing: 12) {
-            HandshakeIllustration()
+            HandshakeDoodle(width: 200)
                 .frame(height: 130)
 
             Text(greeting)

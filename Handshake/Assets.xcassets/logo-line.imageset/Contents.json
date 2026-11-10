@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "LINE_APP_iOS.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

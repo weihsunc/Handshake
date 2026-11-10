@@ -509,40 +509,42 @@ struct StartFromSheet: View {
         switch source {
         case .chat:
             Section(String(localized: "Other ways")) {
-                tip(String(localized: "In Messages, take screenshots, then tap Share › Handshake."), logos: [])
-                tip(String(localized: "In WhatsApp or LINE, open the chat's settings, tap Export Chat, then choose Handshake."),
-                    logos: ["logo-whatsapp", "logo-line"])
+                tip(String(localized: "In Messages, take screenshots, then tap Share › Handshake."))
+                tip(String(localized: "In WhatsApp, open the contact's info, tap Export Chat, then choose Handshake."),
+                    logo: "logo-whatsapp", name: "WhatsApp")
+                tip(String(localized: "In LINE, open the chat menu › Settings › Export chat history, then choose Handshake."),
+                    logo: "logo-line", name: "LINE")
             }
         case .call:
             Section(String(localized: "Where to find it")) {
-                tip(String(localized: "Recorded a call? Open the recording in Notes, tap ⋯ › Copy Transcript, then paste it here. Or share the note to Handshake."), logos: [])
+                tip(String(localized: "Recorded a call? Open the recording in Notes, tap ⋯ › Copy Transcript, then paste it here. Or share the note to Handshake."))
             }
         default:
             EmptyView()
         }
     }
 
-    private func tip(_ text: String, logos: [String]) -> some View {
-        HStack(alignment: .top, spacing: 10) {
-            let shown = logos.filter { UIImage(named: $0) != nil }
-            if shown.isEmpty {
+    /// A how-to line, with the app's own icon when it's in the asset catalog.
+    /// Brand rules (LINE, WhatsApp): the official file unaltered — no
+    /// cropping, outline or overlap with another logo — at 40 pt or more,
+    /// with clear space around it.
+    private func tip(_ text: String, logo: String? = nil, name: String = "") -> some View {
+        HStack(alignment: .center, spacing: 14) {
+            if let logo, UIImage(named: logo) != nil {
+                Image(logo).resizable().scaledToFit()
+                    .frame(width: 40, height: 40)
+                    .accessibilityLabel(Text(verbatim: name))
+            } else {
                 Image(systemName: "lightbulb")
                     .foregroundStyle(.secondary)
-                    .frame(width: 24)
-            } else {
-                HStack(spacing: -6) {
-                    ForEach(shown, id: \.self) { name in
-                        Image(name).resizable().scaledToFit()
-                            .frame(width: 24, height: 24)
-                            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                    }
-                }
+                    .frame(width: 40)
             }
             Text(text)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
+        .padding(.vertical, 2)
     }
 
     // ── Step 2: what was read, a note, Draft ───────────────────────────────
