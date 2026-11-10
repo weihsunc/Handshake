@@ -318,7 +318,7 @@ struct ReadOnlyContractView: View {
                     }
                     if !contract.isIncoming, contract.status != .draft, !signers.isEmpty { signersCard }
                     if contract.canSendCCCopies {
-                        Button("Send CC Copies") { showCopyDelivery = true }
+                        Button("Send Copies") { showCopyDelivery = true }
                             .buttonStyle(.bordered)
                             .tint(Color.accent)
                     }

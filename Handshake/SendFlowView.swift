@@ -19,7 +19,7 @@ import MessageUI
 //   • Each recipient gets their own message and link (one compose sheet
 //     each), because the link differs by the box it unlocks.
 //   • Placeholders still in the text ("[ADDRESS]") are flagged before sending.
-//   • "Signed copies come back to" is carried in the link, so the
+//   • "When it's signed": the reply address is carried in the link, so the
 //     recipient's reply opens already addressed to the sender.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -330,7 +330,7 @@ struct SendFlowView: View {
         let copyAddresses = copyRecipients.map { CopyRecipient.addressKey($0.address) }
         let signerAddresses = Set(recipients.map { CopyRecipient.addressKey(Self.contact(of: $0)) })
         if Set(copyAddresses).count != copyAddresses.count || !signerAddresses.isDisjoint(with: copyAddresses) {
-            out.append(String(localized: "Use a different address for each signer and CC recipient."))
+            out.append(String(localized: "Use a different address for each signer and each person getting a copy."))
         }
         if mySlot != nil && myName.trimmingCharacters(in: .whitespaces).isEmpty {
             out.append(String(localized: "Enter your full name to sign."))
@@ -359,7 +359,6 @@ struct SendFlowView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     signersSection
-                    copyRecipientsSection.padding(.top, 24)
 
                     if triedToSend && !problems.isEmpty {
                         VStack(spacing: 6) {
@@ -381,7 +380,7 @@ struct SendFlowView: View {
                             .padding(.top, 24)
                     }
 
-                    replyLine
+                    whenSignedSection
                         .padding(.top, 24)
                 }
                 .padding(.top, 12)
@@ -662,20 +661,41 @@ struct SendFlowView: View {
         .buttonStyle(.plain)
     }
 
-    private var copyRecipientsSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("CC · Signed copy only")
+    /// Where the finished contract goes: back to you (each signer's reply
+    /// is addressed to you), and to anyone you copy in. One card, so the two
+    /// "signed copy" ideas read as one story.
+    private var whenSignedSection: some View {
+        let addr = replyTo.trimmingCharacters(in: .whitespaces)
+        return VStack(alignment: .leading, spacing: 6) {
+            Text("When it's signed")
                 .font(.footnote)
                 .foregroundStyle(Color.secondaryInk)
                 .padding(.horizontal, 20)
             VStack(spacing: 0) {
+                // Back to you
+                Button {
+                    replyDraft = addr
+                    editingReply = true
+                } label: {
+                    destinationRow(icon: "ph-arrow-bend-up-left", flips: true,
+                                   title: Text("Comes back to you"),
+                                   detail: addr.isEmpty
+                                       ? Text("Add an email or phone").foregroundStyle(Color.accent)
+                                       : Text(addr))
+                }
+                .buttonStyle(.plain)
+
+                // Copies
                 ForEach(copyRecipients) { person in
+                    Divider().padding(.leading, 62)
                     Button { editing = PartyEdit(recipientID: person.id, copyOnly: true) } label: {
                         HStack(spacing: 12) {
                             Monogram(name: person.name)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(person.name).foregroundStyle(Color.primaryInk)
-                                Text(person.address).font(.footnote).foregroundStyle(Color.secondaryInk)
+                                Text("Gets a copy · \(person.address)")
+                                    .font(.footnote).foregroundStyle(Color.secondaryInk)
+                                    .lineLimit(1)
                             }
                             Spacer(minLength: 8)
                             Image("ph-caret-right").flipsForRightToLeftLayoutDirection(true)
@@ -687,12 +707,13 @@ struct SendFlowView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    Divider().padding(.leading, 62)
                 }
+
+                Divider().padding(.leading, 62)
                 Button { editing = PartyEdit(copyOnly: true) } label: {
                     HStack(spacing: 12) {
-                        Image("ph-plus-circle-fill").font(.system(size: 22)).frame(width: 34)
-                        Text("Add CC")
+                        Image("ph-plus").font(.body).frame(width: 34)
+                        Text("Send a copy to someone else")
                         Spacer()
                     }
                     .foregroundStyle(Color.accent)
@@ -704,12 +725,45 @@ struct SendFlowView: View {
             }
             .background(Color.raisedSurface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .padding(.horizontal, 16)
-            Text("You can send them the completed PDF after everyone signs.")
-                .font(.footnote)
-                .foregroundStyle(Color.secondaryInk)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 20)
+
+            Group {
+                if copyRecipients.isEmpty {
+                    Text("Each signer's reply is addressed to you.")
+                } else {
+                    Text("Each signer's reply is addressed to you. You send the copies once everyone has signed.")
+                }
+            }
+            .font(.footnote)
+            .foregroundStyle(Color.secondaryInk)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 20)
+            .padding(.top, 2)
         }
+    }
+
+    /// A row in "When it's signed" that isn't a person: an icon where the
+    /// monogram would be, so it lines up with the people below it.
+    private func destinationRow(icon: String, flips: Bool = false, title: Text, detail: Text) -> some View {
+        HStack(spacing: 12) {
+            Image(icon).flipsForRightToLeftLayoutDirection(flips)
+                .font(.title3)
+                .foregroundStyle(Color.primaryInk)
+                .frame(width: 34, height: 34)
+            VStack(alignment: .leading, spacing: 2) {
+                title.foregroundStyle(Color.primaryInk)
+                detail
+                    .font(.footnote)
+                    .foregroundStyle(Color.secondaryInk)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 8)
+            Image("ph-caret-right").flipsForRightToLeftLayoutDirection(true)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(Color(.tertiaryLabel))
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .contentShape(Rectangle())
     }
 
     @ViewBuilder
@@ -835,35 +889,6 @@ struct SendFlowView: View {
             : shown.formatted(.list(type: .and))
     }
 
-    // ── Reply address ────────────────────────────────────────────────────
-
-    /// Set once and remembered, so a line rather than a section.
-    private var replyLine: some View {
-        let addr = replyTo.trimmingCharacters(in: .whitespaces)
-        return HStack(alignment: .firstTextBaseline, spacing: 6) {
-            Image("ph-arrow-bend-up-left").flipsForRightToLeftLayoutDirection(true)
-                .font(.footnote)
-            Group {
-                if addr.isEmpty {
-                    Text("Signed copies come back to you.")
-                } else {
-                    Text("Signed copies come back to \(addr).")
-                }
-            }
-            .font(.footnote)
-            .fixedSize(horizontal: false, vertical: true)
-            Button(addr.isEmpty ? String(localized: "Add Address") : String(localized: "Change")) {
-                replyDraft = addr
-                editingReply = true
-            }
-            .font(.footnote.weight(.semibold))
-            .foregroundStyle(Color.accent)
-            .buttonStyle(.plain)
-        }
-        .foregroundStyle(Color.secondaryInk)
-        .padding(.horizontal, 20)
-    }
-
     // ─────────────────────────────────────────────────────────────────────────
     // MARK: - Sent
     // ─────────────────────────────────────────────────────────────────────────
@@ -979,7 +1004,7 @@ struct SendFlowView: View {
         steps.append(SentStep(state: .waiting, title: String(localized: "Signed copy comes back"),
                               detail: replyAddress.map { String(localized: "To \($0)") } ?? String(localized: "To you")))
         if !copyRecipients.isEmpty {
-            steps.append(SentStep(state: .waiting, title: String(localized: "Send CC Copies"),
+            steps.append(SentStep(state: .waiting, title: String(localized: "Send Copies"),
                                   detail: String(localized: "After everyone signs")))
         }
         return steps
@@ -1528,7 +1553,7 @@ private struct PartySheet: View {
 
                 if canRemove {
                     Section {
-                        Button(copyOnly ? String(localized: "Remove CC") : String(localized: "Remove Signer"), role: .destructive) {
+                        Button(copyOnly ? String(localized: "Don't Send a Copy") : String(localized: "Remove Signer"), role: .destructive) {
                             onSave(.nobody, ""); dismiss()
                         }
                     }
@@ -1559,7 +1584,7 @@ private struct PartySheet: View {
     }
 
     private var title: String {
-        if copyOnly { return name.isEmpty ? String(localized: "Add CC") : String(localized: "Edit CC") }
+        if copyOnly { return name.isEmpty ? String(localized: "Send a Copy") : String(localized: "Edit Copy") }
         if asksForRole || (role == nil && name.isEmpty) { return String(localized: "Add Signer") }
         return role ?? String(localized: "Signer")
     }

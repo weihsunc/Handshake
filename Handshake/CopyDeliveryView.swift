@@ -34,7 +34,7 @@ struct CopyDeliveryView: View {
                     }
                 }
             }
-            .navigationTitle("Send CC Copies")
+            .navigationTitle("Send Copies")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
