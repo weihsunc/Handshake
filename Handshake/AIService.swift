@@ -106,6 +106,11 @@ enum AIService {
             - Put each section title on its own line in bold, like **1. PROJECT SCOPE** \
               (the words "Section Header" must never appear in the output)
             - Use numbered lists for clauses (1. 2. 3. …)
+            - Never use tables (Markdown, HTML, or aligned text columns), even if requested. \
+              Present schedules, milestones, fees, and comparisons as numbered lists instead, \
+              keeping all details and labelling each value (e.g. "1. Milestone: Design approval; \
+              Due date: [DATE]; Payment: [AMOUNT]"). When revising an existing contract, \
+              convert any tables to numbered lists without losing information.
             - Use [brackets] for any field the user must fill in
             - Include all standard sections for this agreement type
             - END with a signature block, one entry per party, exactly in this form \

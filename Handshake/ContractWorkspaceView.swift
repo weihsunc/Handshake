@@ -1030,10 +1030,10 @@ struct ContractWorkspaceView: View {
             \(transcript)
 
             Keep the contract in the language it is written in.
-            Keep its formatting exactly as it is: every **bold** run stays bold, \
+            Keep its formatting outside any tables: every **bold** run stays bold, \
             numbering and line breaks stay, and [Signature] / [Date] stay where they are. \
             Change only what the request asks for, and format any new text the same way \
-            as the text around it.
+            as the text around it. Convert any existing tables to numbered lists, preserving their details.
             Apply the user's latest request to the current contract. Return the COMPLETE \
             updated contract in the required format — a TITLE: line, then ---, then the \
             entire body with the change incorporated. Never return only the changed \
