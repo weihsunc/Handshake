@@ -511,7 +511,7 @@ struct StartFromSheet: View {
             Section(String(localized: "Other ways")) {
                 tip(String(localized: "In Messages, take screenshots, then tap Share › Handshake."))
                 tip(String(localized: "In WhatsApp, open the contact's info, tap Export Chat, then choose Handshake."),
-                    logo: "logo-whatsapp", name: "WhatsApp")
+                    logo: "logo-whatsapp", name: "WhatsApp", inset: 3)
                 tip(String(localized: "In LINE, open the chat menu › Settings › Export chat history, then choose Handshake."),
                     logo: "logo-line", name: "LINE")
             }
@@ -528,10 +528,13 @@ struct StartFromSheet: View {
     /// Brand rules (LINE, WhatsApp): the official file unaltered — no
     /// cropping, outline or overlap with another logo — at 40 pt or more,
     /// with clear space around it.
-    private func tip(_ text: String, logo: String? = nil, name: String = "") -> some View {
+    /// `inset`: WhatsApp's glyph runs edge to edge where LINE's icon is a
+    /// filled tile; a little inset makes them read the same size.
+    private func tip(_ text: String, logo: String? = nil, name: String = "", inset: CGFloat = 0) -> some View {
         HStack(alignment: .center, spacing: 14) {
             if let logo, UIImage(named: logo) != nil {
                 Image(logo).resizable().scaledToFit()
+                    .padding(inset)
                     .frame(width: 40, height: 40)
                     .accessibilityLabel(Text(verbatim: name))
             } else {
