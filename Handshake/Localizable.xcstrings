@@ -1,6 +1,742 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Signed copy of %@": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」的已簽署副本"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "《%@》的已签署副本"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」の署名済みの控え"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‘%@’의 서명된 사본"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia firmada de %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copie signée de %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unterschriebene Kopie von %@"
+          }
+        }
+      }
+    },
+    "The signed copy of %@ is attached for your records.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隨附「%@」的已簽署副本，供你留存。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "随附《%@》的已签署副本，供你留存。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保管用に「%@」の署名済みの控えを添付しています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보관하실 수 있도록 ‘%@’의 서명된 사본을 첨부합니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjunto la copia firmada de «%@» para tus archivos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous trouverez en pièce jointe la copie signée de « %@ » pour vos dossiers."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die unterschriebene Kopie von „%@“ ist für deine Unterlagen beigefügt."
+          }
+        }
+      }
+    },
+    "Signed copy": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已簽署副本"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已签署副本"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名済みの控え"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명된 사본"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia firmada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copie signée"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unterschriebene Kopie"
+          }
+        }
+      }
+    },
+    "Open the signed contract and try again.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請開啟已簽署的合約後再試一次。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请打开已签署的合同后重试。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名済みの契約書を開いて、もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명된 계약을 열고 다시 시도하세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre el contrato firmado e inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrez le contrat signé et réessayez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne den unterschriebenen Vertrag und versuche es erneut."
+          }
+        }
+      }
+    },
+    "Couldn't send the PDF": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法傳送 PDF"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法发送 PDF"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDFを送信できませんでした"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF를 보낼 수 없음"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo enviar el PDF"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d’envoyer le PDF"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF konnte nicht gesendet werden"
+          }
+        }
+      }
+    },
+    "Only mark it sent if you shared the PDF with %@.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只有在你已將 PDF 傳給 %@ 時，才標記為已傳送。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只有在你已将 PDF 发送给 %@ 时，才标记为已发送。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@にPDFを送った場合にのみ、送信済みにしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@에게 PDF를 공유한 경우에만 보낸 것으로 표시하세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Márcalo como enviado solo si compartiste el PDF con %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indiquez que la copie a été envoyée uniquement si vous avez partagé le PDF avec %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markiere die Kopie nur als gesendet, wenn du das PDF mit %@ geteilt hast."
+          }
+        }
+      }
+    },
+    "Send signed copy to %@": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "將已簽署副本傳給 %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将已签署副本发送给 %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@に署名済みの控えを送信"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@에게 서명된 사본 보내기"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar copia firmada a %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer la copie signée à %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unterschriebene Kopie an %@ senden"
+          }
+        }
+      }
+    },
+    "After everyone signs": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有人簽署後"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有人签署后"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全員の署名後"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모두가 서명한 후"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando todos hayan firmado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quand tout le monde aura signé"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobald alle unterschrieben haben"
+          }
+        }
+      }
+    },
+    "Send CC Copies": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "傳送已簽署副本"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发送抄送副本"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CCに控えを送信"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "참조 사본 보내기"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar copias a CC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer les copies en Cc"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CC-Kopien senden"
+          }
+        }
+      }
+    },
+    "Enter a valid email address or phone number.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請輸入有效的電子郵件地址或電話號碼。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请输入有效的电子邮件地址或电话号码。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有効なメールアドレスまたは電話番号を入力してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "유효한 이메일 주소나 전화번호를 입력하세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce un correo electrónico o número de teléfono válido."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez une adresse e-mail ou un numéro de téléphone valide."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib eine gültige E-Mail-Adresse oder Telefonnummer ein."
+          }
+        }
+      }
+    },
+    "Use a different address for each signer and CC recipient.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請為每位簽署人和副本收件人使用不同的電子郵件地址或電話號碼。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请为每位签署人和抄送人使用不同的电子邮件地址或电话号码。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名者とCCの受信者には、それぞれ異なるメールアドレスまたは電話番号を使ってください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명자와 참조 수신자마다 다른 이메일 주소나 전화번호를 사용하세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa un correo o teléfono distinto para cada firmante y destinatario en CC."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilisez une adresse e-mail ou un numéro différent pour chaque signataire et destinataire en Cc."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwende für jede unterschreibende Person und jeden CC-Empfänger eine andere E-Mail-Adresse oder Telefonnummer."
+          }
+        }
+      }
+    },
+    "You can send them the completed PDF after everyone signs.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有人簽署後，你可以將完成的 PDF 傳給他們。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有人签署后，你可以将完成的 PDF 发送给他们。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全員が署名した後、完成したPDFを送れます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모두가 서명하면 완성된 PDF를 보낼 수 있어요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podrás enviarles el PDF final cuando todos hayan firmado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous pourrez leur envoyer le PDF final quand tout le monde aura signé."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobald alle unterschrieben haben, kannst du ihnen das fertige PDF senden."
+          }
+        }
+      }
+    },
+    "Remove CC": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除副本收件人"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除抄送人"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CCを削除"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "참조 삭제"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar CC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer du Cc"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CC entfernen"
+          }
+        }
+      }
+    },
+    "Edit CC": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "編輯副本收件人"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑抄送人"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CCを編集"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "참조 편집"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar CC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier le Cc"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CC bearbeiten"
+          }
+        }
+      }
+    },
+    "Add CC": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新增副本收件人"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加抄送人"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CCを追加"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "참조 추가"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir CC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter en Cc"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CC hinzufügen"
+          }
+        }
+      }
+    },
+    "CC · Signed copy only": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "副本收件人 · 僅接收已簽署副本"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "抄送 · 仅接收已签署副本"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CC · 署名済みの控えのみ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "참조 · 서명된 사본만"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CC · Solo copia firmada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cc · Copie signée uniquement"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CC · Nur unterschriebene Kopie"
+          }
+        }
+      }
+    },
     "%@\n\nOpen in Handshake to record it:\n%@": {
       "localizations": {
         "zh-Hant": {
@@ -7223,48 +7959,48 @@
         }
       }
     },
-    "Only your recipients sign. You'll get the signed copy back.": {
+    "Your signers will send the signed copy back to you.": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "只有收件人需要簽署。已簽署的副本會傳回給你。"
+            "value": "簽署人會將已簽署的副本傳回給你。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "只有收件人需要签署。已签署的副本会发回给你。"
+            "value": "签署人会将已签署的副本发回给你。"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "署名するのは受信者だけです。署名済みのコピーが返送されます。"
+            "value": "署名者が署名済みの控えをあなたに返送します。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "수신자만 서명해요. 서명된 사본은 나에게 돌아와요."
+            "value": "서명자가 서명된 사본을 다시 보내 드립니다."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solo firman tus destinatarios. Recibirás la copia firmada."
+            "value": "Los firmantes te devolverán la copia firmada."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seuls vos destinataires signent. Vous recevrez la copie signée."
+            "value": "Les signataires vous renverront la copie signée."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nur deine Empfänger signieren. Du bekommst die signierte Kopie zurück."
+            "value": "Die Unterzeichnenden senden dir die unterschriebene Kopie zurück."
           }
         }
       }
@@ -12191,48 +12927,48 @@
         }
       }
     },
-    "You'll sign with %@ before it's sent, so recipients see your signature in place.": {
+    "You'll sign with %@ first so the other signers can see your signature.": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "傳送前你會先使用 %@ 簽署，讓收件人看到你的簽名已就位。"
+            "value": "你會先使用 %@ 簽署，讓其他簽署人看見你的簽名。"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "发送前你会先使用 %@ 签署，让收件人看到你的签名已就位。"
+            "value": "你会先使用 %@ 签署，让其他签署人看到你的签名。"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "送信前に%@で署名するので、受信者にはあなたの署名が表示されます。"
+            "value": "先に%@で署名すると、ほかの署名者にもあなたの署名が表示されます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "보내기 전에 %@(으)로 서명하므로 수신자는 내 서명이 들어간 계약서를 보게 돼요."
+            "value": "다른 서명자가 내 서명을 볼 수 있도록 먼저 %@로 서명하세요."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Firmarás con %@ antes de enviarlo, para que los destinatarios vean tu firma en su lugar."
+            "value": "Firmarás primero con %@ para que los demás firmantes puedan ver tu firma."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vous signerez avec %@ avant l’envoi, pour que les destinataires voient votre signature en place."
+            "value": "Vous signerez d’abord avec %@ pour que les autres signataires puissent voir votre signature."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Du signierst vor dem Senden mit %@, damit Empfänger deine Unterschrift schon sehen."
+            "value": "Du unterschreibst zuerst mit %@, damit die anderen deine Unterschrift sehen können."
           }
         }
       }

@@ -265,6 +265,7 @@ struct ReadOnlyContractView: View {
     @State private var attributedBody: NSMutableAttributedString
     @State private var editorHeight:   CGFloat = 300
     @State private var showShare = false
+    @State private var showCopyDelivery = false
     @State private var revising: GeneratedContract? = nil
     @Environment(\.dismiss) private var dismiss
 
@@ -316,6 +317,11 @@ struct ReadOnlyContractView: View {
                         changesBanner(request)
                     }
                     if !contract.isIncoming, contract.status != .draft, !signers.isEmpty { signersCard }
+                    if contract.canSendCCCopies {
+                        Button("Send CC Copies") { showCopyDelivery = true }
+                            .buttonStyle(.bordered)
+                            .tint(Color.accent)
+                    }
 
                     GeometryReader { geo in
                         RichTextEditorImpl(
@@ -365,6 +371,9 @@ struct ReadOnlyContractView: View {
                               message: SigningConfirmationView.returnMessage(for: contract)) { _ in
                 showShare = false
             }
+        }
+        .sheet(isPresented: $showCopyDelivery) {
+            CopyDeliveryView(contract: contract)
         }
         .fullScreenCover(item: $revising, onDismiss: { dismiss() }) { draft in
             NavigationStack {

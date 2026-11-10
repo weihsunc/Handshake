@@ -80,12 +80,13 @@ final class ContractStore {
         save()
     }
 
-    func markSent(id: UUID, recipients: [Recipient], providerRef: ProviderRef? = nil,
+    func markSent(id: UUID, recipients: [Recipient], copyRecipients: [CopyRecipient] = [], providerRef: ProviderRef? = nil,
                   partyCount: Int? = nil, replyTo: String? = nil,
                   senderName: String? = nil, senderRole: String? = nil,
                   ownSignature: PartySignature? = nil) {
         guard let i = contracts.firstIndex(where: { $0.id == id }) else { return }
         contracts[i].recipients  = recipients
+        contracts[i].copyRecipients = copyRecipients
         contracts[i].status      = .sent
         contracts[i].sentAt      = .now
         contracts[i].partyCount  = partyCount

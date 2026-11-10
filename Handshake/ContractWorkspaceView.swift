@@ -972,6 +972,7 @@ struct ContractWorkspaceView: View {
         // contract sent while the workspace was open) — never regress it here.
         if let stored = ContractStore.shared.contract(id: c.id) {
             c.recipients = stored.recipients
+            c.copyRecipients = stored.copyRecipients
             c.status     = stored.status
             c.sentAt     = stored.sentAt
             c.signedAt   = stored.signedAt

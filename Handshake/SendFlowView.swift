@@ -48,6 +48,7 @@ struct SendFlowView: View {
     @State private var showFillBlanks = false
 
     @State private var recipients: [Recipient]
+    @State private var copyRecipients: [CopyRecipient]
     /// The box the sender signs. nil: they aren't signing.
     @State private var myParty: Int?
     @State private var myName: String
@@ -126,6 +127,7 @@ struct SendFlowView: View {
             mine = left.count == 1 ? left[0] : nil
         }
         _recipients = State(initialValue: rs)
+        _copyRecipients = State(initialValue: stored.copyRecipients)
         _myParty    = State(initialValue: found.isEmpty ? nil : mine)
         _myName  = State(initialValue: AccountStore.shared.name
                                 ?? UserDefaults.standard.string(forKey: Self.myNameKey) ?? "")
@@ -325,6 +327,11 @@ struct SendFlowView: View {
         if !recipients.allSatisfy(Self.isComplete) {
             out.append(String(localized: "Add a name, and an email or phone number, for each recipient."))
         }
+        let copyAddresses = copyRecipients.map { CopyRecipient.addressKey($0.address) }
+        let signerAddresses = Set(recipients.map { CopyRecipient.addressKey(Self.contact(of: $0)) })
+        if Set(copyAddresses).count != copyAddresses.count || !signerAddresses.isDisjoint(with: copyAddresses) {
+            out.append(String(localized: "Use a different address for each signer and CC recipient."))
+        }
         if mySlot != nil && myName.trimmingCharacters(in: .whitespaces).isEmpty {
             out.append(String(localized: "Enter your full name to sign."))
         }
@@ -352,6 +359,7 @@ struct SendFlowView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     signersSection
+                    copyRecipientsSection.padding(.top, 24)
 
                     if triedToSend && !problems.isEmpty {
                         VStack(spacing: 6) {
@@ -526,6 +534,7 @@ struct SendFlowView: View {
         ContractStore.shared.update(id: contract.id) { c in
             guard c.status == .draft else { return }
             c.recipients = rs
+            c.copyRecipients = copyRecipients
             if let role { c.senderRole = role }
         }
         let name = myName.trimmingCharacters(in: .whitespaces)
@@ -595,9 +604,9 @@ struct SendFlowView: View {
             if !slots.isEmpty {
                 Group {
                     if mySlot != nil {
-                        Text("You'll sign with \(SignatureService.biometryName) before it's sent, so recipients see your signature in place.")
+                        Text("You'll sign with \(SignatureService.biometryName) first so the other signers can see your signature.")
                     } else {
-                        Text("Only your recipients sign. You'll get the signed copy back.")
+                        Text("Your signers will send the signed copy back to you.")
                     }
                 }
                 .font(.footnote)
@@ -653,14 +662,89 @@ struct SendFlowView: View {
         .buttonStyle(.plain)
     }
 
+    private var copyRecipientsSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("CC · Signed copy only")
+                .font(.footnote)
+                .foregroundStyle(Color.secondaryInk)
+                .padding(.horizontal, 20)
+            VStack(spacing: 0) {
+                ForEach(copyRecipients) { person in
+                    Button { editing = PartyEdit(recipientID: person.id, copyOnly: true) } label: {
+                        HStack(spacing: 12) {
+                            Monogram(name: person.name)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(person.name).foregroundStyle(Color.primaryInk)
+                                Text(person.address).font(.footnote).foregroundStyle(Color.secondaryInk)
+                            }
+                            Spacer(minLength: 8)
+                            Image(systemName: "chevron.right")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(Color(.tertiaryLabel))
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    Divider().padding(.leading, 62)
+                }
+                Button { editing = PartyEdit(copyOnly: true) } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "plus.circle.fill").font(.system(size: 22)).frame(width: 34)
+                        Text("Add CC")
+                        Spacer()
+                    }
+                    .foregroundStyle(Color.accent)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            .background(Color.raisedSurface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .padding(.horizontal, 16)
+            Text("You can send them the completed PDF after everyone signs.")
+                .font(.footnote)
+                .foregroundStyle(Color.secondaryInk)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 20)
+        }
+    }
+
     @ViewBuilder
     private func partySheet(_ e: PartyEdit) -> some View {
+        if e.copyOnly { copyRecipientSheet(e) }
+        else { signerSheet(e) }
+    }
+
+    private func copyRecipientSheet(_ e: PartyEdit) -> some View {
+        let person = copyRecipients.first { $0.id == e.recipientID }
+        return PartySheet(role: nil, asksForRole: false, canBeMe: false, startsAsMe: false,
+                          name: person?.name ?? "", contact: person?.address ?? "", canRemove: person != nil,
+                          myName: $myName, suggestions: [], copyOnly: true) { choice, _ in
+            switch choice {
+            case .person(let name, let contact):
+                if let i = copyRecipients.firstIndex(where: { $0.id == person?.id }) {
+                    copyRecipients[i].name = name
+                    copyRecipients[i].address = contact
+                } else {
+                    copyRecipients.append(CopyRecipient(name: name, address: contact))
+                }
+            case .nobody: copyRecipients.removeAll { $0.id == person?.id }
+            case .me: break
+            }
+            saveDraftSigners()
+        }
+    }
+
+    private func signerSheet(_ e: PartyEdit) -> some View {
         let p = e.party
         let person = p.map { p in recipients.first { $0.party == p } }
                   ?? e.recipientID.flatMap { id in recipients.first { $0.id == id } }
         let taken = Set(recipients.compactMap { r in
             r.id == person?.id ? nil : (r.name + "|" + Self.contact(of: r)).lowercased() })
-        PartySheet(
+        return PartySheet(
             role: p.map { slots[$0].role },
             asksForRole: e.adding && !slots.isEmpty,
             canBeMe: !slots.isEmpty,
@@ -894,6 +978,10 @@ struct SendFlowView: View {
         }
         steps.append(SentStep(state: .waiting, title: String(localized: "Signed copy comes back"),
                               detail: replyAddress.map { String(localized: "To \($0)") } ?? String(localized: "To you")))
+        if !copyRecipients.isEmpty {
+            steps.append(SentStep(state: .waiting, title: String(localized: "Send CC Copies"),
+                                  detail: String(localized: "After everyone signs")))
+        }
         return steps
     }
 
@@ -1088,7 +1176,7 @@ struct SendFlowView: View {
         let rs    = finalRecipients
         let reply = replyTo.trimmingCharacters(in: .whitespaces)
         let mark: (ProviderRef?) -> Void = { ref in
-            ContractStore.shared.markSent(id: contract.id, recipients: rs, providerRef: ref,
+            ContractStore.shared.markSent(id: contract.id, recipients: rs, copyRecipients: copyRecipients, providerRef: ref,
                                           partyCount: partyCount,
                                           replyTo: reply.isEmpty ? nil : reply,
                                           senderName: senderName,
@@ -1283,6 +1371,7 @@ private struct PartyEdit: Identifiable {
     var party: Int?
     var recipientID: UUID?
     var adding = false
+    var copyOnly = false
 }
 
 private enum PartyChoice {
@@ -1329,6 +1418,7 @@ private struct PartySheet: View {
     let canRemove: Bool
     @Binding var myName: String
     let suggestions: [Recipient]
+    var copyOnly = false
     var onSave: (PartyChoice, String) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -1336,6 +1426,7 @@ private struct PartySheet: View {
     @State private var newRole = ""
     @State private var typedName = ""
     @State private var typedContact = ""
+    @State private var invalidCopyAddress = false
     @FocusState private var focus: Field?
     private enum Field { case role, name, contact, myName }
 
@@ -1406,6 +1497,10 @@ private struct PartySheet: View {
                     }
                 } header: {
                     if canBeMe { Text("Someone else") }
+                } footer: {
+                    if invalidCopyAddress {
+                        Text("Enter a valid email address or phone number.").foregroundStyle(Color.statusDeclined)
+                    }
                 }
 
                 if !shownSuggestions.isEmpty {
@@ -1433,7 +1528,7 @@ private struct PartySheet: View {
 
                 if canRemove {
                     Section {
-                        Button("Remove Signer", role: .destructive) {
+                        Button(copyOnly ? String(localized: "Remove CC") : String(localized: "Remove Signer"), role: .destructive) {
                             onSave(.nobody, ""); dismiss()
                         }
                     }
@@ -1442,6 +1537,7 @@ private struct PartySheet: View {
             .onChange(of: focus) { _, f in
                 if f == .name || f == .contact { withAnimation { isMe = false } }
             }
+            .onChange(of: typedContact) { _, _ in invalidCopyAddress = false }
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -1463,6 +1559,7 @@ private struct PartySheet: View {
     }
 
     private var title: String {
+        if copyOnly { return name.isEmpty ? String(localized: "Add CC") : String(localized: "Edit CC") }
         if asksForRole || (role == nil && name.isEmpty) { return String(localized: "Add Signer") }
         return role ?? String(localized: "Signer")
     }
@@ -1480,6 +1577,14 @@ private struct PartySheet: View {
         let n = typedName.trimmingCharacters(in: .whitespaces)
         let c = typedContact.trimmingCharacters(in: .whitespaces)
         let r = newRole.trimmingCharacters(in: .whitespaces)
+        if copyOnly {
+            guard !n.isEmpty else { focus = .name; return }
+            guard CopyRecipient.isValidAddress(c) else {
+                invalidCopyAddress = true
+                focus = .contact
+                return
+            }
+        }
         if asksForRole && r.isEmpty { focus = .role; return }
         if canBeMe && isMe {
             onSave(.me, r)

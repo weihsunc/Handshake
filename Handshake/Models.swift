@@ -38,6 +38,8 @@ struct GeneratedContract: Identifiable, Codable {
     /// without these they'd load 3× too big. nil on older records.
     var attachmentSizes: [CGSize]?  = nil
     var recipients: [Recipient]     = []
+    /// Sender-only distribution list. Never included in contract links.
+    var copyRecipients: [CopyRecipient] = []
     var status: ContractStatus      = .draft
     var createdAt: Date             = .now
     var sentAt: Date?               = nil
@@ -127,6 +129,7 @@ extension GeneratedContract {
     /// Signatures still missing before the contract is complete.
     var signaturesNeeded: Int { max(0, (partyCount ?? 1) - signatures.count) }
     var isPartlySigned: Bool { !signatures.isEmpty && signaturesNeeded > 0 }
+    var canSendCCCopies: Bool { !isIncoming && status == .signed && signaturesNeeded == 0 && !copyRecipients.isEmpty }
 }
 
 // Declared in an extension on purpose: an initializer inside the struct body
@@ -147,6 +150,7 @@ extension GeneratedContract {
         bodyRTFD      = try c.decodeIfPresent(Data.self,            forKey: .bodyRTFD)
         attachmentSizes = try c.decodeIfPresent([CGSize].self,      forKey: .attachmentSizes)
         recipients    = try c.decodeIfPresent([Recipient].self,     forKey: .recipients)    ?? []
+        copyRecipients = try c.decodeIfPresent([CopyRecipient].self, forKey: .copyRecipients) ?? []
         status        = try c.decodeIfPresent(ContractStatus.self,  forKey: .status)        ?? .draft
         createdAt     = try c.decodeIfPresent(Date.self,            forKey: .createdAt)     ?? .now
         sentAt        = try c.decodeIfPresent(Date.self,            forKey: .sentAt)
@@ -207,5 +211,24 @@ struct Recipient: Identifiable, Codable {
         self.phone = phone
         self.party = party
         self.partyRole = partyRole
+    }
+}
+
+struct CopyRecipient: Identifiable, Codable {
+    var id = UUID()
+    var name: String
+    var address: String
+    var sentAt: Date? = nil
+
+    static func isValidAddress(_ address: String) -> Bool {
+        if address.contains("@") {
+            let parts = address.split(separator: "@", omittingEmptySubsequences: false)
+            return parts.count == 2 && parts.allSatisfy { !$0.isEmpty } && !address.contains(where: \.isWhitespace)
+        }
+        return address.filter(\.isNumber).count >= 7 && address.allSatisfy { $0.isNumber || "+-(). ".contains($0) }
+    }
+
+    static func addressKey(_ address: String) -> String {
+        address.contains("@") ? address.lowercased() : address.filter(\.isNumber)
     }
 }
