@@ -166,7 +166,7 @@ struct SigningView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     // An icon, not the word, so the title gets the room.
                     Button { dismiss() } label: {
-                        Image(systemName: "xmark")
+                        Image("ph-x")
                     }
                     .accessibilityLabel("Close")
                 }
@@ -176,15 +176,15 @@ struct SigningView: View {
                             Button {
                                 sheet = .changes
                             } label: {
-                                Label("Ask for Changes", systemImage: "text.bubble")
+                                Label("Ask for Changes", image: "ph-chat-text")
                             }
                             Button(role: .destructive) {
                                 askDecline = true
                             } label: {
-                                Label("Decline to Sign", systemImage: "xmark.circle")
+                                Label("Decline to Sign", image: "ph-x-circle")
                             }
                         } label: {
-                            Image(systemName: "ellipsis")
+                            Image("ph-dots-three")
                         }
                         .accessibilityLabel("More")
                     }
@@ -257,10 +257,10 @@ struct SigningView: View {
                     StatusBadge(status: status, incoming: contract.isIncoming)
                         .padding(.bottom, 4)
                     if let from = contract.senderName {
-                        Label(String(localized: "From \(from)"), systemImage: "person.crop.circle")
+                        Label(String(localized: "From \(from)"), image: "ph-user-circle")
                     }
                     if let role, !isSigned, !isDeclined, assignedSlot != nil {
-                        Label(String(localized: "You're signing as \(role)"), systemImage: "signature")
+                        Label(String(localized: "You're signing as \(role)"), image: "ph-signature")
                     }
                 }
                 .font(.subheadline)
@@ -374,7 +374,7 @@ struct SigningView: View {
             }
         } label: {
             Label(toTop ? String(localized: "Back to top") : String(localized: "Jump to signature"),
-                  systemImage: toTop || boxDirection == .above ? "arrow.up" : "arrow.down")
+                  image: toTop || boxDirection == .above ? "ph-arrow-up" : "ph-arrow-down")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color.primaryInk)
                 .padding(.horizontal, 16)
@@ -459,7 +459,7 @@ struct SigningView: View {
                 } else {
                     // Search on the left, Sign on the right (Figma 2011:54312).
                     HStack(spacing: 10) {
-                        BarCircleButton(systemImage: "magnifyingglass",
+                        BarCircleButton(icon: "ph-magnifying-glass",
                                         label: String(localized: "Search the contract"),
                                         size: barH, action: openSearch)
                         Spacer(minLength: 0)

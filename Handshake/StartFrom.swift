@@ -45,10 +45,10 @@ enum StartSource: String, Identifiable, CaseIterable {
 
     var symbol: String {
         switch self {
-        case .chat:  "bubble.left.and.bubble.right"
-        case .call:  "phone"
-        case .paper: "doc.viewfinder"
-        case .siri:  "waveform"
+        case .chat:  "ph-chats-circle"
+        case .call:  "ph-phone"
+        case .paper: "ph-scan"
+        case .siri:  "ph-waveform"
         }
     }
 }
@@ -387,7 +387,7 @@ struct StartFromSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(role: .cancel) { dismiss() } label: { Image(systemName: "xmark") }
+                    Button(role: .cancel) { dismiss() } label: { Image("ph-x") }
                         .accessibilityLabel(Text("Cancel"))
                 }
                 if material != nil {
@@ -425,7 +425,7 @@ struct StartFromSheet: View {
     private var header: some View {
         Section {
             VStack(alignment: .leading, spacing: 10) {
-                Image(systemName: source.symbol)
+                Image(source.symbol)
                     .font(.system(size: 28, weight: .light))
                     .foregroundStyle(Color.primaryInk)
                 Text(explainer)
@@ -455,19 +455,19 @@ struct StartFromSheet: View {
         Section {
             switch source {
             case .chat:
-                row(String(localized: "Choose screenshots"), "photo.on.rectangle") { showPhotos = true }
+                row(String(localized: "Choose screenshots"), "ph-images") { showPhotos = true }
                 paste(String(localized: "Paste a message"))
             case .call:
                 paste(String(localized: "Paste the transcript"))
-                row(String(localized: "Choose a text file"), "doc.text") { showFiles = true }
+                row(String(localized: "Choose a text file"), "ph-file-text") { showFiles = true }
             case .paper:
                 if DocumentScanning.isAvailable {
-                    row(String(localized: "Scan with the camera"), "camera.viewfinder") {
+                    row(String(localized: "Scan with the camera"), "ph-camera") {
                         DocumentScanning.scan { pages in Task { await readPages(pages) } }
                     }
                 }
-                row(String(localized: "Choose photos"), "photo.on.rectangle") { showPhotos = true }
-                row(String(localized: "Choose a PDF"), "doc") { showFiles = true }
+                row(String(localized: "Choose photos"), "ph-images") { showPhotos = true }
+                row(String(localized: "Choose a PDF"), "ph-file") { showFiles = true }
             case .siri:
                 EmptyView()
             }
@@ -476,7 +476,7 @@ struct StartFromSheet: View {
 
     private func row(_ title: String, _ symbol: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Label(title, systemImage: symbol)
+            Label(title, image: symbol)
                 .foregroundStyle(Color.primaryInk)
         }
     }
@@ -485,7 +485,7 @@ struct StartFromSheet: View {
     /// the permission.
     private func paste(_ title: String) -> some View {
         HStack {
-            Label(title, systemImage: "doc.on.clipboard")
+            Label(title, image: "ph-clipboard-text")
                 .foregroundStyle(Color.primaryInk)
             Spacer()
             pasteButton
@@ -544,7 +544,7 @@ struct StartFromSheet: View {
                     .frame(width: 24, height: 24)
                     .accessibilityLabel(Text(verbatim: name))
             } else {
-                Image(systemName: "lightbulb")
+                Image("ph-lightbulb")
                     .foregroundStyle(.secondary)
             }
         }
@@ -656,7 +656,7 @@ struct SiriStartSheet: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 20) {
-                Image(systemName: "waveform")
+                Image("ph-waveform")
                     .font(.system(size: 32, weight: .light))
                 Text(String(localized: "Say “Make a contract with Handshake”. Siri asks what it's for, then opens your draft here."))
                     .font(.body)
@@ -672,7 +672,7 @@ struct SiriStartSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(role: .cancel) { dismiss() } label: { Image(systemName: "xmark") }
+                    Button(role: .cancel) { dismiss() } label: { Image("ph-x") }
                         .accessibilityLabel(Text("Cancel"))
                 }
             }

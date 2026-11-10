@@ -180,10 +180,10 @@ struct ChatBar: View {
     private var attachButton: some View {
         if let onAttach {
             Menu {
-                Button { onAttach(.photo) } label: { Label("Photo", systemImage: "photo") }
-                Button { onAttach(.file)  } label: { Label("File",  systemImage: "paperclip") }
+                Button { onAttach(.photo) } label: { Label("Photo", image: "ph-image") }
+                Button { onAttach(.file)  } label: { Label("File",  image: "ph-paperclip") }
             } label: {
-                Image(systemName: "plus")
+                Image("ph-plus")
                     .font(.body.weight(.medium))
                     .foregroundStyle(Color(.label))
                     .frame(width: iconSize, height: iconSize)
@@ -219,7 +219,7 @@ struct ChatBar: View {
                 speech.start { text in prompt = dictationPrefix + text }
             }
         } label: {
-            Image(systemName: speech.isRecording ? "mic.fill" : "mic")
+            Image(speech.isRecording ? "ph-microphone-fill" : "ph-microphone")
                 .font(.body.weight(.medium))
                 .foregroundStyle(speech.isRecording
                                  ? Color.accent
@@ -234,7 +234,7 @@ struct ChatBar: View {
     // ── Shared send button ────────────────────────────────────────────────
     private var sendCircle: some View {
         Button(action: onSend) {
-            Image(systemName: "arrow.up")
+            Image("ph-arrow-up")
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(Color.onAction)
                 .frame(width: iconSize, height: iconSize)
@@ -304,14 +304,14 @@ struct TemplateCard: View {
 // ─────────────────────────────────────────────────────────────────────────────
 
 struct GlassIconButton: View {
-    let systemName: String
+    let icon: String
     /// What VoiceOver reads — the icon alone says nothing.
     var label: String
     var action: (() -> Void)? = nil
 
     var body: some View {
         Button(action: { action?() }) {
-            Image(systemName: systemName)
+            Image(icon)
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(Color(.label))
         }
@@ -433,14 +433,14 @@ enum FormatAction {
 // ─────────────────────────────────────────────────────────────────────────────
 
 struct PrimaryCircleButton: View {
-    let systemName: String
+    let icon: String
     var label: String
     var action: () -> Void
     @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 36
 
     var body: some View {
         Button(action: { action() }) {
-            Image(systemName: systemName)
+            Image(icon)
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(Color.onAction)
                 .frame(width: iconSize, height: iconSize)
@@ -508,15 +508,15 @@ struct FormattingToolbar: View {
                 HStack(spacing: 2) {
 
                     // ── eSignature — first per design ─────────────────────────
-                    toolBtn("signature", String(localized: "Add signature box")) { onAction(.insertSignature) }
-                    toolBtn("calendar",  String(localized: "Add date box"))      { onAction(.insertDate) }
+                    toolBtn("ph-signature", String(localized: "Add signature box")) { onAction(.insertSignature) }
+                    toolBtn("ph-calendar-blank",  String(localized: "Add date box"))      { onAction(.insertDate) }
 
                     sep
 
                     // ── Text style ────────────────────────────────────────────
-                    toolBtn("bold",      String(localized: "Bold"))      { onAction(.bold) }
-                    toolBtn("italic",    String(localized: "Italic"))    { onAction(.italic) }
-                    toolBtn("underline", String(localized: "Underline")) { onAction(.underline) }
+                    toolBtn("ph-text-b",      String(localized: "Bold"))      { onAction(.bold) }
+                    toolBtn("ph-text-italic",    String(localized: "Italic"))    { onAction(.italic) }
+                    toolBtn("ph-text-underline", String(localized: "Underline")) { onAction(.underline) }
 
                     sep
 
@@ -527,21 +527,21 @@ struct FormattingToolbar: View {
                     sep
 
                     // ── Lists ─────────────────────────────────────────────────
-                    toolBtn("list.bullet", String(localized: "Bulleted list")) { onAction(.bulletList) }
-                    toolBtn("list.number", String(localized: "Numbered list")) { onAction(.numberedList) }
+                    toolBtn("ph-list-bullets", String(localized: "Bulleted list")) { onAction(.bulletList) }
+                    toolBtn("ph-list-numbers", String(localized: "Numbered list")) { onAction(.numberedList) }
 
                     sep
 
                     // ── Alignment ─────────────────────────────────────────────
-                    toolBtn("text.alignleft",   String(localized: "Align left"))   { onAction(.alignLeft) }
-                    toolBtn("text.aligncenter", String(localized: "Align center")) { onAction(.alignCenter) }
-                    toolBtn("text.alignright",  String(localized: "Align right"))  { onAction(.alignRight) }
+                    toolBtn("ph-text-align-left",   String(localized: "Align left"))   { onAction(.alignLeft) }
+                    toolBtn("ph-text-align-center", String(localized: "Align center")) { onAction(.alignCenter) }
+                    toolBtn("ph-text-align-right",  String(localized: "Align right"))  { onAction(.alignRight) }
 
                     sep
 
                     // ── Insert ────────────────────────────────────────────────
-                    toolBtn("photo",     String(localized: "Insert photo")) { onAction(.insertImage) }
-                    toolBtn("paperclip", String(localized: "Attach file"))  { onAction(.insertAttachment) }
+                    toolBtn("ph-image",     String(localized: "Insert photo")) { onAction(.insertImage) }
+                    toolBtn("ph-paperclip", String(localized: "Attach file"))  { onAction(.insertAttachment) }
                 }
                 .padding(.horizontal, 10)   // Figma: px-[10] inside the pill
             }
@@ -562,10 +562,10 @@ struct FormattingToolbar: View {
             .padding(.horizontal, 4)
     }
 
-    // ── SF Symbol button — 36 × 36 tap target ────────────────────────────────
+    // ── Icon button (Phosphor) — 36 × 36 tap target ────────────────────────────────
     private func toolBtn(_ icon: String, _ label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: icon)
+            Image(icon)
                 .font(.callout.weight(.medium))
                 .foregroundStyle(Color(.label))
                 .frame(width: iconSize, height: iconSize)
@@ -591,7 +591,7 @@ struct FormattingToolbar: View {
 // MARK: - Handshake Illustration
 // Home screen empty-state graphic.
 // Drop "oc-handshake" PNG into Assets.xcassets to use the real Figma asset;
-// the two-hand SF Symbol fallback renders automatically otherwise.
+// the two-hand icon fallback renders automatically otherwise.
 // ─────────────────────────────────────────────────────────────────────────────
 
 struct HandshakeIllustration: View {
@@ -613,23 +613,23 @@ struct HandshakeIllustration: View {
                 art
             }
         } else {
-            // ── SF Symbol fallback ───────────────────────────────────
+            // ── Icon fallback ────────────────────────────────────────
             ZStack {
                 // Document — top center, slight tilt
-                Image(systemName: "doc.text")
+                Image("ph-file-text")
                     .font(.system(size: 26, weight: .thin))
                     .foregroundStyle(Color(.secondaryLabel).opacity(0.70))
                     .rotationEffect(.degrees(-8))
                     .offset(x: 4, y: -84)
 
                 // Chat bubble — left
-                Image(systemName: "bubble.left")
+                Image("ph-chat-circle")
                     .font(.system(size: 22, weight: .thin))
                     .foregroundStyle(Color(.secondaryLabel).opacity(0.68))
                     .offset(x: -90, y: -6)
 
                 // Envelope — lower right
-                Image(systemName: "envelope")
+                Image("ph-envelope")
                     .font(.system(size: 22, weight: .thin))
                     .foregroundStyle(Color(.secondaryLabel).opacity(0.62))
                     .offset(x: 88, y: 32)
@@ -645,7 +645,7 @@ struct HandshakeIllustration: View {
                 .offset(x: 0, y: -44)
 
                 // Left hand — fingers pointing right, thumb on top
-                Image(systemName: "hand.raised")
+                Image("ph-hand-palm")
                     .font(.system(size: 56, weight: .thin))
                     .foregroundStyle(Color(.label).opacity(0.80))
                     .rotationEffect(.degrees(-90))
@@ -653,7 +653,7 @@ struct HandshakeIllustration: View {
                     .offset(x: -26, y: 4)
 
                 // Right hand — fingers pointing left, thumb on top
-                Image(systemName: "hand.raised")
+                Image("ph-hand-palm")
                     .font(.system(size: 56, weight: .thin))
                     .foregroundStyle(Color(.label).opacity(0.80))
                     .rotationEffect(.degrees(-90))

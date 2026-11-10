@@ -25,7 +25,7 @@ struct CopyDeliveryView: View {
                         }
                         Spacer(minLength: 12)
                         if person.sentAt != nil {
-                            Label("Sent", systemImage: "checkmark").font(.footnote).foregroundStyle(Color.secondaryInk)
+                            Label("Sent", image: "ph-check").font(.footnote).foregroundStyle(Color.secondaryInk)
                         } else {
                             Button("Send") { prepare(for: person) }
                                 .accessibilityLabel(Text("Send signed copy to \(person.name)"))

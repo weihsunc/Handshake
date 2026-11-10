@@ -112,7 +112,7 @@ struct HistoryView: View {
                                 Button(role: .destructive) {
                                     store.delete(id: c.id)
                                 } label: {
-                                    Label("Delete", systemImage: "trash")
+                                    Label("Delete", image: "ph-trash")
                                 }
                             }
                     }
@@ -129,7 +129,7 @@ struct HistoryView: View {
 
     private var emptyState: some View {
         VStack(spacing: 12) {
-            Image(systemName: "doc.text")
+            Image("ph-file-text")
                 .font(.system(size: 40, weight: .thin))
                 .foregroundStyle(.secondary)
             Text("No contracts yet")
@@ -355,7 +355,7 @@ struct ReadOnlyContractView: View {
                         Button {
                             showShare = true
                         } label: {
-                            Label("Send Signed Copy", systemImage: "square.and.arrow.up")
+                            Label("Send Signed Copy", image: "ph-export")
                         }
                     }
                 }
@@ -413,7 +413,7 @@ struct ReadOnlyContractView: View {
         VStack(spacing: 0) {
             ForEach(signers) { s in
                 HStack(spacing: 12) {
-                    Image(systemName: s.signed == nil ? "circle.dashed" : "checkmark.circle.fill")
+                    Image(s.signed == nil ? "ph-circle-dashed" : "ph-check-circle-fill")
                         .foregroundStyle(s.signed == nil ? Color(.tertiaryLabel) : Color.statusSigned)
                         .font(.title3)
                     VStack(alignment: .leading, spacing: 2) {
@@ -444,14 +444,14 @@ struct ReadOnlyContractView: View {
     // ── Banners ──────────────────────────────────────────────────────────────
 
     private var declinedBanner: some View {
-        Banner(icon: "xmark.circle.fill", tint: Color.statusDeclined,
+        Banner(icon: "ph-x-circle-fill", tint: Color.statusDeclined,
                title: String(localized: "\(contract.declinedBy ?? String(localized: "The recipient")) declined to sign"),
                detail: contract.declineReason)
     }
 
     private func changesBanner(_ r: ChangeRequest) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Banner(icon: "text.bubble.fill", tint: .orange,
+            Banner(icon: "ph-chat-text-fill", tint: .orange,
                    title: String(localized: "\(r.by) asked for changes"),
                    detail: r.text)
             PrimaryPillButton(title: String(localized: "Revise Contract"), fullWidth: true) { revise() }
@@ -479,7 +479,7 @@ private struct Banner: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            Image(systemName: icon).foregroundStyle(tint).font(.title3)
+            Image(icon).foregroundStyle(tint).font(.title3)
             VStack(alignment: .leading, spacing: 4) {
                 Text(title).font(.subheadline.weight(.semibold))
                 if let detail, !detail.isEmpty {

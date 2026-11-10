@@ -19,7 +19,7 @@ private let fieldWash   = Color(red: 0.94, green: 0.969, blue: 1)
 struct SignatureFieldBox: View {
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: "signature")
+            Image("ph-signature")
                 .font(.system(size: 20, weight: .medium))
             VStack(alignment: .leading, spacing: 1) {
                 Text("Signature").font(.system(size: 15, weight: .semibold))
@@ -41,7 +41,7 @@ struct SignatureFieldBox: View {
 struct DateFieldBox: View {
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: "calendar")
+            Image("ph-calendar-blank")
                 .font(.system(size: 16, weight: .medium))
             Text("Date").font(.system(size: 15, weight: .semibold))
             Spacer()

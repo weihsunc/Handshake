@@ -364,7 +364,7 @@ struct SendFlowView: View {
                     if triedToSend && !problems.isEmpty {
                         VStack(spacing: 6) {
                             ForEach(problems, id: \.self) { p in
-                                Label(p, systemImage: "exclamationmark.circle")
+                                Label(p, image: "ph-warning-circle")
                                     .font(.footnote)
                                     .foregroundStyle(Color.statusDeclined)
                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -585,7 +585,7 @@ struct SendFlowView: View {
                 if !(slots.isEmpty && recipients.isEmpty) { Divider().padding(.leading, 62) }
                 Button { editing = PartyEdit(party: nil, recipientID: nil, adding: true) } label: {
                     HStack(spacing: 12) {
-                        Image(systemName: "plus.circle.fill")
+                        Image("ph-plus-circle-fill")
                             .font(.system(size: 22))
                             .frame(width: 34)
                         Text("Add Signer")
@@ -651,7 +651,7 @@ struct SendFlowView: View {
                         .lineLimit(1)
                 }
                 Spacer(minLength: 8)
-                Image(systemName: "chevron.right")
+                Image("ph-caret-right").flipsForRightToLeftLayoutDirection(true)
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(Color(.tertiaryLabel))
             }
@@ -678,7 +678,7 @@ struct SendFlowView: View {
                                 Text(person.address).font(.footnote).foregroundStyle(Color.secondaryInk)
                             }
                             Spacer(minLength: 8)
-                            Image(systemName: "chevron.right")
+                            Image("ph-caret-right").flipsForRightToLeftLayoutDirection(true)
                                 .font(.footnote.weight(.semibold))
                                 .foregroundStyle(Color(.tertiaryLabel))
                         }
@@ -691,7 +691,7 @@ struct SendFlowView: View {
                 }
                 Button { editing = PartyEdit(copyOnly: true) } label: {
                     HStack(spacing: 12) {
-                        Image(systemName: "plus.circle.fill").font(.system(size: 22)).frame(width: 34)
+                        Image("ph-plus-circle-fill").font(.system(size: 22)).frame(width: 34)
                         Text("Add CC")
                         Spacer()
                     }
@@ -780,11 +780,11 @@ struct SendFlowView: View {
         if pending.isEmpty {
             Button { showFillBlanks = true } label: {
                 HStack(spacing: 10) {
-                    Label("All blanks filled in", systemImage: "checkmark.circle.fill")
+                    Label("All blanks filled in", image: "ph-check-circle-fill")
                         .font(.subheadline.weight(.semibold))
                     Spacer()
                     Text("Review").font(.subheadline.weight(.semibold))
-                    Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).opacity(0.6)
+                    Image("ph-caret-right").flipsForRightToLeftLayoutDirection(true).font(.footnote.weight(.semibold)).opacity(0.6)
                 }
                 .foregroundStyle(Color.statusSigned)
                 .padding(14)
@@ -796,7 +796,7 @@ struct SendFlowView: View {
         } else {
             Button { showFillBlanks = true } label: {
                 HStack(alignment: .center, spacing: 12) {
-                    Image(systemName: "exclamationmark.triangle.fill")
+                    Image("ph-warning-fill")
                         .font(.subheadline)
                         .foregroundStyle(Color.orange)
                     VStack(alignment: .leading, spacing: 2) {
@@ -841,7 +841,7 @@ struct SendFlowView: View {
     private var replyLine: some View {
         let addr = replyTo.trimmingCharacters(in: .whitespaces)
         return HStack(alignment: .firstTextBaseline, spacing: 6) {
-            Image(systemName: "arrowshape.turn.up.left")
+            Image("ph-arrow-bend-up-left").flipsForRightToLeftLayoutDirection(true)
                 .font(.footnote)
             Group {
                 if addr.isEmpty {
@@ -1024,7 +1024,7 @@ struct SendFlowView: View {
     private func stepMarker(_ state: StepState) -> some View {
         switch state {
         case .done:
-            Image(systemName: "checkmark")
+            Image("ph-check")
                 .font(.system(size: 10, weight: .bold))
                 .foregroundStyle(Color.onInk)
                 .frame(width: 20, height: 20)
@@ -1034,7 +1034,7 @@ struct SendFlowView: View {
                 .strokeBorder(Color(.tertiaryLabel), lineWidth: 1.5)
                 .frame(width: 20, height: 20)
         case .problem:
-            Image(systemName: "exclamationmark")
+            Image("ph-exclamation-mark")
                 .font(.system(size: 10, weight: .bold))
                 .foregroundStyle(.white)
                 .frame(width: 20, height: 20)
@@ -1389,7 +1389,7 @@ private struct Monogram: View {
         ZStack {
             if empty {
                 Circle().strokeBorder(Color(.tertiaryLabel), style: StrokeStyle(lineWidth: 1.2, dash: [3, 3]))
-                Image(systemName: "plus").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.secondaryInk)
+                Image("ph-plus").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.secondaryInk)
             } else {
                 Circle().fill(Color(.systemGray4))
                 Text(initials).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
@@ -1457,7 +1457,7 @@ private struct PartySheet: View {
                                         .foregroundStyle(Color.secondaryInk)
                                 }
                                 Spacer()
-                                if isMe { Image(systemName: "checkmark").fontWeight(.semibold).foregroundStyle(Color.accent) }
+                                if isMe { Image("ph-check").fontWeight(.semibold).foregroundStyle(Color.accent) }
                             }
                         }
                         if isMe {
@@ -1476,7 +1476,7 @@ private struct PartySheet: View {
                             .submitLabel(.next)
                             .onSubmit { focus = .contact }
                         if canBeMe, !isMe, !typedName.isEmpty || !typedContact.isEmpty {
-                            Image(systemName: "checkmark").fontWeight(.semibold).foregroundStyle(Color.accent)
+                            Image("ph-check").fontWeight(.semibold).foregroundStyle(Color.accent)
                         }
                     }
                     TextField("Email or phone", text: $typedContact)
@@ -1493,7 +1493,7 @@ private struct PartySheet: View {
                             withAnimation { isMe = false }
                         }
                     } label: {
-                        Label("Choose from Contacts", systemImage: "person.crop.circle")
+                        Label("Choose from Contacts", image: "ph-user-circle")
                     }
                 } header: {
                     if canBeMe { Text("Someone else") }

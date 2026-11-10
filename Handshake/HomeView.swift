@@ -165,12 +165,12 @@ struct HomeView: View {
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                GlassIconButton(systemName: "line.3.horizontal", label: String(localized: "Contracts")) {
+                GlassIconButton(icon: "ph-list", label: String(localized: "Contracts")) {
                     showHistory = true
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                GlassIconButton(systemName: "person", label: String(localized: "Profile")) {
+                GlassIconButton(icon: "ph-user", label: String(localized: "Profile")) {
                     showProfile = true
                 }
             }
@@ -276,7 +276,7 @@ struct HomeView: View {
                 ForEach(StartSource.allCases) { source in
                     Button { startSource = source } label: {
                         HStack(spacing: 14) {
-                            Image(systemName: source.symbol)
+                            Image(source.symbol)
                                 .font(.system(size: 20, weight: .light))
                                 .foregroundStyle(Color.primaryInk)
                                 .frame(width: 28)
@@ -289,7 +289,7 @@ struct HomeView: View {
                                     .foregroundStyle(Color.secondaryInk)
                             }
                             Spacer(minLength: 8)
-                            Image(systemName: "chevron.right")
+                            Image("ph-caret-right").flipsForRightToLeftLayoutDirection(true)
                                 .font(.footnote.weight(.semibold))
                                 .foregroundStyle(Color(.tertiaryLabel))
                         }

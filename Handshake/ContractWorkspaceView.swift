@@ -242,7 +242,7 @@ struct ContractWorkspaceView: View {
                 Button {
                     if isEditing { isEditing = false } else { dismiss() }
                 } label: {
-                    Image(systemName: "chevron.backward")
+                    Image("ph-caret-left").flipsForRightToLeftLayoutDirection(true)
                         .font(.body.weight(.semibold))
                 }
                 .accessibilityLabel(isEditing ? "Stop editing" : "Back")
@@ -420,7 +420,7 @@ struct ContractWorkspaceView: View {
                         // the text gets the full width while it's written.
                         HStack(alignment: .bottom, spacing: 10) {
                             if contract != nil && aiChatPrompt.isEmpty && !chatBarFocused {
-                                BarCircleButton(systemImage: "magnifyingglass",
+                                BarCircleButton(icon: "ph-magnifying-glass",
                                                 label: String(localized: "Search the contract"),
                                                 size: barHeight,
                                                 action: openSearch)
@@ -552,10 +552,10 @@ struct ContractWorkspaceView: View {
                         if blanks > 0 {
                             suggestionChip(blanks == 1 ? String(localized: "Fill in 1 blank")
                                                        : String(localized: "Fill in \(blanks) blanks"),
-                                           icon: "square.and.pencil") { openBlanksForm() }
+                                           icon: "ph-note-pencil") { openBlanksForm() }
                         }
                         ForEach(ideas, id: \.self) { idea in
-                            suggestionChip(idea, icon: "sparkles") {
+                            suggestionChip(idea, icon: "ph-sparkle") {
                                 aiChatPrompt = idea
                                 sendToAI()
                             }
@@ -571,7 +571,7 @@ struct ContractWorkspaceView: View {
     private func suggestionChip(_ title: String, icon: String,
                                 action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Label(title, systemImage: icon)
+            Label(title, image: icon)
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(Color.primaryInk)
                 .lineLimit(1)
@@ -621,7 +621,7 @@ struct ContractWorkspaceView: View {
     /// "Contract updated · 3 blanks filled in, highlighted below"
     private func filledToastView(_ n: Int) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.fill")
+            Image("ph-check-circle-fill")
                 .font(.title3)
                 .foregroundStyle(Color.statusSigned)
             VStack(alignment: .leading, spacing: 1) {

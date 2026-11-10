@@ -121,14 +121,14 @@ extension SignatureField {
 // ─────────────────────────────────────────────────────────────────────────────
 
 struct BarCircleButton: View {
-    let systemImage: String
+    let icon: String
     let label: String
     var size: CGFloat
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: systemImage)
+            Image(icon)
                 .font(.title3.weight(.medium))
                 .foregroundStyle(Color(.label))
                 .frame(width: size, height: size)
@@ -164,7 +164,7 @@ struct DocumentSearchBar: View {
     var body: some View {
         HStack(spacing: 10) {
             HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass")
+                Image("ph-magnifying-glass")
                     .font(.body.weight(.medium))
                     .foregroundStyle(Color(.secondaryLabel))
                     .accessibilityHidden(true)
@@ -186,7 +186,7 @@ struct DocumentSearchBar: View {
             .background(.regularMaterial, in: Capsule())
             .shadow(color: .black.opacity(0.10), radius: 20, x: 0, y: 8)
 
-            BarCircleButton(systemImage: "xmark", label: String(localized: "Close search"), size: height) {
+            BarCircleButton(icon: "ph-x", label: String(localized: "Close search"), size: height) {
                 speech.stop()
                 onClose()
             }
@@ -212,8 +212,8 @@ struct DocumentSearchBar: View {
                 .accessibilityAddTraits(.updatesFrequently)
 
             HStack(spacing: 0) {
-                stepButton("chevron.up",   label: String(localized: "Previous match"), action: onPrevious)
-                stepButton("chevron.down", label: String(localized: "Next match"),     action: onNext)
+                stepButton("ph-caret-up",   label: String(localized: "Previous match"), action: onPrevious)
+                stepButton("ph-caret-down", label: String(localized: "Next match"),     action: onNext)
             }
             .disabled(matchCount == 0)
         } else {
@@ -224,7 +224,7 @@ struct DocumentSearchBar: View {
                     speech.start { text in query = text }
                 }
             } label: {
-                Image(systemName: speech.isRecording ? "mic.fill" : "mic")
+                Image(speech.isRecording ? "ph-microphone-fill" : "ph-microphone")
                     .font(.body.weight(.medium))
                     .foregroundStyle(speech.isRecording ? Color.accent : Color(.secondaryLabel))
                     .frame(width: iconSize, height: iconSize)
@@ -237,7 +237,7 @@ struct DocumentSearchBar: View {
 
     private func stepButton(_ icon: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: icon)
+            Image(icon)
                 .font(.body.weight(.semibold))
                 .foregroundStyle(matchCount == 0 ? Color(.tertiaryLabel) : Color(.label))
                 .frame(width: iconSize, height: iconSize)

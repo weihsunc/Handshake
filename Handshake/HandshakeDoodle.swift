@@ -54,21 +54,24 @@ struct HandshakeDoodle: View {
 
     // ── Sparkles ────────────────────────────────────────────────────────────
 
-    /// Three small four-point stars around the hands, each twinkling on its
+    /// Two four-point stars, drawn with the hands' own pen: one above the
+    /// clasp, one by the left cuff, each tilted a little and twinkling on its
     /// own beat so they don't pulse together.
     private var sparkleLayer: some View {
         ZStack {
-            twinkle(size: 18, x: -0.10, y: 0.12, period: 1.3)
-            twinkle(size: 26, x: 1.08, y: -0.04, period: 1.7)
-            twinkle(size: 13, x: 1.13, y: 0.42, period: 1.1)
+            twinkle(size: 0.21, x: 0.72, y: -0.18, tilt: -20, period: 1.7)
+            twinkle(size: 0.18, x: -0.07, y: 0.88, tilt: 15, period: 1.3)
         }
         .frame(width: width, height: height)
     }
 
-    private func twinkle(size: CGFloat, x: CGFloat, y: CGFloat, period: Double) -> some View {
+    /// `size` is a fraction of the doodle's width, so the stars keep their
+    /// proportion to the hands at any size.
+    private func twinkle(size: CGFloat, x: CGFloat, y: CGFloat, tilt: Double, period: Double) -> some View {
         Sparkle()
-            .stroke(color, style: StrokeStyle(lineWidth: max(1.5, size / 9), lineCap: .round, lineJoin: .round))
-            .frame(width: size, height: size)
+            .stroke(color, style: StrokeStyle(lineWidth: 13 * width / 340, lineCap: .round, lineJoin: .round))
+            .frame(width: size * width, height: size * width)
+            .rotationEffect(.degrees(tilt))
             .phaseAnimator(reduceMotion || !sparkles ? [true] : [false, true]) { star, bright in
                 star.scaleEffect(bright ? 1 : 0.7).opacity(bright ? 1 : 0.45)
             } animation: { _ in .easeInOut(duration: period) }
@@ -110,16 +113,25 @@ struct HandshakeDoodle: View {
     }
 }
 
-/// A four-point star with pinched sides, like a doodled glint.
+/// A four-point star with curved-in sides, like a doodled glint. The sides
+/// bow toward the middle but don't meet there, so the star stays open when
+/// it's drawn with the hands' heavy pen.
 private struct Sparkle: Shape {
+    /// How far each side's curve reaches from the centre toward its corner
+    /// (0 = pinched shut at the centre, 1 = a straight-sided diamond).
+    var openness: CGFloat = 0.32
+
     func path(in r: CGRect) -> Path {
         let c = CGPoint(x: r.midX, y: r.midY)
+        func toward(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: c.x + (x - c.x) * openness, y: c.y + (y - c.y) * openness)
+        }
         var p = Path()
         p.move(to: CGPoint(x: c.x, y: r.minY))
-        p.addQuadCurve(to: CGPoint(x: r.maxX, y: c.y), control: c)
-        p.addQuadCurve(to: CGPoint(x: c.x, y: r.maxY), control: c)
-        p.addQuadCurve(to: CGPoint(x: r.minX, y: c.y), control: c)
-        p.addQuadCurve(to: CGPoint(x: c.x, y: r.minY), control: c)
+        p.addQuadCurve(to: CGPoint(x: r.maxX, y: c.y), control: toward(r.maxX, r.minY))
+        p.addQuadCurve(to: CGPoint(x: c.x, y: r.maxY), control: toward(r.maxX, r.maxY))
+        p.addQuadCurve(to: CGPoint(x: r.minX, y: c.y), control: toward(r.minX, r.maxY))
+        p.addQuadCurve(to: CGPoint(x: c.x, y: r.minY), control: toward(r.minX, r.minY))
         p.closeSubpath()
         return p
     }

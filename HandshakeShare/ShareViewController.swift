@@ -171,7 +171,7 @@ struct ShareCard: View {
                 }
                 .font(.headline)
             case .saved:
-                Image(systemName: "checkmark.circle")
+                Image("ph-check-circle")
                     .font(.system(size: 36, weight: .light))
                 Text("Added to Handshake")
                     .font(.headline)
@@ -182,7 +182,7 @@ struct ShareCard: View {
                     .buttonStyle(.borderedProminent)
                     .tint(Color(uiColor: .label))
             case .failed:
-                Image(systemName: "exclamationmark.circle")
+                Image("ph-warning-circle")
                     .font(.system(size: 36, weight: .light))
                 Text("Couldn't add this")
                     .font(.headline)
