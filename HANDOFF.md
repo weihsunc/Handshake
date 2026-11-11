@@ -529,6 +529,14 @@ Verified end to end on the simulator with enrolled biometrics: deep link → Fac
 
 ### Feature 4 — Provider-backed signing (decision in progress)
 
+**Decided (Nov 11, 2026):** every contract goes through a third-party e-sign
+provider — no self-hosted e-signature / own signing log. DocuSeal now (Pro,
+$20/mo + $0.20 per completed submission, needed before launch; free test key
+until then). Later, users choose **DocuSeal, DocuSign or Dropbox Sign** — keep
+`SigningBackend` the switch point. Reminder from the research below: only
+DocuSeal accepts an API-applied signature, so with DocuSign / Dropbox Sign
+Face ID becomes an unlock in front of their embedded signing view.
+
 Research on handing the legal weight to an e-sign provider: see the vendor study
 (claude.ai/code/artifact/479670c7-8572-41a7-8151-38e1e238e4b6). The finding that
 matters: **only DocuSeal lets a signature be applied via the API** (`PUT
