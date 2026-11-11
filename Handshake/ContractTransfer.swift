@@ -56,6 +56,9 @@ enum ContractTransfer {
         var declinedBy: String?
         var declineReason: String?
         var change: ChangeRequest?
+        // Nov 10 — DocuSeal: this recipient's submitter (ProviderRef.only),
+        // so signing with Face ID completes their part of the submission.
+        var prov: ProviderRef?
 
         init(_ c: GeneratedContract) {
             id = c.id; title = c.title; content = c.content
@@ -66,6 +69,7 @@ enum ContractTransfer {
             sigs = c.signatures.isEmpty ? nil : c.signatures
             parties = c.partyCount; me = c.myParty; reply = c.replyTo
             declinedBy = c.declinedBy; declineReason = c.declineReason; change = c.changeRequest
+            prov = c.providerRef
         }
 
         var contract: GeneratedContract {
@@ -76,6 +80,7 @@ enum ContractTransfer {
             c.senderName = from; c.signedSlot = signedSlot; c.signedDate = signedDate
             c.partyCount = parties; c.myParty = me; c.replyTo = reply
             c.declinedBy = declinedBy; c.declineReason = declineReason; c.changeRequest = change
+            c.providerRef = prov
             if let sigs {
                 c.signatures = sigs
             } else if let signedBy, let signatureHash {

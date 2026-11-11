@@ -35,7 +35,11 @@ struct RootView: View {
         .onOpenURL { open($0) }
         // Something shared to Handshake whose extension couldn't open the app.
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { ImportHandling.checkInbox() }
+            if phase == .active {
+                ImportHandling.checkInbox()
+                // Signatures made in a browser come back by asking DocuSeal.
+                Task { await DocuSealSync.refresh() }
+            }
         }
         .fullScreenCover(item: $signingTarget) { target in
             SigningView(contract: target.contract)

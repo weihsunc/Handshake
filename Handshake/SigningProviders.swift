@@ -27,8 +27,44 @@ enum SigningBackend: String, Codable {
 struct ProviderRef: Codable, Hashable {
     var backend: SigningBackend
     var documentId: String              // DocuSeal submission id / SignWell document id
-    var submitterIds: [String] = []     // DocuSeal: one per recipient
-    var signingURLs: [String] = []      // SignWell: embedded signing URL per recipient
+    var submitterIds: [String] = []     // DocuSeal: one per signature box
+    var signingURLs: [String] = []      // browser signing page per submitter (DocuSeal embed_src / SignWell)
+    /// DocuSeal: the box each submitter signs ("Freelancer"), same order.
+    var roles: [String]? = nil
+
+    /// One party's part of it — what goes in that party's link, so their
+    /// phone completes their own submitter and nobody else's.
+    func only(role: String) -> ProviderRef? {
+        guard let i = roles?.firstIndex(of: role), submitterIds.indices.contains(i) else { return nil }
+        var r = self
+        r.submitterIds = [submitterIds[i]]
+        r.signingURLs  = signingURLs.indices.contains(i) ? [signingURLs[i]] : []
+        r.roles        = [role]
+        return r
+    }
+
+    /// The browser signing page for a party.
+    func signingURL(role: String) -> String? {
+        guard let i = roles?.firstIndex(of: role), signingURLs.indices.contains(i) else { return nil }
+        return signingURLs[i]
+    }
+}
+
+/// Who signs a DocuSeal submission's box. Email or phone, when known, only
+/// labels the submitter in DocuSeal; DocuSeal sends nothing itself.
+struct DocuSealParty {
+    var role: String
+    var name: String = ""
+    var email: String = ""
+    var phone: String = ""
+}
+
+/// One submitter's state, from /docuseal/status.
+struct DocuSealSubmitterStatus {
+    var id: String
+    var role: String
+    var name: String
+    var completedAt: Date?
 }
 
 enum BackendError: LocalizedError {
@@ -99,16 +135,9 @@ enum SigningProviders {
 
         switch backend {
         case .docuseal:
-            // POST /submissions/pdf answers with an ARRAY of submitters, each
-            // carrying its own id and the shared submission_id.
-            let json = try await BackendClient.post("docuseal/start", body)
-            let list = (json as? [[String: Any]])
-                ?? ((json as? [String: Any])?["submitters"] as? [[String: Any]])
-                ?? []
-            guard !list.isEmpty else { throw BackendError.badResponse }
-            let ids   = list.compactMap { Self.idString($0["id"]) }
-            let docId = list.first.flatMap { Self.idString($0["submission_id"]) } ?? ids.first ?? ""
-            return ProviderRef(backend: .docuseal, documentId: docId, submitterIds: ids)
+            // Created earlier, in the send flow, with startDocuSeal — before the
+            // links go out, since each link carries its signer's part.
+            return nil
 
         case .signwell:
             let json  = try await BackendClient.post("signwell/start", body)
@@ -124,16 +153,46 @@ enum SigningProviders {
         }
     }
 
-    /// Path A only. After Face ID succeeded on the phone, tell DocuSeal the
-    /// submitter is complete and hand over the evidence we collected.
+    /// Creates the DocuSeal submission for a contract: one submitter per
+    /// signature box, the PDF tagged so each box becomes that party's field.
+    /// Called from the send flow before any link goes out.
+    static func startDocuSeal(contract: GeneratedContract, parties: [DocuSealParty]) async throws -> ProviderRef {
+        let pdf = ContractPDF.render(contract, docuSealRoles: parties.map(\.role)).base64EncodedString()
+        let json = try await BackendClient.post("docuseal/start", [
+            "title":      contract.title,
+            "pdfBase64":  pdf,
+            "submitters": parties.map { p -> [String: String] in
+                var s = ["role": p.role]
+                if !p.name.isEmpty  { s["name"]  = p.name }
+                if !p.email.isEmpty { s["email"] = p.email }
+                if !p.phone.isEmpty { s["phone"] = p.phone }
+                return s
+            },
+        ])
+        let obj  = json as? [String: Any] ?? [:]
+        let list = obj["submitters"] as? [[String: Any]] ?? []
+        guard let id = idString(obj["id"]), !list.isEmpty else { throw BackendError.badResponse }
+        return ProviderRef(backend: .docuseal,
+                           documentId: id,
+                           submitterIds: list.compactMap { idString($0["id"]) },
+                           signingURLs: list.map { $0["url"] as? String ?? "" },
+                           roles: list.map { $0["role"] as? String ?? "" })
+    }
+
+    /// Path A: after Face ID succeeded on the phone, tell DocuSeal this party's
+    /// submitter is complete, with the signature as Handshake draws it and
+    /// the evidence we collected.
     static func completeDocuSeal(ref: ProviderRef,
+                                 role: String? = nil,
                                  signerName: String,
                                  stamp: SignatureStamp,
+                                 signedDate: Date? = nil,
                                  consentText: String) async throws {
-        guard let submitterId = ref.submitterIds.first else { throw BackendError.badResponse }
+        let i = role.flatMap { ref.roles?.firstIndex(of: $0) } ?? 0
+        guard ref.submitterIds.indices.contains(i) else { throw BackendError.badResponse }
         let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? "unknown-device"
-        _ = try await BackendClient.post("docuseal/complete", [
-            "submitterId": submitterId,
+        var body: [String: Any] = [
+            "submitterId": ref.submitterIds[i],
             "signerName":  signerName,
             "evidence": [
                 "signedAt":      stamp.isoTimestamp,
@@ -141,7 +200,45 @@ enum SigningProviders {
                 "signatureHash": stamp.hash,
                 "consentText":   consentText,
             ],
-        ])
+        ]
+        if let r = ref.roles, r.indices.contains(i), !r[i].isEmpty {
+            body["role"] = r[i]
+            if let png = signatureImage(signerName) { body["signatureImage"] = png.base64EncodedString() }
+            if let signedDate {
+                let f = DateFormatter(); f.calendar = Calendar(identifier: .gregorian)
+                f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd"
+                body["signedDate"] = f.string(from: signedDate)
+            }
+        }
+        _ = try await BackendClient.post("docuseal/complete", body)
+    }
+
+    /// Who has signed the submission, in the app or in a browser.
+    static func docuSealStatus(ref: ProviderRef) async throws -> [DocuSealSubmitterStatus] {
+        let json = try await BackendClient.post("docuseal/status", ["submissionId": ref.documentId])
+        let list = (json as? [String: Any])?["submitters"] as? [[String: Any]] ?? []
+        let iso = ISO8601DateFormatter(); iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let isoPlain = ISO8601DateFormatter()
+        return list.compactMap { s in
+            guard let id = idString(s["id"]) else { return nil }
+            let at = (s["completedAt"] as? String).flatMap { iso.date(from: $0) ?? isoPlain.date(from: $0) }
+            return DocuSealSubmitterStatus(id: id, role: s["role"] as? String ?? "",
+                                           name: s["name"] as? String ?? "", completedAt: at)
+        }
+    }
+
+    /// The signer's name in the signature typeface, as a PNG — what DocuSeal
+    /// puts in the signature field for someone who signed with Face ID.
+    static func signatureImage(_ name: String) -> Data? {
+        let font = UIFont(name: SignatureTypeface.forName(name).rawValue, size: 72) ?? .italicSystemFont(ofSize: 56)
+        let text = NSAttributedString(string: name, attributes: [.font: font, .foregroundColor: UIColor.black])
+        let size = text.size()
+        guard size.width > 0 else { return nil }
+        let box = CGSize(width: ceil(size.width) + 24, height: ceil(size.height) + 16)
+        let format = UIGraphicsImageRendererFormat(); format.opaque = false; format.scale = 2
+        return UIGraphicsImageRenderer(size: box, format: format).pngData { _ in
+            text.draw(at: CGPoint(x: 12, y: 8))
+        }
     }
 
     /// Path B only. Ask SignWell whether every recipient has signed.
@@ -151,7 +248,7 @@ enum SigningProviders {
     }
 
     /// Provider ids arrive as Int or String depending on the vendor.
-    private static func idString(_ v: Any?) -> String? {
+    static func idString(_ v: Any?) -> String? {
         if let i = v as? Int    { return String(i) }
         if let s = v as? String { return s.isEmpty ? nil : s }
         return nil
@@ -166,7 +263,14 @@ enum SigningProviders {
 
 enum ContractPDF {
 
-    static func render(_ contract: GeneratedContract) -> Data {
+    /// - Parameter docuSealRoles: for DocuSeal, the party of each signature box
+    ///   in order. Each box becomes a DocuSeal text tag
+    ///   (`{{Freelancer Signature;role=Freelancer;type=signature}}`, and its
+    ///   date field `{{Freelancer Date;…;type=date}}`), which DocuSeal turns into
+    ///   that party's field and removes from the page. A document with no boxes
+    ///   gets one per party at the end. Drawn unsigned: everyone, the sender
+    ///   included, signs into DocuSeal's copy.
+    static func render(_ contract: GeneratedContract, docuSealRoles: [String]? = nil) -> Data {
         let page   = CGRect(x: 0, y: 0, width: 612, height: 792)        // US Letter, points
         let inset  = page.insetBy(dx: 72, dy: 72)
 
@@ -175,14 +279,19 @@ enum ContractPDF {
             .font: UIFont.systemFont(ofSize: 22, weight: .bold),
             .foregroundColor: UIColor.black,
         ]))
+        var markdown = docuSealRoles == nil
+            ? contract.displayBody(signatureWidth: inset.width).handshakeMarkdown()
+            : contract.baseBody().handshakeMarkdown()
+        if let roles = docuSealRoles { markdown = tagged(markdown, roles: roles) }
         // Fields as text tokens, not boxes: Core Text doesn't draw attachments.
-        let doc = NSMutableAttributedString.fromHandshakeMarkdown(
-            contract.displayBody(signatureWidth: inset.width).handshakeMarkdown(), renderFields: false)
+        let doc = NSMutableAttributedString.fromHandshakeMarkdown(markdown, renderFields: false)
         // Force a print-safe colour; the editor uses dynamic label colours.
         doc.addAttribute(.foregroundColor, value: UIColor.black, range: NSRange(location: 0, length: doc.length))
         body.append(doc)
 
         let renderer = UIGraphicsPDFRenderer(bounds: page)
+        // DocuSeal reads the tags from the PDF's text; they must survive as
+        // plain text, so they're left as drawn (DocuSeal erases them).
         return renderer.pdfData { ctx in
             let framesetter = CTFramesetterCreateWithAttributedString(body)
             var location = 0
@@ -203,6 +312,46 @@ enum ContractPDF {
                 location += drawn.length
             }
         }
+    }
+}
+
+extension ContractPDF {
+    /// Swaps "[Signature]" / "[Date]" for DocuSeal text tags, box by box.
+    static func tagged(_ markdown: String, roles: [String]) -> String {
+        let sig = SignatureField.signature.token, date = SignatureField.date.token
+        func role(_ i: Int) -> String { roles.indices.contains(i) ? roles[i] : "Party \(i + 1)" }
+
+        var out = ""
+        var rest = Substring(markdown)
+        var slot = -1                                    // the box the text has reached
+        while true {
+            let s = rest.range(of: sig), d = rest.range(of: date)
+            // Whichever token comes first.
+            let isSig: Bool
+            let hit: Range<Substring.Index>
+            switch (s, d) {
+            case let (s?, d?): (hit, isSig) = s.lowerBound < d.lowerBound ? (s, true) : (d, false)
+            case let (s?, nil): (hit, isSig) = (s, true)
+            case let (nil, d?): (hit, isSig) = (d, false)
+            case (nil, nil): out += rest; return slot >= 0 ? out : out + appended(roles.indices.map(role))
+            }
+            out += rest[..<hit.lowerBound]
+            if isSig {
+                slot += 1
+                out += "{{\(role(slot)) Signature;role=\(role(slot));type=signature}}"
+            } else if slot >= 0 {
+                // A date belongs to the box before it.
+                out += "{{\(role(slot)) Date;role=\(role(slot));type=date}}"
+            } else {
+                out += date
+            }
+            rest = rest[hit.upperBound...]
+        }
+    }
+
+    /// A document with no boxes: one per party at the end.
+    private static func appended(_ roles: [String]) -> String {
+        roles.map { "\n\n\($0)\n{{\($0) Signature;role=\($0);type=signature}}" }.joined()
     }
 }
 

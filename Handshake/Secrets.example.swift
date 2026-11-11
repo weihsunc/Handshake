@@ -22,6 +22,7 @@ import Foundation
 //     /// Leave nil to talk to Anthropic directly and sign on-device (no provider).
 //     static let backendURL: String? = nil
 //
-//     /// Which signing path to prototype. .onDevice needs no backend.
+//     /// Which signing path. .onDevice needs no backend. .docuseal is the plan:
+//     /// Face ID in the app, DocuSeal's page in a browser (backend/README.md).
 //     static let signingBackend: SigningBackend = .onDevice
 // }

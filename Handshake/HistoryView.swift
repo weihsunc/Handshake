@@ -33,6 +33,8 @@ struct HistoryView: View {
                 }
             }
             .background(Color.pageBackground)
+            // Anyone who signed in a browser: ask DocuSeal (no-op when it's off).
+            .task { await DocuSealSync.refresh() }
             .navigationTitle("Contracts")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

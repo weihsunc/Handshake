@@ -64,6 +64,10 @@ struct SendFlowView: View {
     /// update live and disappear as each is fixed.
     @State private var triedToSend = false
     @State private var providerError: String? = nil
+    /// The DocuSeal submission for this send (when DocuSeal is on): made
+    /// before the links go out, since each link carries its signer's part
+    /// and each message their browser signing link.
+    @State private var docuSealRef: ProviderRef? = nil
     @State private var signError: String? = nil
     @State private var isSigning = false
     /// The sender's own signature, made when they tap Sign & Send. Saved to
@@ -1128,8 +1132,66 @@ struct SendFlowView: View {
         let name = myName.trimmingCharacters(in: .whitespaces)
         if !name.isEmpty { UserDefaults.standard.set(name, forKey: Self.myNameKey) }
 
+        await prepareDocuSeal()
+
         outcomes = [:]
         deliver(finalRecipients)
+    }
+
+    /// DocuSeal on: one submission, a submitter per box, before any link goes
+    /// out. The sender's own Face ID signature completes their submitter. If
+    /// DocuSeal can't be reached the send carries on with app links only
+    /// (DocuSealSync retries the sender's part later if only that failed).
+    private func prepareDocuSeal() async {
+        guard Secrets.signingBackend == .docuseal, BackendClient.isConfigured else { return }
+        isSigning = true
+        defer { isSigning = false }
+
+        let rs = finalRecipients
+        let me = myName.trimmingCharacters(in: .whitespaces)
+        let reply = replyTo.trimmingCharacters(in: .whitespaces)
+        var parties: [DocuSealParty]
+        if slots.isEmpty {
+            parties = rs.map { r in
+                DocuSealParty(role: Self.docuSealRole(for: r), name: r.name, email: r.email, phone: r.phone)
+            }
+        } else {
+            parties = slots.indices.map { p in
+                if p == mySlot {
+                    return DocuSealParty(role: slots[p].role, name: me,
+                                         email: reply.contains("@") ? reply : "",
+                                         phone: reply.contains("@") ? "" : reply)
+                }
+                let r = rs.first { $0.party == p }
+                return DocuSealParty(role: slots[p].role, name: r?.name ?? "", email: r?.email ?? "", phone: r?.phone ?? "")
+            }
+        }
+
+        let latest = ContractStore.shared.contract(id: contract.id) ?? contract
+        do {
+            let ref = try await SigningProviders.startDocuSeal(contract: latest, parties: parties)
+            docuSealRef = ref
+            if let own = ownSignature, let role = own.role {
+                let stamp = SignatureStamp(signerName: own.name, signedAt: own.signedAt, hash: own.hash, method: own.method)
+                try? await SigningProviders.completeDocuSeal(ref: ref, role: role, signerName: own.name, stamp: stamp,
+                                                             signedDate: own.date,
+                                                             consentText: SigningView.consentText)
+            }
+        } catch {
+            docuSealRef = nil
+            print("DocuSeal start failed — sending app links only:", error.localizedDescription)
+        }
+    }
+
+    /// The DocuSeal role a recipient signs as: their box's party, or, in a
+    /// document without boxes, "Signer N" by their order.
+    static func docuSealRole(for r: Recipient) -> String {
+        r.partyRole ?? "Signer \((r.party ?? 0) + 1)"
+    }
+
+    /// This recipient's browser signing page, when DocuSeal is on.
+    private func browserLink(for r: Recipient) -> String? {
+        docuSealRef?.signingURL(role: Self.docuSealRole(for: r)).flatMap { $0.isEmpty ? nil : $0 }
     }
 
     /// Opens a compose sheet for each of these, one after another.
@@ -1213,6 +1275,8 @@ struct SendFlowView: View {
 
         let backend = Secrets.signingBackend
         guard backend != .onDevice, BackendClient.isConfigured else { mark(nil); return }
+        // DocuSeal's submission was made before the links went out.
+        if backend == .docuseal { mark(docuSealRef); return }
 
         Task {
             do {
@@ -1243,9 +1307,21 @@ struct SendFlowView: View {
         let reply       = replyTo.trimmingCharacters(in: .whitespaces)
         c.replyTo       = reply.isEmpty ? nil : reply
         c.changeRequest = nil
+        // Only this recipient's DocuSeal submitter goes with their link.
+        c.providerRef   = docuSealRef?.only(role: Self.docuSealRole(for: r))
         if let own = ownSignature {
             c.signatures.removeAll { $0.slot == own.slot }
             c.merge(signatures: [own])
+        }
+        // With the link page set up, recipients land there: the app if they
+        // have it (universal link), otherwise Get Handshake or the browser.
+        if let page = Config.linkPageURL {
+            var fragment = "id=\(c.id.uuidString)&d=\(ContractTransfer.encode(c))"
+            if let ds = browserLink(for: r),
+               let q = ds.addingPercentEncoding(withAllowedCharacters: .alphanumerics) {
+                fragment += "&ds=\(q)"
+            }
+            return "\(page)#\(fragment)"
         }
         return ContractTransfer.signingLink(for: c)
     }
@@ -1260,10 +1336,23 @@ struct SendFlowView: View {
 
     private func smsBody(for r: Recipient) -> String {
         let link = signingLink(for: r)
-        if let senderName {
-            return String(localized: "\(senderName) invited you to sign \"\(contract.title)\". Open it in the Handshake app to review and sign with Face ID:\n\(link)")
+        // The link page offers the app and the browser itself.
+        if Config.linkPageURL != nil {
+            if let senderName {
+                return String(localized: "\(senderName) invited you to sign \"\(contract.title)\". Review and sign it here:\n\(link)")
+            }
+            return String(localized: "You've been invited to sign \"\(contract.title)\". Review and sign it here:\n\(link)")
         }
-        return String(localized: "You've been invited to sign \"\(contract.title)\". Open it in the Handshake app to review and sign with Face ID:\n\(link)")
+        var body: String
+        if let senderName {
+            body = String(localized: "\(senderName) invited you to sign \"\(contract.title)\". Open it in the Handshake app to review and sign with Face ID:\n\(link)")
+        } else {
+            body = String(localized: "You've been invited to sign \"\(contract.title)\". Open it in the Handshake app to review and sign with Face ID:\n\(link)")
+        }
+        if let web = browserLink(for: r) {
+            body += "\n\n" + String(localized: "Don't have Handshake? Sign in your browser instead:\n\(web)")
+        }
+        return body
     }
 
     private var mailSubject: String { String(localized: "Please sign: \(contract.title)") }
@@ -1274,6 +1363,20 @@ struct SendFlowView: View {
         let intro = senderName.map { String(localized: "\($0) invited you to review and sign the following agreement:") }
             ?? String(localized: "You've been invited to review and sign the following agreement:")
         let link = signingLink(for: r)
+        if Config.linkPageURL != nil {
+            return String(localized: """
+                Hi,
+
+                \(intro)
+
+                \(contract.title)
+
+                Tap the link below to review and sign:
+                \(link)
+                """)
+        }
+        let closing = browserLink(for: r).map { String(localized: "Don't have Handshake? Sign in your browser instead:\n\($0)") }
+            ?? String(localized: "The link opens in Handshake, so you'll need the app installed on your iPhone or iPad.")
         return String(localized: """
             Hi,
 
@@ -1284,7 +1387,7 @@ struct SendFlowView: View {
             Tap the link below to open it in the Handshake app and sign with Face ID:
             \(link)
 
-            The link opens in Handshake, so you'll need the app installed on your iPhone or iPad.
+            \(closing)
             """)
     }
 }

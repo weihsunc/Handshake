@@ -9,4 +9,10 @@ import Foundation
 
 enum Config {
     static let anthropicAPIKey = Secrets.anthropicAPIKey
+
+    /// The signing link page (web/sign/index.html) once it's hosted, e.g.
+    /// "https://<host>/sign/". Set: every signing link points there and the
+    /// page offers Get Handshake or signing in the browser (DocuSeal). nil:
+    /// links are handshake:// and the message adds the browser link itself.
+    static let linkPageURL: String? = nil
 }

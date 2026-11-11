@@ -461,6 +461,52 @@
         }
       }
     },
+    "%@ invited you to sign \"%@\". Review and sign it here:\n%@": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 邀請你簽署「%@」。在這裡審閱並簽署：\n%@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 邀请你签署“%@”。在这里审阅并签署：\n%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@さんから「%2$@」への署名依頼が届いています。こちらから確認して署名できます：\n%3$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@님이 \"%2$@\" 서명을 요청했어요. 여기에서 확인하고 서명하세요:\n%3$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ te ha invitado a firmar «%@». Revísalo y fírmalo aquí:\n%@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ vous a invité à signer « %@ ». Lisez-le et signez ici :\n%@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ hat dich eingeladen, „%@“ zu unterschreiben. Hier prüfen und unterschreiben:\n%@"
+          }
+        }
+      }
+    },
     "%@ signed \"%@\" with %@.\n\nOpen in Handshake to record the signature:\n%@": {
       "localizations": {
         "zh-Hant": {
@@ -4785,6 +4831,52 @@
         }
       }
     },
+    "Don't have Handshake? Sign in your browser instead:\n%@": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "沒有 Handshake？改用瀏覽器簽署：\n%@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有 Handshake？改用浏览器签署：\n%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake をお持ちでない場合は、ブラウザで署名できます：\n%@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handshake가 없나요? 브라우저에서 서명하세요:\n%@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿No tienes Handshake? Firma en el navegador:\n%@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous n’avez pas Handshake ? Signez dans le navigateur :\n%@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Handshake? Im Browser unterschreiben:\n%@"
+          }
+        }
+      }
+    },
     "Done": {
       "localizations": {
         "zh-Hant": {
@@ -7131,48 +7223,94 @@
         }
       }
     },
-    "Hi,\n\n%@\n\n%@\n\nTap the link below to open it in the Handshake app and sign with Face ID:\n%@\n\nThe link opens in Handshake, so you'll need the app installed on your iPhone or iPad.": {
+    "Hi,\n\n%@\n\n%@\n\nTap the link below to open it in the Handshake app and sign with Face ID:\n%@\n\n%@": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "你好，\n\n%@\n\n%@\n\n點一下下方連結，即可在 Handshake App 中開啟並以 Face ID 簽署：\n%@\n\n連結會在 Handshake 中開啟，因此你的 iPhone 或 iPad 需要已安裝此 App。"
+            "value": "你好，\n\n%@\n\n%@\n\n點一下下方連結，即可在 Handshake App 中開啟並以 Face ID 簽署：\n%@\n\n%@"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "你好，\n\n%@\n\n%@\n\n轻点下方链接，即可在 Handshake App 中打开并以 面容 ID 签署：\n%@\n\n链接会在 Handshake 中打开，因此你的 iPhone 或 iPad 需要已安装此 App。"
+            "value": "你好，\n\n%@\n\n%@\n\n轻点下方链接，即可在 Handshake App 中打开并以 面容 ID 签署：\n%@\n\n%@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "こんにちは。\n\n%1$@\n\n%2$@\n\n下のリンクをタップしてHandshakeアプリで開き、Face IDで署名してください。\n%3$@\n\nリンクはHandshakeで開くため、iPhoneまたはiPadにアプリが必要です。"
+            "value": "こんにちは。\n\n%1$@\n\n%2$@\n\n下のリンクをタップしてHandshakeアプリで開き、Face IDで署名してください。\n%3$@\n\n%4$@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "안녕하세요.\n\n%1$@\n\n%2$@\n\n아래 링크를 탭하면 Handshake 앱에서 열려요. Face ID로 서명하세요.\n%3$@\n\n링크는 Handshake에서 열리므로 iPhone 또는 iPad에 앱이 설치되어 있어야 해요."
+            "value": "안녕하세요.\n\n%1$@\n\n%2$@\n\n아래 링크를 탭하면 Handshake 앱에서 열려요. Face ID로 서명하세요.\n%3$@\n\n%4$@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hola:\n\n%@\n\n%@\n\nToca el enlace de abajo para abrirlo en la app Handshake y firmar con Face ID:\n%@\n\nEl enlace se abre en Handshake, así que necesitarás la app instalada en tu iPhone o iPad."
+            "value": "Hola:\n\n%@\n\n%@\n\nToca el enlace de abajo para abrirlo en la app Handshake y firmar con Face ID:\n%@\n\n%@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bonjour,\n\n%@\n\n%@\n\nTouchez le lien ci-dessous pour l’ouvrir dans l’app Handshake et signer avec Face ID :\n%@\n\nLe lien s’ouvre dans Handshake : l’app doit donc être installée sur votre iPhone ou iPad."
+            "value": "Bonjour,\n\n%@\n\n%@\n\nTouchez le lien ci-dessous pour l’ouvrir dans l’app Handshake et signer avec Face ID :\n%@\n\n%@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hallo,\n\n%@\n\n%@\n\nTippe auf den Link unten, um ihn in der Handshake-App zu öffnen und mit Face ID zu signieren:\n%@\n\nDer Link öffnet sich in Handshake, du brauchst also die App auf deinem iPhone oder iPad."
+            "value": "Hallo,\n\n%@\n\n%@\n\nTippe auf den Link unten, um ihn in der Handshake-App zu öffnen und mit Face ID zu signieren:\n%@\n\n%@"
+          }
+        }
+      }
+    },
+    "Hi,\n\n%@\n\n%@\n\nTap the link below to review and sign:\n%@": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你好，\n\n%@\n\n%@\n\n點一下下方連結即可審閱並簽署：\n%@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你好，\n\n%@\n\n%@\n\n轻点下方链接即可审阅并签署：\n%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "こんにちは。\n\n%1$@\n\n%2$@\n\n下のリンクから確認して署名できます。\n%3$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "안녕하세요.\n\n%1$@\n\n%2$@\n\n아래 링크를 탭해 확인하고 서명하세요.\n%3$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hola:\n\n%@\n\n%@\n\nToca el enlace de abajo para revisarlo y firmarlo:\n%@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bonjour,\n\n%@\n\n%@\n\nTouchez le lien ci-dessous pour le lire et le signer :\n%@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hallo,\n\n%@\n\n%@\n\nTippe auf den Link unten, um ihn zu prüfen und zu unterschreiben:\n%@"
           }
         }
       }
@@ -14077,6 +14215,52 @@
         }
       }
     },
+    "The link opens in Handshake, so you'll need the app installed on your iPhone or iPad.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連結會在 Handshake 中開啟，因此你的 iPhone 或 iPad 需要已安裝此 App。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "链接会在 Handshake 中打开，因此你的 iPhone 或 iPad 需要已安装此 App。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リンクはHandshakeで開くため、iPhoneまたはiPadにアプリが必要です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "링크는 Handshake에서 열리므로 iPhone 또는 iPad에 앱이 설치되어 있어야 해요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El enlace se abre en Handshake, así que necesitarás la app instalada en tu iPhone o iPad."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le lien s’ouvre dans Handshake : l’app doit donc être installée sur votre iPhone ou iPad."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Link öffnet sich in Handshake, du brauchst also die App auf deinem iPhone oder iPad."
+          }
+        }
+      }
+    },
     "The recipient": {
       "localizations": {
         "zh-Hant": {
@@ -16327,6 +16511,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Du wurdest eingeladen, „%@“ zu signieren. Öffne es in der Handshake-App, um es zu prüfen und mit Face ID zu signieren:\n%@"
+          }
+        }
+      }
+    },
+    "You've been invited to sign \"%@\". Review and sign it here:\n%@": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有人邀請你簽署「%@」。在這裡審閱並簽署：\n%@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有人邀请你签署“%@”。在这里审阅并签署：\n%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」への署名依頼が届いています。こちらから確認して署名できます：\n%2$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%1$@\" 서명 요청이 도착했어요. 여기에서 확인하고 서명하세요:\n%2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te han invitado a firmar «%@». Revísalo y fírmalo aquí:\n%@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous êtes invité à signer « %@ ». Lisez-le et signez ici :\n%@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du wurdest eingeladen, „%@“ zu unterschreiben. Hier prüfen und unterschreiben:\n%@"
           }
         }
       }

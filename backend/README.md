@@ -1,37 +1,73 @@
 # Handshake backend
 
-One Supabase Edge Function. It exists so the iOS app never holds an API key.
+One Supabase Edge Function. It exists so the iOS app never holds an API key:
+the Anthropic key (AI drafting) and the DocuSeal key (signing records and the
+browser signing option) live here as Supabase secrets.
 
-## First-time setup (about ten minutes)
+## First-time setup
 
-1. **Supabase** — create a free project at supabase.com. Install the CLI:
-   `brew install supabase/tap/supabase`, then `supabase login` and
-   `supabase link --project-ref <your-project-ref>` from this `backend/` folder.
-2. **DocuSeal** — free sandbox at docuseal.com (no card). Profile → API key.
-   The test key ends in `+test`.
-3. **SignWell** — free account at signwell.com. Settings → API → create key.
-   Test mode is unlimited; the first 25 real documents a month are free.
+**Owner** (accounts and keys — only you can do these):
 
-Then, from `backend/`:
+1. **DocuSeal** — sign up at docuseal.com (wei@studiolofi.com). Settings → API →
+   copy the **test** key (it ends in `+test`).
+2. **Supabase** — create a project called `handshake` in your account. Keep the
+   database password it asks for.
+3. In Terminal: `supabase login` (opens the browser to sign in).
+4. From this `backend/` folder, paste your keys yourself:
+
+   ```bash
+   supabase secrets set ANTHROPIC_API_KEY=sk-ant-... DOCUSEAL_API_KEY=...+test
+   ```
+
+**Then** (Claude or you):
 
 ```bash
-supabase secrets set ANTHROPIC_API_KEY=sk-ant-... DOCUSEAL_API_KEY=...+test SIGNWELL_API_KEY=...
+supabase link --project-ref <your-project-ref>
 supabase functions deploy handshake --no-verify-jwt
 ```
 
-The deploy prints a URL like `https://<ref>.supabase.co/functions/v1/handshake`.
-Paste that into `Handshake/Secrets.swift` as `backendURL` — it is the only
-"secret" the app ships, and it isn't one.
+The deploy prints `https://<ref>.supabase.co/functions/v1/handshake`. In
+`Handshake/Secrets.swift` set `backendURL` to it and
+`signingBackend = .docuseal`. Setting `backendURL` sends **all** AI calls
+through the function, so the Anthropic key must be set there first.
+
+SignWell (Path B, `SIGNWELL_API_KEY`) isn't needed for the DocuSeal plan.
+
+## How signing works with DocuSeal on
+
+1. **Send:** the app creates one DocuSeal submission (`/docuseal/start`) — a
+   submitter per signature box, the PDF tagged so each box becomes that
+   party's signature field. The sender, who signed with Face ID first, is
+   completed straight away (`/docuseal/complete`).
+2. **Each message** carries the app link (with that signer's DocuSeal part
+   inside) and **"Don't have Handshake? Sign in your browser instead"** — the
+   signer's DocuSeal page. Once the link page is hosted (`Config.linkPageURL`),
+   there's one link and the page offers both.
+3. **In the app:** Face ID, then `/docuseal/complete` for that signer, with the
+   signature drawn in the Handshake typeface and the evidence. The signed copy
+   still goes back to the sender as before.
+4. **In a browser:** DocuSeal's page, typed or drawn signature.
+5. **Sender's phone:** opening Contracts (or the app) asks `/docuseal/status`;
+   anyone who signed in a browser is marked signed. When every box is signed,
+   the contract moves to Signed.
 
 ## Routes
 
-| Route | Path | What it does |
-|---|---|---|
-| `POST /ai/messages` | both | Anthropic proxy — the app's generation and suggestions go through here |
-| `POST /docuseal/start` | A | Create a submission for a contract, one submitter per recipient, no emails |
-| `POST /docuseal/complete` | A | After Face ID: mark the submitter completed ("auto-signed via API") with the evidence the phone collected |
-| `POST /signwell/start` | B | Create a document with embedded signing; returns a signing URL per recipient |
-| `POST /signwell/status` | B | Poll for completion |
+| Route | What it does |
+|---|---|
+| `POST /ai/messages` | Anthropic proxy — the app's generation and suggestions |
+| `POST /docuseal/start` | `{title, pdfBase64, submitters:[{role,name,email,phone}]}` → `{id, submitters:[{id,role,slug,url}]}`. No emails or texts from DocuSeal |
+| `POST /docuseal/complete` | `{submitterId, signerName, role, signatureImage, signedDate, evidence}` → marks the submitter completed ("auto-signed via API") |
+| `POST /docuseal/status` | `{submissionId}` → `{status, submitters:[{id,role,name,status,completedAt}], documents, auditLogUrl}` |
+| `POST /signwell/start`, `/signwell/status` | Path B, not used by the DocuSeal plan |
 
-Both providers start in **test mode**. Nothing here produces a real signature
-until you switch them.
+## Not yet verified against live DocuSeal
+
+Written from DocuSeal's API docs; expect small fixes on the first live run:
+the signature image format for `/docuseal/complete` (sent as base64 PNG in
+`fields[].default_value`), whether `completed: true` needs the date field
+filled, and how the text tags size the fields.
+
+**Known gap:** the function is deployed without auth (`--no-verify-jwt`), so
+anyone with its URL can call it. Fine for testing; add an app check before
+launch.
