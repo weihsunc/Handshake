@@ -1,0 +1,11 @@
+# Supabase project config for Handshake's backend.
+# Only what differs from the defaults. The GitHub integration (and
+# `supabase functions deploy`) read this, so deploys from a push keep the
+# same settings as a manual deploy.
+project_id = "handshake"
+
+[functions.handshake]
+# The app calls the function without a Supabase sign-in; keys stay server-side.
+# Same as deploying with --no-verify-jwt. (Add an app check before launch —
+# see README "Known gap".)
+verify_jwt = false

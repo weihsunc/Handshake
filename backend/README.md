@@ -33,6 +33,20 @@ through the function, so the Anthropic key must be set there first.
 
 SignWell (Path B, `SIGNWELL_API_KEY`) isn't needed for the DocuSeal plan.
 
+## Live project (Nov 11, 2026)
+
+- Supabase project **handshake** in the free
+  **Handshake** organization; move it into Lofi Studio (Pro) when upgrading
+  (project Settings → General → Transfer project). Free projects pause after
+  about a week unused — un-pause from the dashboard.
+- The function URL lives only in the gitignored `Secrets.swift` (and the
+  Supabase dashboard). Keep it out of this public repo until the function
+  has an app check. Secrets set: `ANTHROPIC_API_KEY`, `DOCUSEAL_API_KEY` (test).
+- `supabase/config.toml` keeps `verify_jwt = false` for the function, so a
+  deploy from the GitHub integration matches `--no-verify-jwt`.
+- Verified live: AI proxy; DocuSeal start (text tags became fields),
+  complete (base64 PNG accepted as the signature image), status.
+
 ## How signing works with DocuSeal on
 
 1. **Send:** the app creates one DocuSeal submission (`/docuseal/start`) — a
@@ -61,12 +75,11 @@ SignWell (Path B, `SIGNWELL_API_KEY`) isn't needed for the DocuSeal plan.
 | `POST /docuseal/status` | `{submissionId}` → `{status, submitters:[{id,role,name,status,completedAt}], documents, auditLogUrl}` |
 | `POST /signwell/start`, `/signwell/status` | Path B, not used by the DocuSeal plan |
 
-## Not yet verified against live DocuSeal
+## Still to verify
 
-Written from DocuSeal's API docs; expect small fixes on the first live run:
-the signature image format for `/docuseal/complete` (sent as base64 PNG in
-`fields[].default_value`), whether `completed: true` needs the date field
-filled, and how the text tags size the fields.
+The full app round trip (send → sign in the app and in a browser → the
+sender's copy turns Signed), and how the text tags size the fields on a
+real contract PDF.
 
 **Known gap:** the function is deployed without auth (`--no-verify-jwt`), so
 anyone with its URL can call it. Fine for testing; add an app check before
