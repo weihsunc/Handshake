@@ -255,6 +255,10 @@ async function expand(s) {
   document.getElementById("ok").hidden = false;
 })();
 
+// A second signing link opened in the same tab changes only the part after
+// "#", which doesn't reload the page — so reload it, to show that contract.
+window.addEventListener("hashchange", () => location.reload());
+
 // Tap the doodle to draw it again.
 document.getElementById("art").addEventListener("click", () => {
   const svg = document.querySelector("#art svg");
