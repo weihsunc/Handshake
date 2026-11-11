@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Handshake</title>
+<!--
+  Handshake · the signing link page
+
+  What a recipient sees when they open a signing link without the app.
+  Main action: get Handshake and sign there (Face ID). Option: sign in the
+  browser on DocuSeal's hosted page. Already have the app: open it.
+
+  The link carries everything in its fragment (after #), which browsers never
+  send to the server — so this is one static file, the host never sees the
+  contract, and nothing is stored anywhere:
+
+      https://<host>/sign/#id=<uuid>&d=<payload>&ds=<docuseal signing url>
+
+    id  the contract id (as in handshake://sign/<id>)
+    d   the same payload as the app link: base64url(raw-deflate(JSON))
+        — see ContractTransfer.swift
+    ds  optional: this signer's DocuSeal link. Without it, the browser
+        option is hidden (DocuSeal isn't set up yet).
+
+  Set APP_STORE_URL once the app is listed.
+-->
+<style>
+  :root {
+    --page: #FAFAF9; --ink: #1F1E1C; --secondary: #6B6A67; --card: #FFFFFF;
+    --on-ink: #FAFAF9; --link: #0A84FF;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --page: #121211; --ink: #EDECE9; --secondary: #9C9A96; --card: #1E1E1C;
+            --on-ink: #121211; --link: #409CFF; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--page); color: var(--ink); }
+  body {
+    font: 17px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100dvh; display: flex; justify-content: center;
+    padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+  }
+  main { width: 100%; max-width: 420px; display: flex; flex-direction: column; }
+  .art { display: flex; justify-content: center; margin: 28px 0 12px; cursor: pointer; }
+  .art svg { width: 168px; height: 168px; }
+  h1 { font-size: 24px; line-height: 1.2; font-weight: 700; text-align: center; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .role { color: var(--secondary); text-align: center; margin: 0 0 22px; font-size: 15px; }
+  .card { background: var(--card); border-radius: 16px; padding: 14px 16px; }
+  .card .title { font-weight: 600; font-size: 16px; }
+  .card .meta { color: var(--secondary); font-size: 14px; margin-top: 2px; }
+  .spacer { flex: 1; min-height: 28px; }
+  .primary {
+    display: block; text-align: center; text-decoration: none;
+    background: var(--ink); color: var(--on-ink); font-weight: 600;
+    border-radius: 999px; padding: 15px 20px; font-size: 17px;
+  }
+  .note { color: var(--secondary); font-size: 13px; text-align: center; margin: 8px 0 14px; }
+  .secondary { display: block; text-align: center; color: var(--link); text-decoration: none;
+               font-weight: 500; padding: 10px; font-size: 16px; }
+  .open { display: block; text-align: center; color: var(--secondary); font-size: 14px;
+          text-decoration: none; padding: 6px; }
+  .privacy { color: var(--secondary); font-size: 12px; text-align: center; margin: 18px 8px 0; }
+  .broken { text-align: center; color: var(--secondary); }
+  [hidden] { display: none !important; }
+
+  /* The doodle draws itself in, like the app's: page, corner, lines, pen,
+     then the signature written left to right up to the nib. */
+  .art path { stroke: var(--ink); stroke-dasharray: 1; stroke-dashoffset: 1;
+              animation: draw var(--d, .3s) ease-in-out var(--t, 0s) forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .art .pen { transform-origin: 270px 200px; animation: nudge .5s ease-in-out 3.1s 2 alternate; }
+  @keyframes nudge { to { transform: translate(-6px, 3px) rotate(-3deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .art path { animation: none; stroke-dashoffset: 0; }
+    .art .pen { animation: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="art" id="art" aria-hidden="true">
+    <!-- "agreement.svg", the owner's doodle (400 × 400), paths unchanged. -->
+    <svg viewBox="60 80 280 245" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path pathLength="1" style="--t:.2s;--d:.75s" stroke-width="16" d="M83.7369 288.444C80.6561 259.715 80.1284 230.813 80.1284 201.89C80.1284 181.285 71.8196 116.625 78.7768 99.3229C79.9498 96.4035 96.6129 94.5956 98.6911 94.9388C111.692 97.0949 201.295 89.4578 209.969 92.9101C215.486 95.1026 221.59 105.823 226.201 109.95C263.285 143.152 250.998 128.911 250.998 183.502"/>
+      <path pathLength="1" style="--t:.9s;--d:.4s" stroke-width="16" d="M248.47 271.071C245.796 276.081 253.619 303.435 248.47 305.96C243.147 308.568 105.302 309.164 92.0859 307.725"/>
+      <path pathLength="1" style="--t:1.25s;--d:.3s" stroke-width="16" d="M209.698 101.354C217.998 112.241 202.962 126.528 204.859 135.991C205.025 136.812 239.235 132.624 243.567 133.8"/>
+      <path pathLength="1" style="--t:1.5s;--d:.18s" stroke-width="12" d="M114.875 137.008C126.219 137.842 137.244 132.895 148.388 133.893"/>
+      <path pathLength="1" style="--t:1.65s;--d:.22s" stroke-width="12" d="M112.195 174.004C135.077 175.684 160.792 169.855 181.903 171.779"/>
+      <path pathLength="1" style="--t:1.85s;--d:.22s" stroke-width="12" d="M117.555 206.926C120.532 205.792 123.308 199.76 126.94 200.275C150.41 203.605 159.345 207.493 184.581 204.71"/>
+      <path pathLength="1" style="--t:2.05s;--d:.18s" stroke-width="12" d="M117.555 242.192C133.916 243.182 136.025 236.872 157.771 241.302"/>
+      <g class="pen">
+        <path pathLength="1" style="--t:2.25s;--d:.55s" stroke-width="16" d="M235.656 227.352C248.017 211.693 272.226 178.413 284.956 162.912C296.461 148.902 295.801 135.225 316.285 148.828C332.535 159.622 316.949 170.237 307.48 183.104C305.858 185.306 260.957 245.463 259.98 245.302C251.825 243.948 242.427 227.833 233.675 230.014C232.292 230.358 222.373 262.4 221.817 265.159C219.947 274.467 248.921 251.813 256.699 248.71"/>
+      </g>
+      <!-- The signature, reversed from the file so it's written left to right, up to the nib. -->
+      <path pathLength="1" opacity="0.502" style="--t:2.9s;--d:.9s" stroke-width="16" d="M137.664 274.836C146.425 272.395 156.97 275.823 162.647 274.372C168.995 272.75 170.513 258.973 178.096 260.908C186.408 263.032 185.311 281.052 190.363 280.408C198.241 279.401 218.823 237.421 219.436 270.196"/>
+    </svg>
+  </div>
+
+  <section id="ok" hidden>
+    <h1 id="headline"></h1>
+    <p class="role" id="role"></p>
+    <div class="card">
+      <div class="title" id="title"></div>
+      <div class="meta" id="meta"></div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <a class="primary" id="get" data-t="get"></a>
+    <p class="note" data-t="getNote"></p>
+    <a class="secondary" id="web" data-t="web" hidden></a>
+    <a class="open" id="open" data-t="open"></a>
+    <p class="privacy" data-t="privacy"></p>
+  </section>
+
+  <section id="bad" class="broken" hidden>
+    <h1 data-t="badTitle"></h1>
+    <p data-t="badBody"></p>
+  </section>
+</main>
+
+<script>
+const APP_STORE_URL = "https://apps.apple.com/";   // TODO: Handshake's listing once it's live
+
+const T = {
+  en: {
+    from: n => `${n} sent you a contract to sign`, anon: "You've been sent a contract to sign",
+    role: r => `You're signing as ${r}`, signers: n => `${n} signers`,
+    get: "Get Handshake to sign", getNote: "Sign with Face ID and keep your copy on your phone.",
+    web: "Sign in your browser instead", open: "Already have Handshake? Open it",
+    privacy: "The contract travels inside this link. This page doesn't send it anywhere.",
+    badTitle: "This link is incomplete", badBody: "It may have been cut off when it was copied or forwarded. Ask the sender to send it again." },
+  "zh-Hant": {
+    from: n => `${n} 傳了一份合約給你簽署`, anon: "有人傳了一份合約給你簽署",
+    role: r => `你以「${r}」身分簽署`, signers: n => `${n} 位簽署人`,
+    get: "下載 Handshake 來簽署", getNote: "用 Face ID 簽署，並把副本留在手機上。",
+    web: "改用瀏覽器簽署", open: "已經有 Handshake？直接開啟",
+    privacy: "合約內容就在這個連結裡，這個頁面不會把它傳到任何地方。",
+    badTitle: "這個連結不完整", badBody: "可能在複製或轉寄時被截斷了。請寄件人再傳一次。" },
+  "zh-Hans": {
+    from: n => `${n} 发来一份合同请你签署`, anon: "有人发来一份合同请你签署",
+    role: r => `你以“${r}”身份签署`, signers: n => `${n} 位签署人`,
+    get: "下载 Handshake 来签署", getNote: "用面容 ID 签署，并把副本留在手机上。",
+    web: "改用浏览器签署", open: "已经有 Handshake？直接打开",
+    privacy: "合同内容就在这个链接里，这个页面不会把它发送到任何地方。",
+    badTitle: "这个链接不完整", badBody: "可能在复制或转发时被截断了。请发件人再发一次。" },
+  ja: {
+    from: n => `${n}さんから署名依頼の契約書が届いています`, anon: "署名依頼の契約書が届いています",
+    role: r => `「${r}」として署名します`, signers: n => `署名者 ${n} 人`,
+    get: "Handshake を入手して署名", getNote: "Face ID で署名し、控えを iPhone に保存できます。",
+    web: "ブラウザで署名する", open: "Handshake をお持ちの方は開く",
+    privacy: "契約書はこのリンクの中に含まれています。このページがどこかへ送信することはありません。",
+    badTitle: "リンクが不完全です", badBody: "コピーや転送の途中で切れた可能性があります。送信者にもう一度送ってもらってください。" },
+  ko: {
+    from: n => `${n}님이 서명할 계약서를 보냈습니다`, anon: "서명할 계약서가 도착했습니다",
+    role: r => `‘${r}’(으)로 서명합니다`, signers: n => `서명자 ${n}명`,
+    get: "Handshake 받고 서명하기", getNote: "Face ID로 서명하고 사본을 휴대폰에 보관하세요.",
+    web: "브라우저에서 서명하기", open: "이미 Handshake가 있나요? 열기",
+    privacy: "계약서는 이 링크 안에 담겨 있습니다. 이 페이지는 어디로도 전송하지 않습니다.",
+    badTitle: "링크가 완전하지 않습니다", badBody: "복사하거나 전달하는 중에 잘렸을 수 있습니다. 보낸 사람에게 다시 보내 달라고 요청하세요." },
+  es: {
+    from: n => `${n} te ha enviado un contrato para firmar`, anon: "Te han enviado un contrato para firmar",
+    role: r => `Firmas como ${r}`, signers: n => `${n} firmantes`,
+    get: "Descarga Handshake para firmar", getNote: "Firma con Face ID y guarda tu copia en el teléfono.",
+    web: "Firmar en el navegador", open: "¿Ya tienes Handshake? Ábrelo",
+    privacy: "El contrato viaja dentro de este enlace. Esta página no lo envía a ningún sitio.",
+    badTitle: "Este enlace está incompleto", badBody: "Puede que se haya cortado al copiarlo o reenviarlo. Pide a quien lo envió que lo mande de nuevo." },
+  fr: {
+    from: n => `${n} vous a envoyé un contrat à signer`, anon: "Vous avez reçu un contrat à signer",
+    role: r => `Vous signez en tant que ${r}`, signers: n => `${n} signataires`,
+    get: "Obtenir Handshake pour signer", getNote: "Signez avec Face ID et gardez votre copie sur votre téléphone.",
+    web: "Signer dans le navigateur", open: "Vous avez déjà Handshake ? Ouvrez-le",
+    privacy: "Le contrat voyage dans ce lien. Cette page ne l'envoie nulle part.",
+    badTitle: "Ce lien est incomplet", badBody: "Il a peut-être été coupé lors d'une copie ou d'un transfert. Demandez à l'expéditeur de le renvoyer." },
+  de: {
+    from: n => `${n} hat dir einen Vertrag zum Unterschreiben geschickt`, anon: "Du hast einen Vertrag zum Unterschreiben erhalten",
+    role: r => `Du unterschreibst als ${r}`, signers: n => `${n} Unterzeichner`,
+    get: "Handshake laden und unterschreiben", getNote: "Mit Face ID unterschreiben und die Kopie auf dem Handy behalten.",
+    web: "Im Browser unterschreiben", open: "Schon Handshake? Öffnen",
+    privacy: "Der Vertrag steckt in diesem Link. Diese Seite sendet ihn nirgendwohin.",
+    badTitle: "Dieser Link ist unvollständig", badBody: "Er wurde beim Kopieren oder Weiterleiten vielleicht abgeschnitten. Bitte den Absender, ihn noch einmal zu schicken." },
+};
+
+function lang() {
+  for (const l of navigator.languages || [navigator.language || "en"]) {
+    const s = l.toLowerCase();
+    if (s.startsWith("zh")) return /hant|tw|hk|mo/.test(s) ? "zh-Hant" : "zh-Hans";
+    const base = s.split("-")[0];
+    if (T[base]) return base;
+  }
+  return "en";
+}
+const L = T[lang()];
+document.documentElement.lang = lang();
+document.querySelectorAll("[data-t]").forEach(el => { el.textContent = L[el.dataset.t]; });
+
+// Same encoding as ContractTransfer.swift: base64url → raw deflate → JSON.
+async function decode(d) {
+  const b64 = d.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(d.length / 4) * 4, "=");
+  const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+  return JSON.parse(await new Response(stream).text());
+}
+
+(async () => {
+  const p = new URLSearchParams(location.hash.slice(1));
+  const id = p.get("id"), d = p.get("d"), ds = p.get("ds");
+  let c = null;
+  try { if (id && d) c = await decode(d); } catch (e) { c = null; }
+  if (!c) { document.getElementById("bad").hidden = false; return; }
+
+  const me = c.recipients?.find(r => r.party === c.me);
+  const role = me?.partyRole;
+  document.getElementById("headline").textContent = c.from ? L.from(c.from) : L.anon;
+  document.getElementById("role").textContent = role ? L.role(role) : "";
+  document.getElementById("title").textContent = c.title;
+  document.getElementById("meta").textContent = [c.from, c.parties > 1 ? L.signers(c.parties) : null]
+    .filter(Boolean).join(" · ");
+  document.getElementById("get").href = APP_STORE_URL;
+  document.getElementById("open").href = `handshake://sign/${id}?d=${d}`;
+  if (ds && /^https:\/\//.test(ds)) {
+    const web = document.getElementById("web");
+    web.href = ds; web.hidden = false;
+  }
+  document.getElementById("ok").hidden = false;
+})();
+
+// Tap the doodle to draw it again.
+document.getElementById("art").addEventListener("click", () => {
+  const svg = document.querySelector("#art svg");
+  svg.replaceWith(svg.cloneNode(true));
+});
+</script>
+</body>
+</html>
