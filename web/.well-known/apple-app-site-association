@@ -1,0 +1,10 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["TEAMID.com.weihsun.Handshake"],
+        "components": [{ "/": "/sign/*", "comment": "Signing links open in the app when it's installed" }]
+      }
+    ]
+  }
+}
