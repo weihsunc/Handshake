@@ -152,8 +152,12 @@ struct DocumentSearchBar: View {
     let matchCount: Int
     let current: Int?
     var height: CGFloat
-    let onPrevious: () -> Void
-    let onNext: () -> Void
+    var placeholder: LocalizedStringKey = "Search keywords or fields"
+    /// Finding in a document: "2 of 5" and arrows to step through. Filtering
+    /// a list (Contracts): no count, just a button to clear what's typed.
+    var stepsThroughMatches: Bool = true
+    var onPrevious: () -> Void = {}
+    var onNext: () -> Void = {}
     let onClose: () -> Void
 
     @State private var speech = SpeechInput()
@@ -169,7 +173,7 @@ struct DocumentSearchBar: View {
                     .foregroundStyle(Color(.secondaryLabel))
                     .accessibilityHidden(true)
 
-                TextField("Search keywords or fields", text: $query)
+                TextField(placeholder, text: $query)
                     .font(.body)
                     .tint(Color.ink)
                     .focused(focus)
@@ -202,7 +206,16 @@ struct DocumentSearchBar: View {
     /// the arrows to step through matches.
     @ViewBuilder
     private var trailing: some View {
-        if hasQuery && !speech.isRecording {
+        if hasQuery && !speech.isRecording && !stepsThroughMatches {
+            Button { query = "" } label: {
+                Image("ph-x-circle-fill")
+                    .font(.body)
+                    .foregroundStyle(Color(.tertiaryLabel))
+                    .frame(width: iconSize, height: iconSize)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Clear search")
+        } else if hasQuery && !speech.isRecording {
             Text(matchCount == 0 ? String(localized: "No results")
                                  : String(localized: "\((current ?? 0) + 1) of \(matchCount)"))
                 .font(.subheadline.monospacedDigit())

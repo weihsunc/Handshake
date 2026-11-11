@@ -13,6 +13,10 @@ import UIKit
 //   screen once had no way back to sign except the original link.
 // Drafts: swipe-to-delete, tap to reopen in the workspace (editable).
 // Sent / signed: tap to view read-only.
+//
+// Search: a button at the bottom right opens the same search bar as the
+// signing screen; typing narrows every section to the contracts whose title,
+// people (name, email, phone), sender or text match.
 // ─────────────────────────────────────────────────────────────────────────────
 
 struct HistoryView: View {
@@ -21,6 +25,10 @@ struct HistoryView: View {
     @State private var openDraft:    GeneratedContract? = nil
     @State private var viewContract: GeneratedContract? = nil
     @State private var signContract: GeneratedContract? = nil
+    @State private var isSearching = false
+    @State private var searchQuery = ""
+    @FocusState private var searchFocused: Bool
+    @ScaledMetric(relativeTo: .body) private var barH: CGFloat = 52
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -33,6 +41,9 @@ struct HistoryView: View {
                 }
             }
             .background(Color.pageBackground)
+            .safeAreaInset(edge: .bottom) {
+                if !store.isEmpty { searchBar }
+            }
             // Anyone who signed in a browser: ask DocuSeal (no-op when it's off).
             .task { await DocuSealSync.refresh() }
             .navigationTitle("Contracts")
@@ -65,8 +76,76 @@ struct HistoryView: View {
         }
     }
 
-    private var toSign:  [GeneratedContract] { store.pending.filter(\.isIncoming) }
-    private var waiting: [GeneratedContract] { store.pending.filter { !$0.isIncoming } }
+    private var toSign:    [GeneratedContract] { shown(store.pending.filter(\.isIncoming)) }
+    private var waiting:   [GeneratedContract] { shown(store.pending.filter { !$0.isIncoming }) }
+    private var completed: [GeneratedContract] { shown(store.completed) }
+    private var declined:  [GeneratedContract] { shown(store.declined) }
+    private var drafts:    [GeneratedContract] { shown(store.drafts) }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Search
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private var trimmedQuery: String { searchQuery.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    /// The contracts that match what's typed (all of them when nothing is).
+    private func shown(_ list: [GeneratedContract]) -> [GeneratedContract] {
+        let q = trimmedQuery
+        guard isSearching, !q.isEmpty else { return list }
+        return list.filter { Self.matches($0, q) }
+    }
+
+    /// Title, the people on it, who sent it, then the wording itself.
+    /// Case and accents don't matter ("jose" finds "José").
+    static func matches(_ c: GeneratedContract, _ q: String) -> Bool {
+        var fields = [c.title, c.senderName ?? ""]
+        for r in c.recipients { fields += [r.name, r.email, r.phone] }
+        fields.append(c.content)
+        return fields.contains { $0.localizedStandardContains(q) }
+    }
+
+    private var noMatches: Bool {
+        isSearching && !trimmedQuery.isEmpty
+            && toSign.isEmpty && waiting.isEmpty && completed.isEmpty && declined.isEmpty && drafts.isEmpty
+    }
+
+    /// The search button at the bottom right; tapped, the search bar.
+    private var searchBar: some View {
+        Group {
+            if isSearching {
+                DocumentSearchBar(query: $searchQuery,
+                                  focus: $searchFocused,
+                                  matchCount: 0, current: nil,
+                                  height: barH,
+                                  placeholder: "Search contracts",
+                                  stepsThroughMatches: false,
+                                  onClose: closeSearch)
+                    .transition(.opacity)
+            } else {
+                HStack {
+                    Spacer(minLength: 0)
+                    BarCircleButton(icon: "ph-magnifying-glass",
+                                    label: String(localized: "Search contracts"),
+                                    size: barH, action: openSearch)
+                }
+                .transition(.opacity)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 12)
+        .readableColumn(Layout.readableWidth + 32)
+    }
+
+    private func openSearch() {
+        withAnimation(.spring(response: 0.34, dampingFraction: 0.86)) { isSearching = true }
+        searchFocused = true
+    }
+
+    private func closeSearch() {
+        searchFocused = false
+        withAnimation(.spring(response: 0.34, dampingFraction: 0.86)) { isSearching = false }
+        searchQuery = ""
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // MARK: - List
@@ -90,25 +169,25 @@ struct HistoryView: View {
                 }
             }
 
-            if !store.completed.isEmpty {
+            if !completed.isEmpty {
                 Section("Signed") {
-                    ForEach(store.completed) { c in
+                    ForEach(completed) { c in
                         ContractRow(contract: c) { viewContract = c }
                     }
                 }
             }
 
-            if !store.declined.isEmpty {
+            if !declined.isEmpty {
                 Section("Declined") {
-                    ForEach(store.declined) { c in
+                    ForEach(declined) { c in
                         ContractRow(contract: c) { viewContract = c }
                     }
                 }
             }
 
-            if !store.drafts.isEmpty {
+            if !drafts.isEmpty {
                 Section("Drafts") {
-                    ForEach(store.drafts) { c in
+                    ForEach(drafts) { c in
                         ContractRow(contract: c) { openDraft = c }
                             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                 Button(role: .destructive) {
@@ -123,6 +202,10 @@ struct HistoryView: View {
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
+        .scrollDismissesKeyboard(.immediately)
+        .overlay {
+            if noMatches { ContentUnavailableView.search(text: trimmedQuery) }
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -257,7 +340,9 @@ struct StatusBadge: View {
 // ─────────────────────────────────────────────────────────────────────────────
 // MARK: - ReadOnlyContractView
 // Viewer for sent / signed contracts — same document rendering as the
-// workspace, but not editable and with no AI panel.
+// workspace, but not editable and with no AI panel. The search button at the
+// bottom right finds words (and Signature / Date boxes) in the contract, the
+// same way as the signing screen.
 // ─────────────────────────────────────────────────────────────────────────────
 
 struct ReadOnlyContractView: View {
@@ -270,6 +355,15 @@ struct ReadOnlyContractView: View {
     @State private var showCopyDelivery = false
     @State private var revising: GeneratedContract? = nil
     @Environment(\.dismiss) private var dismiss
+
+    // ── Find in the contract ──
+    @State private var textView: UITextView? = nil
+    @State private var isSearching = false
+    @State private var searchQuery = ""
+    @FocusState private var searchFocused: Bool
+    @State private var searchMatches: [NSRange] = []
+    @State private var searchIndex = 0
+    @ScaledMetric(relativeTo: .body) private var barH: CGFloat = 52
 
     private let slots: [SignatureSlots.Slot]
 
@@ -331,7 +425,7 @@ struct ReadOnlyContractView: View {
                             dynamicHeight:   $editorHeight,
                             isEditing:       false,
                             availableWidth:  geo.size.width,
-                            onReady:         { _ in },
+                            onReady:         { tv in textView = tv },
                             onEditingBegan:  { },
                             allowsEditing:   false
                         )
@@ -342,6 +436,8 @@ struct ReadOnlyContractView: View {
                     } action: { width in
                         guard width > 0, !contract.signatures.isEmpty else { return }
                         attributedBody = contract.displayBody(signatureWidth: width)
+                        // Replacing the text also clears the search highlights.
+                        if isSearching { DispatchQueue.main.async { applySearch(reveal: false) } }
                     }
                 }
                 .padding(.horizontal, 16)
@@ -349,7 +445,10 @@ struct ReadOnlyContractView: View {
                 .padding(.bottom, 40)
                 .readableColumn(Layout.readableWidth + 32)
             }
+            .scrollDismissesKeyboard(.immediately)
             .background(Color.pageBackground.ignoresSafeArea())
+            .safeAreaInset(edge: .bottom) { searchBar }
+            .onChange(of: searchQuery) { _, _ in runSearch() }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if canShareSigned {
@@ -385,6 +484,70 @@ struct ReadOnlyContractView: View {
                                       })
             }
         }
+    }
+
+    // ── Search ───────────────────────────────────────────────────────────────
+
+    /// The search button at the bottom right; tapped, the find bar.
+    private var searchBar: some View {
+        Group {
+            if isSearching {
+                DocumentSearchBar(query: $searchQuery,
+                                  focus: $searchFocused,
+                                  matchCount: searchMatches.count,
+                                  current: searchMatches.isEmpty ? nil : searchIndex,
+                                  height: barH,
+                                  onPrevious: { stepSearch(-1) },
+                                  onNext: { stepSearch(1) },
+                                  onClose: closeSearch)
+                    .transition(.opacity)
+            } else {
+                HStack {
+                    Spacer(minLength: 0)
+                    BarCircleButton(icon: "ph-magnifying-glass",
+                                    label: String(localized: "Search the contract"),
+                                    size: barH, action: openSearch)
+                }
+                .transition(.opacity)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 12)
+        .readableColumn(Layout.readableWidth + 32)
+    }
+
+    private func openSearch() {
+        withAnimation(.spring(response: 0.34, dampingFraction: 0.86)) { isSearching = true }
+        searchFocused = true
+    }
+
+    private func closeSearch() {
+        searchFocused = false
+        withAnimation(.spring(response: 0.34, dampingFraction: 0.86)) { isSearching = false }
+        searchQuery = ""
+        searchMatches = []
+        searchIndex = 0
+        if let tv = textView { DocumentSearch.clear(tv) }
+    }
+
+    private func runSearch() {
+        guard isSearching else { return }
+        searchMatches = DocumentSearch.matches(for: searchQuery, in: attributedBody)
+        searchIndex = 0
+        applySearch(reveal: true)
+    }
+
+    private func stepSearch(_ delta: Int) {
+        guard !searchMatches.isEmpty else { return }
+        searchIndex = (searchIndex + delta + searchMatches.count) % searchMatches.count
+        applySearch(reveal: true)
+    }
+
+    private func applySearch(reveal: Bool) {
+        guard let tv = textView else { return }
+        let current = searchMatches.isEmpty ? nil : searchIndex
+        DocumentSearch.decorate(tv, matches: searchMatches, current: current)
+        if reveal, let c = current { DocumentSearch.reveal(searchMatches[c], in: tv) }
     }
 
     // ── Who signs, and who has ───────────────────────────────────────────────
