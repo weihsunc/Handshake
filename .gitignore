@@ -23,3 +23,6 @@ xcuserdata/
 
 # ── Stray Cowork import folder (not part of the project) ──────────────────────
 HandShake (1)/
+
+# Supabase CLI link state (local only)
+backend/supabase/.temp/
