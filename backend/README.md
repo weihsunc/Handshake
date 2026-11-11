@@ -75,11 +75,15 @@ SignWell (Path B, `SIGNWELL_API_KEY`) isn't needed for the DocuSeal plan.
 | `POST /docuseal/status` | `{submissionId}` → `{status, submitters:[{id,role,name,status,completedAt}], documents, auditLogUrl}` |
 | `POST /signwell/start`, `/signwell/status` | Path B, not used by the DocuSeal plan |
 
-## Still to verify
+## Verified end to end (Nov 11, 2026)
 
-The full app round trip (send → sign in the app and in a browser → the
-sender's copy turns Signed), and how the text tags size the fields on a
-real contract PDF.
+Send with three signers → sender's part completed at send → one signer in a
+browser (DocuSeal page) → another in the app with Face ID → DocuSeal reports
+the submission completed → the sender's copy turns Signed when Contracts
+opens.
+
+Still worth checking: how the text tags size the fields on a long, real
+contract PDF.
 
 **Known gap:** the function is deployed without auth (`--no-verify-jwt`), so
 anyone with its URL can call it. Fine for testing; add an app check before
