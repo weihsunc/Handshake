@@ -25,7 +25,9 @@ struct CheckDoodle: View {
     @State private var settled = false
 
     var body: some View {
-        let stroke = StrokeStyle(lineWidth: 16 * size / 400, lineCap: .round, lineJoin: .round)
+        // The handshake's pen at the Signed screen's size (104), in
+        // proportion at any other size.
+        let stroke = StrokeStyle(lineWidth: HandshakeDoodle.pen * size / 104, lineCap: .round, lineJoin: .round)
         ZStack {
             DoodlePath(part: .loop).trim(from: 0, to: loop).stroke(color, style: stroke)
             DoodlePath(part: .tick).trim(from: 0, to: tick).stroke(color, style: stroke)

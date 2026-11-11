@@ -28,6 +28,11 @@ struct HandshakeDoodle: View {
 
     private var height: CGFloat { width * 162 / 340 }
 
+    /// The pen the mark is drawn with on Home (200 wide): about 7.6 pt. The
+    /// other doodles (the Sent page's paper plane, the Signed check) use it
+    /// at their own screen size, so all of them read as one hand.
+    static let pen: CGFloat = 13 * 200 / 340
+
     var body: some View {
         // The mark is 16 wide; a little lighter at hero size.
         let line = StrokeStyle(lineWidth: 13 * width / 340, lineCap: .round, lineJoin: .round)

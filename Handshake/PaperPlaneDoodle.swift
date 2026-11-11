@@ -25,7 +25,9 @@ struct PaperPlaneDoodle: View {
     @State private var landed = false
 
     var body: some View {
-        let stroke = StrokeStyle(lineWidth: 16 * size / PlanePath.crop.width,
+        // The handshake's pen at the Sent page's size (84), in proportion
+        // at any other size.
+        let stroke = StrokeStyle(lineWidth: HandshakeDoodle.pen * size / 84,
                                  lineCap: .round, lineJoin: .round)
         ZStack {
             PlanePath(part: .outline).trim(from: 0, to: outline).stroke(color, style: stroke)
