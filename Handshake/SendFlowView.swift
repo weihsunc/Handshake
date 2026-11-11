@@ -68,6 +68,9 @@ struct SendFlowView: View {
     /// before the links go out, since each link carries its signer's part
     /// and each message their browser signing link.
     @State private var docuSealRef: ProviderRef? = nil
+    /// Each recipient's short link (ShortLinks), made just before the
+    /// messages open. Missing → the full link goes instead.
+    @State private var shortLinks: [UUID: String] = [:]
     @State private var signError: String? = nil
     @State private var isSigning = false
     /// The sender's own signature, made when they tap Sign & Send. Saved to
@@ -1133,9 +1136,28 @@ struct SendFlowView: View {
         if !name.isEmpty { UserDefaults.standard.set(name, forKey: Self.myNameKey) }
 
         await prepareDocuSeal()
+        await prepareShortLinks()
 
         outcomes = [:]
         deliver(finalRecipients)
+    }
+
+    /// Short links for everyone this send goes to, made in parallel. Any that
+    /// fail fall back to the full link in signingLink(for:).
+    private func prepareShortLinks() async {
+        shortLinks = [:]
+        guard let page = Config.linkPageURL else { return }
+        isSigning = true
+        defer { isSigning = false }
+        let jobs = finalRecipients.map { ($0.id, linkFragment(for: $0)) }
+        await withTaskGroup(of: (UUID, String?).self) { group in
+            for (id, fragment) in jobs {
+                group.addTask { (id, await ShortLinks.make(fragment: fragment, page: page)) }
+            }
+            for await (id, link) in group {
+                if let link { shortLinks[id] = link }
+            }
+        }
     }
 
     /// DocuSeal on: one submission, a submitter per box, before any link goes
@@ -1297,6 +1319,29 @@ struct SendFlowView: View {
     // Built from the store, so the sender's latest edits are what goes, with
     // this recipient's box (`myParty`) and the sender's signature inside.
     private func signingLink(for r: Recipient) -> String {
+        // With the link page set up, recipients land there: the app if they
+        // have it (universal link), otherwise Get Handshake or the browser.
+        // The short link when it was made, else the full one.
+        if let page = Config.linkPageURL {
+            return shortLinks[r.id] ?? "\(page)#\(linkFragment(for: r))"
+        }
+        return ContractTransfer.signingLink(for: linkContract(for: r))
+    }
+
+    /// What the link page reads: "id=…&d=…" plus "&ds=…" (this recipient's
+    /// browser signing page). The same text goes inside a short link.
+    private func linkFragment(for r: Recipient) -> String {
+        let c = linkContract(for: r)
+        var fragment = "id=\(c.id.uuidString)&d=\(ContractTransfer.encode(c))"
+        if let ds = browserLink(for: r),
+           let q = ds.addingPercentEncoding(withAllowedCharacters: .alphanumerics) {
+            fragment += "&ds=\(q)"
+        }
+        return fragment
+    }
+
+    /// The contract as this recipient receives it.
+    private func linkContract(for r: Recipient) -> GeneratedContract {
         var c = ContractStore.shared.contract(id: contract.id) ?? contract
         c.recipients    = finalRecipients
         c.status        = .sent
@@ -1313,17 +1358,7 @@ struct SendFlowView: View {
             c.signatures.removeAll { $0.slot == own.slot }
             c.merge(signatures: [own])
         }
-        // With the link page set up, recipients land there: the app if they
-        // have it (universal link), otherwise Get Handshake or the browser.
-        if let page = Config.linkPageURL {
-            var fragment = "id=\(c.id.uuidString)&d=\(ContractTransfer.encode(c))"
-            if let ds = browserLink(for: r),
-               let q = ds.addingPercentEncoding(withAllowedCharacters: .alphanumerics) {
-                fragment += "&ds=\(q)"
-            }
-            return "\(page)#\(fragment)"
-        }
-        return ContractTransfer.signingLink(for: c)
+        return c
     }
 
     /// The sender's name: what they typed to sign, or their Apple name.
