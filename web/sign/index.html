@@ -57,8 +57,9 @@
     background: var(--ink); color: var(--on-ink); font-weight: 600;
     border-radius: 999px; padding: 15px 20px; font-size: 17px;
   }
+  .note { color: var(--secondary); font-size: 14px; text-align: center; margin: 10px 0 0; }
   .secondary { display: block; text-align: center; color: var(--link); text-decoration: none;
-               font-weight: 500; padding: 14px 10px 4px; font-size: 16px; }
+               font-weight: 500; padding: 12px 10px 4px; font-size: 16px; }
   .broken { text-align: center; color: var(--secondary); }
   [hidden] { display: none !important; }
 
@@ -105,6 +106,7 @@
     <div class="spacer"></div>
 
     <a class="primary" id="get" data-t="get"></a>
+    <p class="note" data-t="why"></p>
     <a class="secondary" id="web" data-t="web" hidden></a>
   </section>
 
@@ -121,49 +123,49 @@ const T = {
   en: {
     from: n => `${n} sent you a contract to sign`, anon: "You've been sent a contract to sign",
     role: r => `You're signing as ${r}`,
-    get: "Get Handshake to sign",
+    get: "Get Handshake to sign", why: "Review the contract and sign with Face ID.",
     web: "Sign in your browser instead",
     badTitle: "This link is incomplete", badBody: "It may have been cut off when it was copied or forwarded. Ask the sender to send it again." },
   "zh-Hant": {
     from: n => `${n} 傳了一份合約給你簽署`, anon: "有人傳了一份合約給你簽署",
     role: r => `你以「${r}」身分簽署`,
-    get: "下載 Handshake 來簽署",
+    get: "下載 Handshake 來簽署", why: "在 App 裡閱讀合約，用 Face ID 簽署。",
     web: "改用瀏覽器簽署",
     badTitle: "這個連結不完整", badBody: "可能在複製或轉寄時被截斷了。請寄件人再傳一次。" },
   "zh-Hans": {
     from: n => `${n} 发来一份合同请你签署`, anon: "有人发来一份合同请你签署",
     role: r => `你以“${r}”身份签署`,
-    get: "下载 Handshake 来签署",
+    get: "下载 Handshake 来签署", why: "在 App 里阅读合同，用面容 ID 签署。",
     web: "改用浏览器签署",
     badTitle: "这个链接不完整", badBody: "可能在复制或转发时被截断了。请发件人再发一次。" },
   ja: {
     from: n => `${n}さんから署名依頼の契約書が届いています`, anon: "署名依頼の契約書が届いています",
     role: r => `「${r}」として署名します`,
-    get: "Handshake を入手して署名",
+    get: "Handshake を入手して署名", why: "契約書を確認して、Face ID で署名できます。",
     web: "ブラウザで署名する",
     badTitle: "リンクが不完全です", badBody: "コピーや転送の途中で切れた可能性があります。送信者にもう一度送ってもらってください。" },
   ko: {
     from: n => `${n}님이 서명할 계약서를 보냈습니다`, anon: "서명할 계약서가 도착했습니다",
     role: r => `‘${r}’(으)로 서명합니다`,
-    get: "Handshake 받고 서명하기",
+    get: "Handshake 받고 서명하기", why: "계약서를 검토하고 Face ID로 서명하세요.",
     web: "브라우저에서 서명하기",
     badTitle: "링크가 완전하지 않습니다", badBody: "복사하거나 전달하는 중에 잘렸을 수 있습니다. 보낸 사람에게 다시 보내 달라고 요청하세요." },
   es: {
     from: n => `${n} te ha enviado un contrato para firmar`, anon: "Te han enviado un contrato para firmar",
     role: r => `Firmas como ${r}`,
-    get: "Descarga Handshake para firmar",
+    get: "Descarga Handshake para firmar", why: "Revisa el contrato y fírmalo con Face ID.",
     web: "Firmar en el navegador",
     badTitle: "Este enlace está incompleto", badBody: "Puede que se haya cortado al copiarlo o reenviarlo. Pide a quien lo envió que lo mande de nuevo." },
   fr: {
     from: n => `${n} vous a envoyé un contrat à signer`, anon: "Vous avez reçu un contrat à signer",
     role: r => `Vous signez en tant que ${r}`,
-    get: "Obtenir Handshake pour signer",
+    get: "Obtenir Handshake pour signer", why: "Relisez le contrat et signez avec Face ID.",
     web: "Signer dans le navigateur",
     badTitle: "Ce lien est incomplet", badBody: "Il a peut-être été coupé lors d'une copie ou d'un transfert. Demandez à l'expéditeur de le renvoyer." },
   de: {
     from: n => `${n} hat dir einen Vertrag zum Unterschreiben geschickt`, anon: "Du hast einen Vertrag zum Unterschreiben erhalten",
     role: r => `Du unterschreibst als ${r}`,
-    get: "Handshake laden und unterschreiben",
+    get: "Handshake laden und unterschreiben", why: "Vertrag lesen und mit Face ID unterschreiben.",
     web: "Im Browser unterschreiben",
     badTitle: "Dieser Link ist unvollständig", badBody: "Er wurde beim Kopieren oder Weiterleiten vielleicht abgeschnitten. Bitte den Absender, ihn noch einmal zu schicken." },
 };
