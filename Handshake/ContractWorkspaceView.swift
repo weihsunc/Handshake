@@ -539,27 +539,47 @@ struct ContractWorkspaceView: View {
 
     // ── Suggestions ───────────────────────────────────────────────────────
 
-    /// Next steps under the latest reply, wrapping onto as many lines as
-    /// they need: fill in the blanks (the app does that, no AI), then the
-    /// AI's own ideas.
+    /// Under the latest reply: the one thing that must happen before
+    /// sending — fill in the blanks (the app does that, no AI) — as a real
+    /// button, then the AI's ideas as quieter chips under "Optional ideas".
+    /// Two kinds on purpose: the blanks are required, the ideas are edits
+    /// the person may or may not want (never legal advice — see AIService).
     @ViewBuilder
     private var suggestionRow: some View {
         if let last = messages.last, !last.isUser, contract != nil, !isLoading, !isAILoading {
             let blanks = SignatureSlots.blanks(in: attributedBody).count
             let ideas = last.suggestions ?? []
             if blanks > 0 || !ideas.isEmpty {
-                WrapLayout(spacing: 8, lineSpacing: 8) {
-                        if blanks > 0 {
-                            suggestionChip(blanks == 1 ? String(localized: "Fill in 1 blank")
-                                                       : String(localized: "Fill in \(blanks) blanks"),
-                                           icon: "ph-note-pencil") { openBlanksForm() }
+                VStack(alignment: .leading, spacing: 14) {
+                    if blanks > 0 {
+                        Button(action: openBlanksForm) {
+                            Label(blanks == 1 ? String(localized: "Fill in 1 blank")
+                                              : String(localized: "Fill in \(blanks) blanks"),
+                                  image: "ph-note-pencil")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color.onAction)
+                                .frame(maxWidth: .infinity)
+                                .frame(minHeight: 44)
+                                .background(Color.action, in: Capsule())
+                                .contentShape(Capsule())
                         }
-                        ForEach(ideas, id: \.self) { idea in
-                            suggestionChip(idea, icon: "ph-sparkle") {
-                                aiChatPrompt = idea
-                                sendToAI()
+                        .buttonStyle(.plain)
+                    }
+                    if !ideas.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Optional ideas")
+                                .font(.footnote)
+                                .foregroundStyle(Color(.secondaryLabel))
+                            WrapLayout(spacing: 8, lineSpacing: 8) {
+                                ForEach(ideas, id: \.self) { idea in
+                                    ideaChip(idea) {
+                                        aiChatPrompt = idea
+                                        sendToAI()
+                                    }
+                                }
                             }
                         }
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, -4)
@@ -568,21 +588,26 @@ struct ContractWorkspaceView: View {
         }
     }
 
-    private func suggestionChip(_ title: String, icon: String,
-                                action: @escaping () -> Void) -> some View {
+    /// One of the AI's ideas: outlined, no icon (each starts with its own
+    /// verb), and free to wrap onto a second line rather than being cut off.
+    private func ideaChip(_ title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Label(title, image: icon)
-                .font(.subheadline.weight(.medium))
+            Text(title)
+                .font(.subheadline)
                 .foregroundStyle(Color.primaryInk)
-                .lineLimit(1)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 9)
-                .background(Color(.systemBackground).opacity(0.6), in: Capsule())
-                .overlay(Capsule().strokeBorder(Color(.separator), lineWidth: 1))
-                .contentShape(Capsule())
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 13)
+                .padding(.vertical, 8)
+                // A capsule at one line; stays a soft rounded box if it wraps.
+                .background(Color(.systemBackground).opacity(0.6), in: chipShape)
+                .overlay(chipShape.strokeBorder(Color(.separator), lineWidth: 1))
+                .contentShape(chipShape)
         }
         .buttonStyle(.plain)
     }
+
+    private var chipShape: RoundedRectangle { RoundedRectangle(cornerRadius: 18, style: .continuous) }
 
     /// Fill In Blanks, right on the contract: the same form as the send
     /// page, written into the document when it closes.

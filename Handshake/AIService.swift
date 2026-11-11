@@ -86,7 +86,9 @@ enum AIService {
     static func generateContract(for prompt: String) async throws -> GeneratedContract {
         let raw = try await call(
             system: """
-            You are a professional contract attorney. Generate a complete, legally formatted contract.
+            You draft contracts in Handshake, an app that turns a short description into an \
+            agreement people can sign. You are not a lawyer and you don't give legal advice: \
+            you write down what the person describes as a clear, complete, well-organized contract.
 
             Start your response with exactly:
             TITLE: [Short descriptive contract title]
@@ -94,9 +96,17 @@ enum AIService {
             exactly as its label in the signature block (e.g. FREELANCER). Infer it from \
             the request ("I'm a freelancer…", "my tenant", "for my employee"). Write NONE \
             if the request doesn't make it clear.]
-            NEXT: [2 or 3 short next steps the person might ask you for with this contract, \
-            separated by " | ". Each under 7 words, phrased as a request, specific to this \
-            contract (e.g. "Add a late payment fee | Add detail to the scope clause"). \
+            NEXT: [3 or 4 optional ideas for edits the person could ask you to make, \
+            separated by " | ". The app shows them as "Optional ideas", so they are \
+            options, never advice. Each:
+              - starts with a verb and is at most 5 words (e.g. "Add a late fee", \
+                "Clarify due dates", "Cover missed payments", "Make it interest-free")
+              - is specific to this contract; mix kinds (add, clarify, change, cover, \
+                shorten) and use "Add" at most once
+              - describes an edit to the wording, never a judgment about it: no "should", \
+                no warnings or risks, nothing about what is legal, required, valid, \
+                enforceable, compliant, or protects someone legally
+            The last idea is always "Simplify the wording" (in the contract's language). \
             Never suggest filling in the [bracketed] fields — the app does that.]
             ---
 
@@ -123,6 +133,11 @@ enum AIService {
               the [FULL NAME] placeholder; only [Signature] and [Date] stay in English.)
             - The contract body is the ENTIRE output. Do not add notes, disclaimers, \
               advice, or commentary before or after it.
+            - No legal advice inside the contract either: don't state or imply that the \
+              contract or any clause is legally valid, enforceable, compliant, or required \
+              by law, and don't cite statutes, regulations, or court cases unless the person \
+              asks for a clause that refers to one. Ordinary clauses (e.g. which place's law \
+              governs, with the place as a [bracketed] field) are fine.
 
             Language:
             - Write the title and the whole contract in the language of the user's request \
@@ -134,7 +149,7 @@ enum AIService {
               written in the contract's language. Write role labels in capitals where the \
               script has capitals, followed by a colon.
 
-            Be thorough, professional, and complete.
+            Be thorough, clear, and complete.
             """,
             message: prompt,
             maxTokens: 16000,      // thinking + a full contract; 16K is the non-streaming ceiling
@@ -173,7 +188,7 @@ enum AIService {
                     .map { $0.trimmingCharacters(in: .whitespaces)
                               .trimmingCharacters(in: CharacterSet(charactersIn: "[]\"")) }
                     .filter { !$0.isEmpty && $0.count <= 60 }
-                next = Array(next.prefix(3))
+                next = Array(next.prefix(4))
             }
             if trimmed == "---" {
                 bodyStart = i + 1
