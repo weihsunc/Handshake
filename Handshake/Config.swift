@@ -14,5 +14,5 @@ enum Config {
     /// "https://<host>/sign/". Set: every signing link points there and the
     /// page offers Get Handshake or signing in the browser (DocuSeal). nil:
     /// links are handshake:// and the message adds the browser link itself.
-    static let linkPageURL: String? = nil
+    static let linkPageURL: String? = "https://gethandshake.app/sign/"
 }

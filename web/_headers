@@ -1,4 +1,4 @@
-# Cloudflare Pages headers (same as vercel.json — keep the two in step).
+# Cloudflare Pages headers for the link page (hosted on Cloudflare Pages, project "handshake").
 /*
   Referrer-Policy: no-referrer
   X-Content-Type-Options: nosniff
