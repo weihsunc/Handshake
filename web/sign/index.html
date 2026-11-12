@@ -127,7 +127,7 @@
 </main>
 
 <script>
-const APP_STORE_URL = "https://apps.apple.com/";   // TODO: Handshake's listing once it's live
+const APP_STORE_URL = null;   // TODO: Handshake's listing once it's live
 
 const T = {
   en: {
@@ -188,6 +188,17 @@ const T = {
     badTitle: "Dieser Link ist unvollständig", badBody: "Er wurde beim Kopieren oder Weiterleiten vielleicht abgeschnitten. Bitte den Absender, ihn noch einmal zu schicken." },
 };
 
+const PRELAUNCH = {
+  en: ["Review and sign in your browser", "No app download needed.", "Handshake isn't available to download yet. If you already have it, open the app below."],
+  "zh-Hant": ["在瀏覽器閱讀並簽署", "不需下載 App。", "Handshake 尚未開放下載。若已安裝，請從下方開啟 App。"],
+  "zh-Hans": ["在浏览器阅读并签署", "无需下载 App。", "Handshake 尚未开放下载。若已安装，请从下方打开 App。"],
+  ja: ["ブラウザで確認して署名", "アプリのダウンロードは不要です。", "Handshake はまだダウンロードできません。インストール済みの場合は、下からアプリを開いてください。"],
+  ko: ["브라우저에서 검토하고 서명", "앱을 다운로드할 필요가 없습니다.", "Handshake는 아직 다운로드할 수 없습니다. 이미 설치했다면 아래에서 앱을 여세요."],
+  es: ["Revisar y firmar en el navegador", "No necesitas descargar la app.", "Handshake aún no está disponible para descargar. Si ya la tienes, ábrela abajo."],
+  fr: ["Lire et signer dans le navigateur", "Aucun téléchargement nécessaire.", "Handshake n’est pas encore disponible au téléchargement. Si vous l’avez déjà, ouvrez l’app ci-dessous."],
+  de: ["Im Browser prüfen und unterschreiben", "Kein App-Download nötig.", "Handshake steht noch nicht zum Download bereit. Wenn du die App schon hast, öffne sie unten."],
+};
+
 function lang() {
   for (const l of navigator.languages || [navigator.language || "en"]) {
     const s = l.toLowerCase();
@@ -243,14 +254,25 @@ async function expand(s) {
   document.getElementById("headline").textContent = c.from ? L.from(c.from) : L.anon;
   document.getElementById("role").textContent = role ? L.role(role) : "";
   document.getElementById("title").textContent = c.title;
-  document.getElementById("get").href = APP_STORE_URL;
+  const get = document.getElementById("get");
+  const browserURL = ds && /^https:\/\//.test(ds) ? ds : null;
+  if (APP_STORE_URL) {
+    get.href = APP_STORE_URL;
+  } else if (browserURL) {
+    get.href = browserURL;
+    get.textContent = PRELAUNCH[lang()][0];
+    document.querySelector('[data-t="why"]').textContent = PRELAUNCH[lang()][1];
+  } else {
+    get.hidden = true;
+    document.querySelector('[data-t="why"]').textContent = PRELAUNCH[lang()][2];
+  }
   // For people who already have the app (until universal links open it directly).
   if (/^[0-9A-Fa-f-]{36}$/.test(id) && /^[A-Za-z0-9_-]+$/.test(d))
     document.getElementById("open").href = `handshake://sign/${id}?d=${d}`;
   else document.getElementById("open").hidden = true;
-  if (ds && /^https:\/\//.test(ds)) {
+  if (browserURL && APP_STORE_URL) {
     const web = document.getElementById("web");
-    web.href = ds; web.hidden = false;
+    web.href = browserURL; web.hidden = false;
   }
   document.getElementById("ok").hidden = false;
 })();

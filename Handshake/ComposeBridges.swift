@@ -112,7 +112,7 @@ struct ReplyComposeSheet: View {
             .ignoresSafeArea()
         case .mail(let email):
             MailComposeView(toRecipients: [email], subject: subject, body: message) { r in
-                onFinish(r == .sent || r == .saved ? .sent : .cancelled)
+                onFinish(r == .sent ? .sent : .cancelled)
             }
             .ignoresSafeArea()
         case .share:

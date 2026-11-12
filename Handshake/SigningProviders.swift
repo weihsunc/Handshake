@@ -52,7 +52,7 @@ struct ProviderRef: Codable, Hashable {
 
 /// Who signs a DocuSeal submission's box. Email or phone, when known, only
 /// labels the submitter in DocuSeal; DocuSeal sends nothing itself.
-struct DocuSealParty {
+struct DocuSealParty: Equatable {
     var role: String
     var name: String = ""
     var email: String = ""
@@ -71,12 +71,14 @@ enum BackendError: LocalizedError {
     case notConfigured
     case http(Int, String)
     case badResponse
+    case missingSubmission
 
     var errorDescription: String? {
         switch self {
         case .notConfigured:   return String(localized: "No backend URL in Secrets.swift.")
         case .http(let c, let m): return String(localized: "Backend error \(c): \(m)")
         case .badResponse:     return String(localized: "Unexpected response from the backend.")
+        case .missingSubmission: return String(localized: "This invitation isn't registered with the signing provider. Ask the sender to send it again.")
         }
     }
 }
@@ -171,12 +173,21 @@ enum SigningProviders {
         ])
         let obj  = json as? [String: Any] ?? [:]
         let list = obj["submitters"] as? [[String: Any]] ?? []
-        guard let id = idString(obj["id"]), !list.isEmpty else { throw BackendError.badResponse }
+        let ids = list.compactMap { idString($0["id"]) }
+        let roles = list.compactMap { $0["role"] as? String }
+        let urls = list.compactMap { $0["url"] as? String }
+        guard let id = idString(obj["id"]), !list.isEmpty,
+              list.count == parties.count, ids.count == list.count,
+              Set(ids).count == ids.count,
+              roles.count == list.count, Set(roles).count == roles.count,
+              Set(roles) == Set(parties.map(\.role)), urls.count == list.count,
+              urls.allSatisfy({ URL(string: $0)?.scheme == "https" })
+        else { throw BackendError.badResponse }
         return ProviderRef(backend: .docuseal,
                            documentId: id,
-                           submitterIds: list.compactMap { idString($0["id"]) },
-                           signingURLs: list.map { $0["url"] as? String ?? "" },
-                           roles: list.map { $0["role"] as? String ?? "" })
+                           submitterIds: ids,
+                           signingURLs: urls,
+                           roles: roles)
     }
 
     /// Path A: after Face ID succeeded on the phone, tell DocuSeal this party's

@@ -39,7 +39,7 @@ struct SendFlowView: View {
     /// Signature boxes on the unsigned document, and whose they are.
     @State private var slots: [SignatureSlots.Slot]
     /// "[ADDRESS]"-style placeholders still in the document.
-    @State private var blanks: [String]
+    @State private var blanks: [SignatureSlots.Blank]
     /// Where each blank sits ("…entered into as of ____ (the Effective…").
     @State private var blankContext: [String: String]
     /// What the sender typed for each blank. Written into the document when
@@ -68,6 +68,8 @@ struct SendFlowView: View {
     /// before the links go out, since each link carries its signer's part
     /// and each message their browser signing link.
     @State private var docuSealRef: ProviderRef? = nil
+    @State private var preparedContract: Data? = nil
+    @State private var preparedParties: [DocuSealParty] = []
     /// Each recipient's short link (ShortLinks), made just before the
     /// messages open. Missing → the full link goes instead.
     @State private var shortLinks: [UUID: String] = [:]
@@ -76,6 +78,7 @@ struct SendFlowView: View {
     /// The sender's own signature, made when they tap Sign & Send. Saved to
     /// the contract only once something was actually sent.
     @State private var ownSignature: PartySignature? = nil
+    @State private var ownSignatureBody: String? = nil
 
     /// After sending: the confirmation replaces the form (who it went to,
     /// how, what happens next). Back is gone from then on; Done returns to
@@ -111,7 +114,7 @@ struct SendFlowView: View {
         let base   = stored.baseBody()
         let found  = SignatureSlots.find(in: base)
         _slots = State(initialValue: found)
-        let foundBlanks = SignatureSlots.blanks(in: base)
+        let foundBlanks = SignatureSlots.blankFields(in: base)
         _blanks = State(initialValue: foundBlanks)
         _blankContext = State(initialValue: Self.contexts(of: foundBlanks, in: base))
         // The sender's party: what they chose last time ("" = not signing),
@@ -289,14 +292,14 @@ struct SendFlowView: View {
     private func saveBody(_ body: NSMutableAttributedString) {
         ContractStore.shared.update(id: contract.id) { $0.setBody(body) }
         slots = SignatureSlots.find(in: body)
-        let b = SignatureSlots.blanks(in: body)
+        let b = SignatureSlots.blankFields(in: body)
         blanks = b
         blankContext = Self.contexts(of: b, in: body)
     }
 
-    private static func contexts(of blanks: [String], in body: NSAttributedString) -> [String: String] {
+    private static func contexts(of blanks: [SignatureSlots.Blank], in body: NSAttributedString) -> [String: String] {
         Dictionary(uniqueKeysWithValues: blanks.compactMap { b in
-            SignatureSlots.context(of: b, in: body).map { (b, $0) }
+            SignatureSlots.context(of: b, in: body).map { (b.id, $0) }
         })
     }
 
@@ -395,6 +398,7 @@ struct SendFlowView: View {
                 .readableColumn(Layout.readableWidth + 32)
             }
             .background(Color.pageBackground.ignoresSafeArea())
+            .disabled(isSigning)
             .navigationTitle("Send for Signing")
             .navigationBarTitleDisplayMode(.inline)
             // A pushed page: the system back button (and edge swipe) leave it.
@@ -485,20 +489,20 @@ struct SendFlowView: View {
     private var autoValues: [String: String] {
         var out: [String: String] = [:]
         for b in blanks {
-            guard let p = SignatureSlots.party(forNameBlank: b, in: slots) else { continue }
+            guard let p = SignatureSlots.party(forNameBlank: b.token, in: slots) else { continue }
             let name = (p == mySlot ? myName : recipients.first { $0.party == p }?.name ?? "")
                 .trimmingCharacters(in: .whitespaces)
-            if !name.isEmpty { out[b] = name }
+            if !name.isEmpty { out[b.id] = name }
         }
         return out
     }
 
-    private func value(for blank: String) -> String {
-        (blankValues[blank] ?? autoValues[blank] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    private func value(for blank: SignatureSlots.Blank) -> String {
+        (blankValues[blank.id] ?? autoValues[blank.id] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Blanks that would still go out as "[…]".
-    private var pendingBlanks: [String] { blanks.filter { value(for: $0).isEmpty } }
+    private var pendingBlanks: [SignatureSlots.Blank] { blanks.filter { value(for: $0).isEmpty } }
 
     /// Writes the filled blanks into the stored document. `includeAuto`:
     /// also the names taken from this screen (only when actually sending —
@@ -509,18 +513,18 @@ struct SendFlowView: View {
     private func applyBlanks(includeAuto: Bool) -> (ranges: [NSRange], count: Int) {
         var fills: [String: String] = [:]
         for b in blanks {
-            let v = (blankValues[b] ?? (includeAuto ? autoValues[b] : nil) ?? "")
-            if !v.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { fills[b] = v }
+            let v = (blankValues[b.id] ?? (includeAuto ? autoValues[b.id] : nil) ?? "")
+            if !v.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { fills[b.id] = v }
         }
         guard !fills.isEmpty, let stored = ContractStore.shared.contract(id: contract.id) else { return ([], 0) }
         let body = stored.baseBody()
-        let ranges = SignatureSlots.fillTracking(fills, in: body)
+        let ranges = SignatureSlots.fillFields(fills, fields: blanks, in: body)
         guard !ranges.isEmpty else { return ([], 0) }
         ContractStore.shared.update(id: contract.id) { $0.setBody(body) }
-        blanks = SignatureSlots.blanks(in: body)
+        blanks = SignatureSlots.blankFields(in: body)
         blankContext = Self.contexts(of: blanks, in: body)
-        blankValues = blankValues.filter { blanks.contains($0.key) }
-        return (ranges, fills.count)
+        blankValues = [:]
+        return (ranges, ranges.count)
     }
 
     /// The fill-in form closed. Anything typed goes into the contract now,
@@ -555,7 +559,7 @@ struct SendFlowView: View {
 
     private var blanksSummary: String {
         let pending = pendingBlanks
-        let shown = Array(pending.prefix(3))
+        let shown = pending.prefix(3).map(\.token)
         return pending.count > 3
             ? String(localized: "\(shown.joined(separator: ", ")) and \(pending.count - 3) more")
             : shown.formatted(.list(type: .and))
@@ -889,8 +893,8 @@ struct SendFlowView: View {
     }
 
     /// "Effective Date, State/Country and 19 more" — the blanks by name.
-    private func blanksNamed(_ pending: [String]) -> String {
-        let shown = pending.prefix(2).map(blankLabel)
+    private func blanksNamed(_ pending: [SignatureSlots.Blank]) -> String {
+        let shown = pending.prefix(2).map { blankLabel($0.token) }
         return pending.count > 2
             ? String(localized: "\(shown.joined(separator: ", ")) and \(pending.count - 2) more")
             : shown.formatted(.list(type: .and))
@@ -1098,20 +1102,23 @@ struct SendFlowView: View {
     }
 
     private func send() async {
+        guard !isSigning else { return }
+        isSigning = true
+        defer { isSigning = false }
         // Filled blanks (and the names from this screen) go into the
         // document first, so the links, and the sender's signature, are on
         // the finished wording.
         applyBlanks(includeAuto: true)
+        let signingBody = (ContractStore.shared.contract(id: contract.id) ?? contract).content
+        if ownSignatureBody != signingBody || mySlot == nil { ownSignature = nil }
         // The sender's own box first. A signature already on the record for
         // that box (sending again, wording unchanged) is reused.
-        if let slot = mySlot, ownSignature?.slot != slot {
+        if let slot = mySlot, ownSignature?.slot != slot || ownSignature?.name != myName.trimmingCharacters(in: .whitespaces) {
             let name = myName.trimmingCharacters(in: .whitespaces)
             if let kept = ContractStore.shared.contract(id: contract.id)?.signature(forSlot: slot),
                kept.name == name {
                 ownSignature = kept
             } else {
-                isSigning = true
-                defer { isSigning = false }
                 do {
                     try await SignatureService.authenticate(
                         reason: String(localized: "Confirm your identity to sign \"\(contract.title)\".")
@@ -1128,6 +1135,7 @@ struct SendFlowView: View {
                                               date: slots[slot].hasDate ? stamp.signedAt : nil,
                                               method: SignatureService.biometryName)
             }
+            ownSignatureBody = signingBody
         }
 
         let reply = replyTo.trimmingCharacters(in: .whitespaces)
@@ -1135,7 +1143,12 @@ struct SendFlowView: View {
         let name = myName.trimmingCharacters(in: .whitespaces)
         if !name.isEmpty { UserDefaults.standard.set(name, forKey: Self.myNameKey) }
 
-        await prepareDocuSeal()
+        do {
+            try await prepareDocuSeal()
+        } catch {
+            providerError = error.localizedDescription
+            return
+        }
         await prepareShortLinks()
 
         outcomes = [:]
@@ -1147,8 +1160,6 @@ struct SendFlowView: View {
     private func prepareShortLinks() async {
         shortLinks = [:]
         guard let page = Config.linkPageURL else { return }
-        isSigning = true
-        defer { isSigning = false }
         let jobs = finalRecipients.map { ($0.id, linkFragment(for: $0)) }
         await withTaskGroup(of: (UUID, String?).self) { group in
             for (id, fragment) in jobs {
@@ -1161,13 +1172,12 @@ struct SendFlowView: View {
     }
 
     /// DocuSeal on: one submission, a submitter per box, before any link goes
-    /// out. The sender's own Face ID signature completes their submitter. If
-    /// DocuSeal can't be reached the send carries on with app links only
-    /// (DocuSealSync retries the sender's part later if only that failed).
-    private func prepareDocuSeal() async {
-        guard Secrets.signingBackend == .docuseal, BackendClient.isConfigured else { return }
-        isSigning = true
-        defer { isSigning = false }
+    /// out. No invitation leaves until the provider has registered the
+    /// submission and acknowledged the sender's own signature, if any.
+    private func prepareDocuSeal() async throws {
+        guard Secrets.signingBackend != .onDevice else { return }
+        guard BackendClient.isConfigured else { throw BackendError.notConfigured }
+        guard Secrets.signingBackend == .docuseal else { return }
 
         let rs = finalRecipients
         let me = myName.trimmingCharacters(in: .whitespaces)
@@ -1190,18 +1200,24 @@ struct SendFlowView: View {
         }
 
         let latest = ContractStore.shared.contract(id: contract.id) ?? contract
-        do {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        let snapshot = try encoder.encode(latest)
+        if docuSealRef == nil || preparedContract != snapshot || preparedParties != parties {
+            // Reuse the submission when retrying a failed sender completion.
+            // Changed wording or signers require a fresh submission.
+            docuSealRef = nil
             let ref = try await SigningProviders.startDocuSeal(contract: latest, parties: parties)
             docuSealRef = ref
-            if let own = ownSignature, let role = own.role {
-                let stamp = SignatureStamp(signerName: own.name, signedAt: own.signedAt, hash: own.hash, method: own.method)
-                try? await SigningProviders.completeDocuSeal(ref: ref, role: role, signerName: own.name, stamp: stamp,
-                                                             signedDate: own.date,
-                                                             consentText: SigningView.consentText)
-            }
-        } catch {
-            docuSealRef = nil
-            print("DocuSeal start failed — sending app links only:", error.localizedDescription)
+            preparedContract = snapshot
+            preparedParties = parties
+        }
+        guard let ref = docuSealRef else { throw BackendError.badResponse }
+        if let own = ownSignature, let role = own.role {
+            let stamp = SignatureStamp(signerName: own.name, signedAt: own.signedAt, hash: own.hash, method: own.method)
+            try await SigningProviders.completeDocuSeal(ref: ref, role: role, signerName: own.name, stamp: stamp,
+                                                       signedDate: own.date,
+                                                       consentText: SigningView.consentText)
         }
     }
 
@@ -1263,7 +1279,7 @@ struct SendFlowView: View {
             .ignoresSafeArea()
         case .mail(let email):
             MailComposeView(toRecipients: [email], subject: mailSubject, body: mailBody(for: d.recipient)) { r in
-                delivered(d, sent: r == .sent || r == .saved)
+                delivered(d, sent: r == .sent)
             }
             .ignoresSafeArea()
         case .share:
@@ -1435,7 +1451,7 @@ struct SendFlowView: View {
 // ─────────────────────────────────────────────────────────────────────────────
 
 struct FillBlanksSheet: View {
-    let blanks: [String]
+    let blanks: [SignatureSlots.Blank]
     let context: [String: String]
     let auto: [String: String]
     @Binding var values: [String: String]
@@ -1448,18 +1464,18 @@ struct FillBlanksSheet: View {
                 ForEach(blanks, id: \.self) { b in
                     Section {
                         TextField(label(b), text: Binding(
-                            get: { values[b] ?? auto[b] ?? "" },
-                            set: { values[b] = $0 }
+                            get: { values[b.id] ?? auto[b.id] ?? "" },
+                            set: { values[b.id] = $0 }
                         ))   // one line: a blank sits inside a sentence
-                        .focused($focused, equals: b)
+                        .focused($focused, equals: b.id)
                         .submitLabel(.next)
                         .onSubmit { focusNext(after: b) }
                     } header: {
                         Text(label(b))
                     } footer: {
                         VStack(alignment: .leading, spacing: 4) {
-                            if let line = context[b] { Text(line) }
-                            if values[b] == nil, auto[b] != nil {
+                            if let line = context[b.id] { Text(line) }
+                            if values[b.id] == nil, auto[b.id] != nil {
                                 Text("Filled in from the name on the send screen.")
                                     .foregroundStyle(Color.accent)
                             }
@@ -1475,16 +1491,16 @@ struct FillBlanksSheet: View {
                 }
             }
             .onAppear {
-                focused = blanks.first { (values[$0] ?? auto[$0] ?? "").isEmpty }
+                focused = blanks.first { (values[$0.id] ?? auto[$0.id] ?? "").isEmpty }?.id
             }
         }
     }
 
-    private func label(_ b: String) -> String { blankLabel(b) }
+    private func label(_ b: SignatureSlots.Blank) -> String { blankLabel(b.token) }
 
-    private func focusNext(after b: String) {
+    private func focusNext(after b: SignatureSlots.Blank) {
         guard let i = blanks.firstIndex(of: b) else { return }
-        focused = blanks.dropFirst(i + 1).first
+        focused = blanks.dropFirst(i + 1).first?.id
         if focused == nil { dismiss() }
     }
 }

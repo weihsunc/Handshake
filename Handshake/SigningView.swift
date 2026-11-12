@@ -657,7 +657,11 @@ struct SigningView: View {
 
     private func sign() async {
         let name = signerName.trimmingCharacters(in: .whitespaces)
-        guard !name.isEmpty else { return }
+        guard !name.isEmpty, !isSigning else { return }
+        if Secrets.signingBackend != .onDevice && contract.providerRef == nil {
+            signError = BackendError.missingSubmission.localizedDescription
+            return
+        }
 
         isSigning = true
         defer { isSigning = false }
@@ -679,11 +683,12 @@ struct SigningView: View {
         switch contract.providerRef?.backend ?? .onDevice {
 
         case .docuseal:
-            // Path A: Face ID was the signature. Tell DocuSeal, with our
-            // evidence, for this person's box. Not a gate: if DocuSeal can't
-            // be reached the signature still stands in Handshake and the
-            // signed copy still goes back to the sender.
-            guard let ref = contract.providerRef else { finishLocally(stamp, name: name); return }
+            // Only record success after the provider acknowledges this box.
+            // On failure the unsigned document stays available for a retry.
+            guard let ref = contract.providerRef else {
+                signError = BackendError.missingSubmission.localizedDescription
+                return
+            }
             let slot = slots.isEmpty ? nil : selectedSlot
             do {
                 try await SigningProviders.completeDocuSeal(
@@ -691,11 +696,12 @@ struct SigningView: View {
                     role: ref.roles?.first,
                     signerName: name,
                     stamp: stamp,
-                    signedDate: slot.flatMap { slots.indices.contains($0) && slots[$0].hasDate ? stamp.signedAt : nil },
+                    signedDate: slot.flatMap { slots.indices.contains($0) && slots[$0].hasDate ? signedDate : nil },
                     consentText: Self.consentText
                 )
             } catch {
-                print("DocuSeal complete failed — signed in Handshake only:", error.localizedDescription)
+                signError = error.localizedDescription
+                return
             }
             finishLocally(stamp, name: name)
 

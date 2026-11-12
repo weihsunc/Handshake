@@ -92,7 +92,7 @@ struct ContractWorkspaceView: View {
     @State private var toastGeneration                         = 0
     /// Fill In Blanks opened from the contract itself (a chat suggestion).
     @State private var showBlanksForm                          = false
-    @State private var formBlanks:     [String]                = []
+    @State private var formBlanks:     [SignatureSlots.Blank]                = []
     @State private var formContext:    [String: String]        = [:]
     @State private var formValues:     [String: String]        = [:]
     @State private var textViewRef:    UITextView?             = nil
@@ -547,7 +547,7 @@ struct ContractWorkspaceView: View {
     @ViewBuilder
     private var suggestionRow: some View {
         if let last = messages.last, !last.isUser, contract != nil, !isLoading, !isAILoading {
-            let blanks = SignatureSlots.blanks(in: attributedBody).count
+            let blanks = SignatureSlots.blankFields(in: attributedBody).count
             let ideas = last.suggestions ?? []
             if blanks > 0 || !ideas.isEmpty {
                 VStack(alignment: .leading, spacing: 14) {
@@ -613,11 +613,11 @@ struct ContractWorkspaceView: View {
     /// page, written into the document when it closes.
     private func openBlanksForm() {
         if isEditing { isEditing = false }
-        let b = SignatureSlots.blanks(in: attributedBody)
+        let b = SignatureSlots.blankFields(in: attributedBody)
         guard !b.isEmpty else { return }
         formBlanks  = b
         formContext = Dictionary(uniqueKeysWithValues: b.compactMap { x in
-            SignatureSlots.context(of: x, in: attributedBody).map { (x, $0) } })
+            SignatureSlots.context(of: x, in: attributedBody).map { (x.id, $0) } })
         formValues  = [:]
         showBlanksForm = true
     }
@@ -627,12 +627,12 @@ struct ContractWorkspaceView: View {
         formValues = [:]
         guard !fills.isEmpty else { return }
         let doc = NSMutableAttributedString(attributedString: attributedBody)
-        let ranges = SignatureSlots.fillTracking(fills, in: doc)
+        let ranges = SignatureSlots.fillFields(fills, fields: formBlanks, in: doc)
         guard !ranges.isEmpty else { return }
         attributedBody = doc
         persist()
         filledRanges = ranges
-        filledToast  = fills.count
+        filledToast  = ranges.count
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { showFilledBlanks() }
     }
 

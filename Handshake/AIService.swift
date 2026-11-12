@@ -121,14 +121,22 @@ enum AIService {
               keeping all details and labelling each value (e.g. "1. Milestone: Design approval; \
               Due date: [DATE]; Payment: [AMOUNT]"). When revising an existing contract, \
               convert any tables to numbered lists without losing information.
-            - Use [brackets] for any field the user must fill in
-            - Include all standard sections for this agreement type
+            - Preserve every supplied name, amount, date, duration, and agreed term. \
+              Never replace information the user supplied with a blank (for example, \
+              "lend my camera to Jamie" names the borrower Jamie).
+            - Use [brackets] only for missing information. Give each distinct fact a \
+              specific label, such as [DAMAGE NOTICE HOURS] and [PAYMENT DEADLINE DAYS], \
+              never a generic [NUMBER], [AMOUNT], or [DATE]. Specify the unit outside \
+              the blank; never leave wording such as "hours or days" unresolved.
+            - Keep a simple agreement concise. Include sections relevant to the \
+              described deal without inventing optional fees or extra requirements.
             - END with a signature block, one entry per party, exactly in this form \
               (keep the bracketed tokens verbatim — the app fills them in when someone signs):
               **SIGNATURES**
               [PARTY ROLE, e.g. LANDLORD]: [FULL NAME]
               [Signature]
               [Date]
+              Use the actual name instead of [FULL NAME] when the request names that party. \
               (In a contract that isn't in English, translate the heading, the role and \
               the [FULL NAME] placeholder; only [Signature] and [Date] stay in English.)
             - The contract body is the ENTIRE output. Do not add notes, disclaimers, \

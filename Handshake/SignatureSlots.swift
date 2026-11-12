@@ -21,6 +21,54 @@ import Foundation
 
 enum SignatureSlots {
 
+    /// Each occurrence is its own input. Identical labels can describe
+    /// different terms (for example, a notice period and a payment deadline).
+    struct Blank: Hashable, Identifiable {
+        let token: String
+        let range: NSRange
+        var id: String { "\(range.location):\(token)" }
+    }
+
+    static func blankFields(in doc: NSAttributedString) -> [Blank] {
+        let ns = doc.string as NSString
+        let skip = find(in: doc).compactMap(\.roleLine)
+        let re = try! NSRegularExpression(pattern: #"\[[^\[\]\n]+\]"#)
+        return re.matches(in: doc.string, range: NSRange(location: 0, length: ns.length)).compactMap { m in
+            let token = ns.substring(with: m.range)
+            guard token != Self.token, token != SignatureField.date.token,
+                  !skip.contains(where: { NSLocationInRange(m.range.location, $0) }) else { return nil }
+            return Blank(token: token, range: m.range)
+        }
+    }
+
+    static func context(of blank: Blank, in doc: NSAttributedString) -> String? {
+        context(of: blank.token, range: blank.range, in: doc)
+    }
+
+    /// Validate the form's snapshot before applying any input. If the document
+    /// changed while the form was open, leave it untouched rather than fill a
+    /// different occurrence at a stale offset.
+    static func fillFields(_ values: [String: String], fields: [Blank],
+                           in doc: NSMutableAttributedString) -> [NSRange] {
+        let ns = doc.string as NSString
+        guard fields.allSatisfy({ NSMaxRange($0.range) <= ns.length && ns.substring(with: $0.range) == $0.token }) else { return [] }
+        let hits = fields.compactMap { field -> (range: NSRange, value: String)? in
+            guard let value = values[field.id]?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !value.isEmpty, value != field.token else { return nil }
+            return (field.range, value)
+        }.sorted { $0.range.location < $1.range.location }
+        for hit in hits.reversed() {
+            let attrs = doc.attributes(at: hit.range.location, effectiveRange: nil)
+            doc.replaceCharacters(in: hit.range, with: NSAttributedString(string: hit.value, attributes: attrs))
+        }
+        var shift = 0
+        return hits.map { hit in
+            let length = (hit.value as NSString).length
+            defer { shift += length - hit.range.length }
+            return NSRange(location: hit.range.location + shift, length: length)
+        }
+    }
+
     struct Slot: Equatable {
         /// Display name, e.g. "Landlord". "Party N" when no role line is found.
         let role: String
@@ -69,6 +117,11 @@ enum SignatureSlots {
         let ns = doc.string as NSString
         let r = ns.range(of: blank)
         guard r.location != NSNotFound else { return nil }
+        return context(of: blank, range: r, in: doc)
+    }
+
+    private static func context(of blank: String, range r: NSRange, in doc: NSAttributedString) -> String? {
+        let ns = doc.string as NSString
         let para = ns.paragraphRange(for: r)
         let start = max(para.location, r.location - 40)
         let end   = min(para.location + para.length, r.location + r.length + 40)
@@ -201,25 +254,15 @@ enum SignatureSlots {
     // ── Blanks ───────────────────────────────────────────────────────────────
 
     /// Placeholders the AI left for the sender to fill — "[ADDRESS]",
-    /// "[RENT AMOUNT]" — in document order, without repeats. Not the field
+    /// "[RENT AMOUNT]" — one per occurrence in document order. Not the field
     /// tokens, and not the name on a party's line: the signer fills that.
     static func blanks(in doc: NSAttributedString) -> [String] {
-        let ns = doc.string as NSString
-        let skip = find(in: doc).compactMap(\.roleLine)
-        guard let re = try? NSRegularExpression(pattern: #"\[[^\[\]\n]{1,48}\]"#) else { return [] }
-        var seen = Set<String>(), out: [String] = []
-        for m in re.matches(in: doc.string, range: NSRange(location: 0, length: ns.length)) {
-            let t = ns.substring(with: m.range)
-            if t == token || t == SignatureField.date.token { continue }
-            if skip.contains(where: { NSLocationInRange(m.range.location, $0) }) { continue }
-            if seen.insert(t).inserted { out.append(t) }
-        }
-        return out
+        blankFields(in: doc).map(\.token)
     }
 
     /// The first "[…]" on a party's line, for the signer's name.
     static func namePlaceholder(in line: NSRange, of ns: NSString) -> NSRange? {
-        guard let re = try? NSRegularExpression(pattern: #"\[[^\[\]\n]{1,48}\]"#),
+        guard let re = try? NSRegularExpression(pattern: #"\[[^\[\]\n]+\]"#),
               let m = re.firstMatch(in: ns as String, range: line) else { return nil }
         return m.range
     }

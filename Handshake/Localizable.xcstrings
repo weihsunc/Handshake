@@ -17066,6 +17066,52 @@
           }
         }
       }
+    },
+    "This invitation isn't registered with the signing provider. Ask the sender to send it again.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這份邀請尚未在簽署服務註冊。請寄件人重新傳送。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这份邀请尚未在签署服务注册。请发件人重新发送。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この招待は署名サービスに登録されていません。送信者に再送を依頼してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 초대는 서명 서비스에 등록되어 있지 않습니다. 보낸 사람에게 다시 보내 달라고 요청하세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta invitación no está registrada en el servicio de firma. Pide al remitente que la envíe de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette invitation n’est pas enregistrée auprès du service de signature. Demandez à l’expéditeur de la renvoyer."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Einladung ist beim Signaturdienst nicht registriert. Bitte den Absender, sie erneut zu senden."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
