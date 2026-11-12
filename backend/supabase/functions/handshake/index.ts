@@ -9,6 +9,7 @@
 //   /auth/apple           → Sign in with Apple identity token → Handshake session
 //   /auth/refresh         → new session from a refresh token
 //   /credits/balance      → sends left (signed in)
+//   /credits/purchase     → an App Store send pack bought: check it with Apple's signature, add its sends
 //   /docuseal/start       → take a send credit, then create a DocuSeal submission, one submitter per box
 //   /docuseal/complete    → after Face ID on the phone: mark that submitter signed
 //   /docuseal/status      → who has signed (in the app or in a browser)
@@ -24,6 +25,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient, type User } from "npm:@supabase/supabase-js@2";
+import * as x509 from "npm:@peculiar/x509@1";
+x509.cryptoProvider.set(crypto);
 
 const env = (k: string) => {
   const v = Deno.env.get(k);
@@ -120,7 +123,7 @@ async function authApple(b: Json) {
   const { data, error } = await publicClient().auth.signInWithIdToken({ provider: "apple", token: idToken, nonce });
   if (error || !data.session || !data.user) return bad(error?.message ?? "sign in failed", 401);
   const credits = await ensureAccount(data.user);
-  return json({ session: sessionJson(data.session), credits, freeSends: FREE_SENDS });
+  return json({ session: sessionJson(data.session), credits, freeSends: FREE_SENDS, userId: data.user.id });
 }
 
 async function authRefresh(b: Json) {
@@ -133,7 +136,122 @@ async function authRefresh(b: Json) {
 
 async function creditsBalance(user: User | null) {
   if (!user) return bad("sign_in_required", 401);
-  return json({ credits: await ensureAccount(user), freeSends: FREE_SENDS });
+  return json({ credits: await ensureAccount(user), freeSends: FREE_SENDS, userId: user.id });
+}
+
+// ── Send packs (App Store) ───────────────────────────────────────────────────
+//
+// Consumable in-app purchases, one per pack. After a purchase the phone sends
+// StoreKit's signed transaction (JWS) here; it's checked offline, the way
+// Apple's App Store Server Library does it:
+//   • the certificate chain in the JWS header ends at Apple Root CA - G3
+//     (pinned by fingerprint), each certificate signed by the next and in
+//     date, the leaf and intermediate carrying Apple's App Store OIDs;
+//   • the JWS is signed (ES256) by the leaf;
+//   • it's this app, a known pack, a consumable, not revoked, and bought by
+//     this account (appAccountToken = the account's id, set by the phone).
+// Then add_purchase adds the sends once per transaction id. The phone only
+// finishes the StoreKit transaction after this answers, so a purchase whose
+// report was lost is sent again on the next launch.
+//
+// Sandbox purchases are accepted: App Review and TestFlight buy in the
+// sandbox against this same backend.
+//
+// ALLOW_XCODE_PURCHASES=true accepts purchases made with the StoreKit
+// configuration file in Xcode (environment "Xcode", signed by Xcode, not
+// Apple) WITHOUT checking the signature. Only for a local stack — never set
+// it on the live project.
+
+const BUNDLE_ID = "com.weihsun.Handshake";
+/** Product id → sends. Must match App Store Connect and Handshake.storekit. */
+const PACKS: Record<string, number> = {
+  "com.weihsun.Handshake.sends.1": 1,
+  "com.weihsun.Handshake.sends.5": 5,
+  "com.weihsun.Handshake.sends.10": 10,
+};
+/** SHA-256 of Apple Root CA - G3 (also in macOS's system roots). */
+const APPLE_ROOT_G3_SHA256 = "63343abfb89a6a03ebb57e9b3f5fa7be7c4f5c756f3017b3a8c488c3653e9179";
+const OID_APPLE_WWDR_INTERMEDIATE = "1.2.840.113635.100.6.2.1";
+const OID_APP_STORE_RECEIPT_SIGNING = "1.2.840.113635.100.6.11.1";
+
+const base64Bytes = (s: string) => {
+  const b = s.replace(/-/g, "+").replace(/_/g, "/");
+  return Uint8Array.from(atob(b + "=".repeat((4 - (b.length % 4)) % 4)), (c) => c.charCodeAt(0));
+};
+const base64Json = (s: string) => JSON.parse(new TextDecoder().decode(base64Bytes(s)));
+
+type AppStoreTransaction = {
+  transactionId: string; originalTransactionId?: string; bundleId: string; productId: string;
+  type: string; quantity?: number; appAccountToken?: string; revocationDate?: number; environment: string;
+};
+
+/** Roots a chain may end at: Apple's, plus one for local tests (TEST_TRUSTED_ROOT_SHA256). */
+function trustedRoots() {
+  const extra = Deno.env.get("TEST_TRUSTED_ROOT_SHA256")?.toLowerCase();
+  return extra ? [APPLE_ROOT_G3_SHA256, extra] : [APPLE_ROOT_G3_SHA256];
+}
+
+async function verifyAppStoreJWS(jws: string): Promise<AppStoreTransaction> {
+  const parts = jws.split(".");
+  if (parts.length !== 3) throw new Error("not a JWS");
+  const header = base64Json(parts[0]);
+  const payload = base64Json(parts[1]) as AppStoreTransaction;
+
+  if (payload.environment === "Xcode") {
+    if (Deno.env.get("ALLOW_XCODE_PURCHASES") === "true") return payload;
+    throw new Error("Xcode test purchases aren't accepted here");
+  }
+
+  if (header.alg !== "ES256") throw new Error("unexpected algorithm");
+  const x5c = header.x5c as string[] | undefined;
+  if (!Array.isArray(x5c) || x5c.length !== 3) throw new Error("expected three certificates");
+  const [leaf, intermediate, root] = x5c.map((c) => new x509.X509Certificate(base64Bytes(c)));
+
+  const rootHash = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", root.rawData)),
+    (b) => b.toString(16).padStart(2, "0")).join("");
+  if (!trustedRoots().includes(rootHash)) throw new Error("not Apple's root certificate");
+
+  const now = new Date();
+  if (!(await root.verify({ publicKey: root.publicKey, date: now }))) throw new Error("root certificate invalid");
+  if (!(await intermediate.verify({ publicKey: root.publicKey, date: now }))) throw new Error("intermediate certificate invalid");
+  if (!(await leaf.verify({ publicKey: intermediate.publicKey, date: now }))) throw new Error("leaf certificate invalid");
+  if (!intermediate.getExtension(OID_APPLE_WWDR_INTERMEDIATE)) throw new Error("intermediate isn't Apple's");
+  if (!leaf.getExtension(OID_APP_STORE_RECEIPT_SIGNING)) throw new Error("leaf isn't an App Store signing certificate");
+
+  const key = await leaf.publicKey.export({ name: "ECDSA", namedCurve: "P-256" }, ["verify"]);
+  const ok = await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, key,
+    base64Bytes(parts[2]), new TextEncoder().encode(`${parts[0]}.${parts[1]}`));
+  if (!ok) throw new Error("signature doesn't match");
+  return payload;
+}
+
+async function creditsPurchase(b: Json, user: User | null) {
+  if (!user) return bad("sign_in_required", 401);
+  const { jws } = b as { jws: string };
+  if (!jws) return bad("jws required");
+
+  let t: AppStoreTransaction;
+  try {
+    t = await verifyAppStoreJWS(jws);
+  } catch (e) {
+    return json({ error: "invalid_transaction", detail: (e as Error).message }, 400);
+  }
+  const perPack = PACKS[t.productId];
+  if (t.bundleId !== BUNDLE_ID || !perPack || t.type !== "Consumable" || !t.transactionId) {
+    return json({ error: "invalid_transaction", detail: "not a Handshake send pack" }, 400);
+  }
+  if (t.revocationDate) return json({ error: "invalid_transaction", detail: "refunded" }, 400);
+  // Bought while signed in to another Handshake account: leave it for that one.
+  if (t.appAccountToken?.toLowerCase() !== user.id.toLowerCase()) return bad("other_account", 403);
+
+  await ensureAccount(user);
+  const sends = perPack * Math.max(1, t.quantity ?? 1);
+  const { data, error } = await admin().rpc("add_purchase", {
+    p_user: user.id, p_transaction: String(t.transactionId), p_credits: sends,
+  });
+  if (error) throw new Error(error.message);
+  const row = (data as { credits: number; added: boolean }[])[0];
+  return json({ credits: row.credits, added: row.added, sends, transactionId: String(t.transactionId) });
 }
 
 // ── Anthropic proxy ──────────────────────────────────────────────────────────
@@ -359,6 +477,7 @@ Deno.serve(async (req) => {
       case "/auth/apple":        return await authApple(body);
       case "/auth/refresh":      return await authRefresh(body);
       case "/credits/balance":   return await creditsBalance(await caller(req));
+      case "/credits/purchase":  return await creditsPurchase(body, await caller(req));
       case "/docuseal/start":    return await docusealStart(body, await caller(req));
       case "/docuseal/complete": return await docusealComplete(body);
       case "/docuseal/status":   return await docusealStatus(body);

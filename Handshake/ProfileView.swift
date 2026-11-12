@@ -6,9 +6,8 @@ import AuthenticationServices
 //
 // Opened from the person button on Home. Four parts:
 //   account   Sign in with Apple (AccountStore). Name + email, or a sign-in button.
-//   sends     Sends left (CreditsStore): 2 free, then paid per send. The
-//             balance is the backend's; buying sends (StoreKit) comes once
-//             the Apple Developer account exists.
+//   sends     Sends left (CreditsStore): 2 free, then send packs bought
+//             with StoreKit (SendPacks). The balance is the backend's.
 //   legal     Which AI model drafts the contracts and what does the signing —
 //             read from the code that actually does it, so it can't drift.
 //   log out   Forgets the account on this device; contracts stay.
@@ -27,6 +26,7 @@ struct ProfileView: View {
 
     @State private var account = AccountStore.shared
     @State private var credits = CreditsStore.shared
+    @State private var showPacks = false
     @State private var confirmLogout = false
     @State private var message: String? = nil
     @Environment(\.dismiss) private var dismiss
@@ -52,6 +52,7 @@ struct ProfileView: View {
             }
         }
         .task { await credits.refresh() }
+        .sheet(isPresented: $showPacks) { SendPacksSheet() }
         .task { await account.refreshCredentialState() }
         .confirmationDialog("Log out of Handshake?", isPresented: $confirmLogout, titleVisibility: .visible) {
             Button("Log Out", role: .destructive) { account.signOut() }
@@ -117,6 +118,7 @@ struct ProfileView: View {
         Section {
             if let n = credits.credits {
                 LabeledContent("Sends left", value: n.formatted())
+                Button("Buy Sends") { showPacks = true }
             } else if account.isSignedIn && !credits.hasSession {
                 // Signed in to Apple on this phone before accounts reached the
                 // backend (or the session lapsed): sign in once more.

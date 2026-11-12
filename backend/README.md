@@ -72,7 +72,8 @@ SignWell (Path B, `SIGNWELL_API_KEY`) isn't needed for the DocuSeal plan.
 | `POST /ai/messages` | Anthropic proxy — the app's generation and suggestions |
 | `POST /auth/apple` | `{idToken, nonce}` (Sign in with Apple; the raw nonce) → `{session:{accessToken,refreshToken,expiresAt}, credits, freeSends}`. Makes the account and gives the free sends the first time |
 | `POST /auth/refresh` | `{refreshToken}` → `{session}`; 401 `invalid_session` when it can't be renewed |
-| `POST /credits/balance` | signed in → `{credits, freeSends}`; signed out → 401 `sign_in_required` |
+| `POST /credits/balance` | signed in → `{credits, freeSends, userId}`; signed out → 401 `sign_in_required` |
+| `POST /credits/purchase` | `{jws}` (StoreKit's signed transaction for a send pack) → `{credits, added, sends, transactionId}`. Checks Apple's signature chain; 400 `invalid_transaction`, 403 `other_account` (bought by another Handshake account), 401 signed out. Adds a transaction's sends once |
 | `POST /docuseal/start` | `{contractId, title, pdfBase64, submitters:[{role,name,email,phone}]}` → `{id, submitters:[{id,role,slug,url}], credits, charged}`. Signed in: takes a send credit first (402 `no_credits` when none are left) and gives it back if DocuSeal fails. No emails or texts from DocuSeal |
 | `POST /docuseal/complete` | `{submitterId, signerName, role, signatureImage, signedDate, evidence}` → marks the submitter completed ("auto-signed via API") |
 | `POST /docuseal/status` | `{submissionId}` → `{status, submitters:[{id,role,name,status,completedAt}], documents, auditLogUrl}` |
@@ -124,11 +125,68 @@ enforcement, bad and refreshed sessions, one free grant per Apple ID, and the
 app's public key locked out of the tables and functions. **Not tested:** a
 real Apple identity token through `/auth/apple` (needs the Apple account).
 
-**Not built yet:** buying sends (StoreKit consumables, checked on the server
-with Apple, added once per transaction — the ledger's unique index is
-ready), giving a credit back when a contract is declined or cancelled before
-anyone else signs, a daily limit on AI drafting, and DeviceCheck to cap free
-sends per phone.
+**Not built yet:** giving a credit back when a contract is declined or
+cancelled before anyone else signs, taking sends back when Apple refunds a
+pack (App Store Server Notifications), a daily limit on AI drafting, and
+DeviceCheck to cap free sends per phone.
+
+## Send packs (StoreKit, Nov 12, 2026)
+
+Consumable in-app purchases, one per pack:
+
+| Product id | Sends | Price |
+|---|---|---|
+| `com.weihsun.Handshake.sends.1` | 1 | $2.99 |
+| `com.weihsun.Handshake.sends.5` | 5 | $11.99 ($2.40 each) |
+| `com.weihsun.Handshake.sends.10` | 10 | $19.99 ($2.00 each) |
+
+The ids and send counts live in three places that must match: `PACKS` in
+the function, `SendPacks.sends` in the app, and `Handshake.storekit` (and
+App Store Connect). Prices shown in the app always come from the App Store.
+
+**How a purchase is counted:** the app buys with the Handshake account's id
+as the `appAccountToken`, then sends StoreKit's signed transaction to
+`/credits/purchase`. The function checks it offline the way Apple's App
+Store Server Library does: the `x5c` chain ends at **Apple Root CA - G3**
+(pinned by SHA-256), each certificate is signed by the next and in date,
+the intermediate and leaf carry Apple's OIDs, and the leaf signed the JWS
+(ES256). Then: this bundle id, a known pack, a consumable, not refunded,
+bought by this account. `add_purchase` (migration
+`20261112090000_send_packs.sql`) adds the sends once per transaction id. The
+app finishes the transaction only after the function answers, so a purchase
+whose report was lost is sent again at the next launch
+(`Transaction.unfinished`). Sandbox purchases count too, since App Review
+and TestFlight buy in the sandbox against this backend.
+
+`ALLOW_XCODE_PURCHASES=true` accepts purchases made with
+`Handshake.storekit` in Xcode **without checking their signature**. Only for
+a local stack; never set it on the live project. `TEST_TRUSTED_ROOT_SHA256`
+trusts one extra root, for the local tests only; never set it live either.
+
+**Owner setup** (needs the Apple Developer account):
+
+1. App Store Connect → the app → In-App Purchases → add the three
+   **Consumable** products above (ids exactly as listed, names "1 Send",
+   "5 Sends", "10 Sends", prices $2.99 / $11.99 / $19.99), with a review
+   screenshot of the Get More Sends sheet. Sign the Paid Apps agreement and
+   add banking and tax info first, or products won't load.
+2. Join the App Store Small Business Program (15% instead of 30%).
+3. To try purchases in the simulator before then: in Xcode, Product → Scheme
+   → Edit Scheme → Run → Options → **StoreKit Configuration** →
+   `Handshake.storekit`, and point the app at a local stack started with
+   `ALLOW_XCODE_PURCHASES=true` (the live backend refuses those purchases).
+
+**Tested locally (Nov 12):** with a test certificate chain shaped like
+Apple's (root, intermediate with the WWDR OID, leaf with the App Store OID),
+trusted only via `TEST_TRUSTED_ROOT_SHA256`: a 5-pack adds 5; reporting it
+again adds nothing; quantity multiplies; the same purchase reported 5 times
+at once counts once; refused — an edited payload, an untrusted root, a leaf
+without the App Store OID, a leaf not signed by the intermediate, an unknown
+product, another app, a refunded purchase, another account's or no account
+token, an Xcode purchase without the flag, signed out, not a JWS. **Not
+tested:** a real App Store transaction (needs App Store Connect products)
+and the purchase sheet in the simulator (needs the StoreKit configuration
+chosen in Xcode's scheme).
 
 ## Verified end to end (Nov 11, 2026)
 

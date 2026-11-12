@@ -19,8 +19,7 @@ import AuthenticationServices
 //
 // The backend charges when the DocuSeal submission is made (/docuseal/start):
 // 402 no_credits when none are left, 401 sign_in_required once it enforces
-// credits (ENFORCE_CREDITS). Buying sends (StoreKit) waits on the Apple
-// Developer account.
+// credits (ENFORCE_CREDITS). More sends are bought in packs (SendPacks.swift).
 // ─────────────────────────────────────────────────────────────────────────────
 
 actor BackendSession {
@@ -50,6 +49,20 @@ actor BackendSession {
     func clear() {
         tokens = nil
         Keychain.delete()
+    }
+
+    /// The Handshake account's id (the access token's `sub`) — set as a
+    /// purchase's appAccountToken so the backend knows whose sends they are.
+    func userID() -> UUID? {
+        guard let t = tokens else { return nil }
+        let parts = t.accessToken.split(separator: ".")
+        guard parts.count == 3 else { return nil }
+        var b = String(parts[1]).replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+        b += String(repeating: "=", count: (4 - b.count % 4) % 4)
+        guard let data = Data(base64Encoded: b),
+              let claims = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let sub = claims["sub"] as? String else { return nil }
+        return UUID(uuidString: sub)
     }
 
     /// The access token was refused: refresh on the next call.

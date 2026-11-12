@@ -1,0 +1,63 @@
+{
+  "identifier" : "5E2D4C1A",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "2.99",
+      "familyShareable" : false,
+      "internalID" : "6750000001",
+      "localizations" : [
+        {
+          "description" : "Send one contract for signing.",
+          "displayName" : "1 Send",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.weihsun.Handshake.sends.1",
+      "referenceName" : "1 Send",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "11.99",
+      "familyShareable" : false,
+      "internalID" : "6750000005",
+      "localizations" : [
+        {
+          "description" : "Send five contracts for signing.",
+          "displayName" : "5 Sends",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.weihsun.Handshake.sends.5",
+      "referenceName" : "5 Sends",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "19.99",
+      "familyShareable" : false,
+      "internalID" : "6750000010",
+      "localizations" : [
+        {
+          "description" : "Send ten contracts for signing.",
+          "displayName" : "10 Sends",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.weihsun.Handshake.sends.10",
+      "referenceName" : "10 Sends",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

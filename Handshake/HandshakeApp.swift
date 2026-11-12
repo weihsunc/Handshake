@@ -33,6 +33,9 @@ struct RootView: View {
             HomeView()
         }
         .onOpenURL { open($0) }
+        // Send packs bought but not yet counted by the backend (the app quit,
+        // or no connection) are reported again; later ones as they arrive.
+        .task { SendPacks.shared.start() }
         // Something shared to Handshake whose extension couldn't open the app.
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {

@@ -451,10 +451,9 @@ struct SendFlowView: View {
                isPresented: Binding(get: { providerError != nil }, set: { if !$0 { providerError = nil } })) {
             Button("OK", role: .cancel) { providerError = nil }
         } message: { Text(providerError ?? "") }
-        .alert("No Sends Left", isPresented: $outOfSends) {
-            Button("OK", role: .cancel) { }
-        } message: {
-            Text("You've used your \(CreditsStore.freeSends) free sends. Buying more sends is coming soon.")
+        // No sends left: buy a pack, then the send carries on.
+        .sheet(isPresented: $outOfSends) {
+            SendPacksSheet(outOfSends: true) { startSend() }
         }
         .sheet(isPresented: $needsSignIn) {
             SignInToSendSheet { startSend() }
