@@ -70,10 +70,65 @@ SignWell (Path B, `SIGNWELL_API_KEY`) isn't needed for the DocuSeal plan.
 | Route | What it does |
 |---|---|
 | `POST /ai/messages` | Anthropic proxy — the app's generation and suggestions |
-| `POST /docuseal/start` | `{title, pdfBase64, submitters:[{role,name,email,phone}]}` → `{id, submitters:[{id,role,slug,url}]}`. No emails or texts from DocuSeal |
+| `POST /auth/apple` | `{idToken, nonce}` (Sign in with Apple; the raw nonce) → `{session:{accessToken,refreshToken,expiresAt}, credits, freeSends}`. Makes the account and gives the free sends the first time |
+| `POST /auth/refresh` | `{refreshToken}` → `{session}`; 401 `invalid_session` when it can't be renewed |
+| `POST /credits/balance` | signed in → `{credits, freeSends}`; signed out → 401 `sign_in_required` |
+| `POST /docuseal/start` | `{contractId, title, pdfBase64, submitters:[{role,name,email,phone}]}` → `{id, submitters:[{id,role,slug,url}], credits, charged}`. Signed in: takes a send credit first (402 `no_credits` when none are left) and gives it back if DocuSeal fails. No emails or texts from DocuSeal |
 | `POST /docuseal/complete` | `{submitterId, signerName, role, signatureImage, signedDate, evidence}` → marks the submitter completed ("auto-signed via API") |
 | `POST /docuseal/status` | `{submissionId}` → `{status, submitters:[{id,role,name,status,completedAt}], documents, auditLogUrl}` |
 | `POST /signwell/start`, `/signwell/status` | Path B, not used by the DocuSeal plan |
+
+## Send credits (Nov 11, 2026)
+
+Pricing (owner): **2 free sends per Apple ID, then $2.99 a send.** Only the
+sender pays; signing is always free. One credit pays for one contract however
+many people sign it, and sending the same contract again (after Revise
+Contract) is free up to 5 sends in all; the 6th takes a new credit.
+
+- **Accounts** are Supabase Auth users made from Sign in with Apple. The app
+  sends Apple's identity token to `/auth/apple` (the function signs in with
+  it and makes the account), keeps the session in the Keychain
+  (`SendCredits.swift`) and sends `Authorization: Bearer <access token>` on
+  every call.
+- **Balances** live in Postgres (`migrations/20261111120000_send_credits.sql`):
+  `accounts` (sends left), `credit_ledger` (every change), `free_grants`
+  (a hash of the Apple ID, so deleting and remaking an account doesn't give
+  the free sends again), `contract_sends` (the free re-sends). Row level
+  security is on with no policies and the functions are service-role only,
+  so nothing but this function can read or change a balance.
+- **The charge** happens in `/docuseal/start`, in one locked transaction per
+  account, so two quick sends can't both spend the last credit. A failed
+  DocuSeal call gives the credit back.
+- **`ENFORCE_CREDITS`** (secret, off by default): when `true`, `/docuseal/start`
+  refuses callers who aren't signed in (401 `sign_in_required`; the app then
+  shows Sign in with Apple). Until then signed-in callers are charged and
+  everyone else goes through uncharged, so builds that can't use Sign in with
+  Apple (Personal Team) keep working. Turn it on once the app with Sign in
+  with Apple is what people use.
+
+**Owner setup before it works live** (none of this is done yet):
+
+1. Apply the migration: `supabase db push` from `backend/` (or let the GitHub
+   integration do it, if it's set to run migrations).
+2. Supabase dashboard → Authentication → Sign In / Providers → **Apple** →
+   enable, **Client IDs** `com.weihsun.Handshake`. No secret key is needed
+   for sign-in from the app. Needs the Sign in with Apple capability on the
+   App ID, so it waits on the Apple Developer account.
+3. When ready to require accounts: `supabase secrets set ENFORCE_CREDITS=true`.
+
+**Tested locally (Nov 11):** a scratch Supabase stack with a stand-in DocuSeal.
+Covered: 2 free sends, no extra grant on later calls, charge, free re-send,
+the 6th re-send charging, refund on DocuSeal failure, 402 at zero, 5 sends at
+once with 1 credit (exactly one goes), signed-out pass-through and
+enforcement, bad and refreshed sessions, one free grant per Apple ID, and the
+app's public key locked out of the tables and functions. **Not tested:** a
+real Apple identity token through `/auth/apple` (needs the Apple account).
+
+**Not built yet:** buying sends (StoreKit consumables, checked on the server
+with Apple, added once per transaction — the ledger's unique index is
+ready), giving a credit back when a contract is declined or cancelled before
+anyone else signs, a daily limit on AI drafting, and DeviceCheck to cap free
+sends per phone.
 
 ## Verified end to end (Nov 11, 2026)
 
@@ -85,6 +140,7 @@ opens.
 Still worth checking: how the text tags size the fields on a long, real
 contract PDF.
 
-**Known gap:** the function is deployed without auth (`--no-verify-jwt`), so
-anyone with its URL can call it. Fine for testing; add an app check before
-launch.
+**Known gap:** the function is deployed without the gateway's JWT check
+(`--no-verify-jwt`) — it checks sessions itself for credits, but the AI
+proxy and the other DocuSeal routes are open to anyone with the URL. Fine
+for testing; add an app check (App Attest) before launch.

@@ -75,6 +75,10 @@ struct SendFlowView: View {
     @State private var shortLinks: [UUID: String] = [:]
     @State private var signError: String? = nil
     @State private var isSigning = false
+    /// The backend refused the send: no sends left (402), or it wants the
+    /// sender signed in first (401). See SendCredits.swift.
+    @State private var outOfSends = false
+    @State private var needsSignIn = false
     /// The sender's own signature, made when they tap Sign & Send. Saved to
     /// the contract only once something was actually sent.
     @State private var ownSignature: PartySignature? = nil
@@ -447,6 +451,14 @@ struct SendFlowView: View {
                isPresented: Binding(get: { providerError != nil }, set: { if !$0 { providerError = nil } })) {
             Button("OK", role: .cancel) { providerError = nil }
         } message: { Text(providerError ?? "") }
+        .alert("No Sends Left", isPresented: $outOfSends) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("You've used your \(CreditsStore.freeSends) free sends. Buying more sends is coming soon.")
+        }
+        .sheet(isPresented: $needsSignIn) {
+            SignInToSendSheet { startSend() }
+        }
         .alert("Couldn't sign",
                isPresented: Binding(get: { signError != nil }, set: { if !$0 { signError = nil } })) {
             Button("OK", role: .cancel) { signError = nil }
@@ -1145,6 +1157,12 @@ struct SendFlowView: View {
 
         do {
             try await prepareDocuSeal()
+        } catch BackendError.http(let code, _) where code == 402 {
+            outOfSends = true                   // no sends left (SendCredits.swift)
+            return
+        } catch BackendError.http(let code, _) where code == 401 {
+            needsSignIn = true                  // the backend wants the sender signed in
+            return
         } catch {
             providerError = error.localizedDescription
             return

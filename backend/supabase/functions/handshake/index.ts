@@ -6,7 +6,10 @@
 //
 // Routes (all POST, JSON in / JSON out):
 //   /ai/messages          → Anthropic Messages API proxy (moves the key off the phone)
-//   /docuseal/start       → create a DocuSeal submission for a contract, one submitter per box
+//   /auth/apple           → Sign in with Apple identity token → Handshake session
+//   /auth/refresh         → new session from a refresh token
+//   /credits/balance      → sends left (signed in)
+//   /docuseal/start       → take a send credit, then create a DocuSeal submission, one submitter per box
 //   /docuseal/complete    → after Face ID on the phone: mark that submitter signed
 //   /docuseal/status      → who has signed (in the app or in a browser)
 //   /signwell/start       → create a SignWell document, return an embedded signing URL (Path B)
@@ -20,6 +23,8 @@
 // the bottom of `providers` when you're ready for real signatures.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { createClient, type User } from "npm:@supabase/supabase-js@2";
+
 const env = (k: string) => {
   const v = Deno.env.get(k);
   if (!v) throw new Error(`Missing secret ${k}`);
@@ -28,7 +33,8 @@ const env = (k: string) => {
 
 const providers = {
   anthropic: { url: "https://api.anthropic.com/v1/messages" },
-  docuseal:  { url: "https://api.docuseal.com" },                 // test key ends in "+test"
+  // DOCUSEAL_URL only for local tests against a stand-in server.
+  docuseal:  { url: Deno.env.get("DOCUSEAL_URL") ?? "https://api.docuseal.com" }, // test key ends in "+test"
   signwell:  { url: "https://www.signwell.com/api/v1", testMode: true },
 };
 
@@ -41,6 +47,94 @@ const json = (body: Json, status = 200) =>
   });
 
 const bad = (msg: string, status = 400) => json({ error: msg }, status);
+
+// ── Accounts and send credits ───────────────────────────────────────────────
+//
+// Pricing (owner, Nov 11, 2026): 2 free sends per Apple ID, then $2.99 a send.
+// Only the sender pays; signing is free. The balance lives in Postgres
+// (migrations/…_send_credits.sql) and only this function changes it.
+//
+// Accounts are Supabase Auth users made from Sign in with Apple: the phone
+// sends Apple's identity token to /auth/apple and gets a session back; after
+// that it sends `Authorization: Bearer <access token>` on every call.
+//
+// ENFORCE_CREDITS=true (a Supabase secret) makes /docuseal/start refuse
+// callers who aren't signed in. Until then a signed-in caller is charged and
+// anyone else goes through as before, so builds without Sign in with Apple
+// (a Personal Team can't use it) keep working.
+
+const FREE_SENDS = 2;
+/** Sending the same contract again (after Revise Contract) is free until this many sends. */
+const SENDS_PER_CREDIT = 5;
+
+const enforceCredits = () => Deno.env.get("ENFORCE_CREDITS") === "true";
+
+// SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY are set by
+// Supabase in every edge function.
+const admin = () =>
+  createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), { auth: { persistSession: false } });
+const publicClient = () =>
+  createClient(env("SUPABASE_URL"), env("SUPABASE_ANON_KEY"), { auth: { persistSession: false } });
+
+/** A response the router returns as is (a 401 or 402 from deep inside a route). */
+class Refusal extends Error {
+  constructor(readonly response: Response) { super("refused"); }
+}
+
+/** The signed-in caller, or null when the call carries no session. */
+async function caller(req: Request): Promise<User | null> {
+  const header = req.headers.get("authorization") ?? "";
+  const token = header.match(/^Bearer (.+)$/i)?.[1];
+  if (!token) return null;
+  const { data, error } = await admin().auth.getUser(token);
+  if (error || !data.user) throw new Refusal(bad("invalid_session", 401));
+  return data.user;
+}
+
+async function sha256Hex(text: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** Makes the account on first use (with the free sends, once per Apple ID). Returns the balance. */
+async function ensureAccount(user: User): Promise<number> {
+  // Apple's user id survives deleting the Handshake account; the auth user id doesn't.
+  const apple = user.identities?.find((i) => i.provider === "apple");
+  const identity = apple ? `apple:${apple.id}` : `user:${user.id}`;
+  const { data, error } = await admin().rpc("ensure_account", {
+    p_user: user.id,
+    p_identity_hash: await sha256Hex(identity),
+    p_free_sends: FREE_SENDS,
+  });
+  if (error) throw new Error(error.message);
+  return data as number;
+}
+
+const sessionJson = (s: { access_token: string; refresh_token: string; expires_at?: number } | null) =>
+  s ? { accessToken: s.access_token, refreshToken: s.refresh_token, expiresAt: s.expires_at ?? null } : null;
+
+// Phone: Sign in with Apple with a hashed nonce, then { idToken, nonce } (the raw nonce).
+async function authApple(b: Json) {
+  const { idToken, nonce } = b as { idToken: string; nonce?: string };
+  if (!idToken) return bad("idToken required");
+  const { data, error } = await publicClient().auth.signInWithIdToken({ provider: "apple", token: idToken, nonce });
+  if (error || !data.session || !data.user) return bad(error?.message ?? "sign in failed", 401);
+  const credits = await ensureAccount(data.user);
+  return json({ session: sessionJson(data.session), credits, freeSends: FREE_SENDS });
+}
+
+async function authRefresh(b: Json) {
+  const { refreshToken } = b as { refreshToken: string };
+  if (!refreshToken) return bad("refreshToken required");
+  const { data, error } = await publicClient().auth.refreshSession({ refresh_token: refreshToken });
+  if (error || !data.session) return bad("invalid_session", 401);
+  return json({ session: sessionJson(data.session) });
+}
+
+async function creditsBalance(user: User | null) {
+  if (!user) return bad("sign_in_required", 401);
+  return json({ credits: await ensureAccount(user), freeSends: FREE_SENDS });
+}
 
 // ── Anthropic proxy ──────────────────────────────────────────────────────────
 // The phone sends the same body it used to send directly; we add the key.
@@ -87,39 +181,81 @@ const docuseal = (path: string, init: RequestInit = {}) =>
 
 type Submitter = { role: string; name?: string; email?: string; phone?: string };
 
-async function docusealStart(b: Json) {
-  const { title, pdfBase64, submitters } = b as { title: string; pdfBase64: string; submitters: Submitter[] };
+async function docusealStart(b: Json, user: User | null) {
+  const { title, pdfBase64, submitters, contractId } = b as {
+    title: string; pdfBase64: string; submitters: Submitter[];
+    /** The app's id for the contract: sending it again is free for a few sends. */
+    contractId?: string;
+  };
   if (!title || !pdfBase64 || !submitters?.length) return bad("title, pdfBase64, submitters required");
 
-  const r = await docuseal("/submissions/pdf", {
-    method: "POST",
-    body: JSON.stringify({
-      name: title,
-      send_email: false,
-      send_sms: false,
-      order: "random",                       // anyone can sign first
-      documents: [{ name: `${title}.pdf`, file: pdfBase64 }],
-      submitters: submitters.map((s) => ({
-        role: s.role,
-        ...(s.name ? { name: s.name } : {}),
-        ...(s.email ? { email: s.email } : {}),
-        ...(s.phone ? { phone: s.phone } : {}),
+  // A send credit first. Signed out: refused once credits are enforced,
+  // otherwise let through uncharged (see "Accounts and send credits").
+  let charge: { contract: string; charged: boolean; credits: number } | null = null;
+  if (user) {
+    if (!contractId) return bad("contractId required");
+    await ensureAccount(user);
+    const { data, error } = await admin().rpc("begin_send", {
+      p_user: user.id, p_contract: contractId, p_sends_per_credit: SENDS_PER_CREDIT,
+    });
+    if (error?.message.includes("no_credits")) return json({ error: "no_credits", credits: 0 }, 402);
+    if (error) throw new Error(error.message);
+    const row = (data as { charged: boolean; credits: number }[])[0];
+    charge = { contract: contractId, charged: row.charged, credits: row.credits };
+  } else if (enforceCredits()) {
+    return bad("sign_in_required", 401);
+  }
+
+  // The send didn't happen: give the credit back.
+  const undo = async () => {
+    if (!charge || !user) return;
+    await admin().rpc("undo_send", { p_user: user.id, p_contract: charge.contract, p_charged: charge.charged });
+  };
+
+  let r: Response;
+  try {
+    r = await docuseal("/submissions/pdf", {
+      method: "POST",
+      body: JSON.stringify({
+        name: title,
         send_email: false,
         send_sms: false,
-      })),
-    }),
-  });
+        order: "random",                       // anyone can sign first
+        documents: [{ name: `${title}.pdf`, file: pdfBase64 }],
+        submitters: submitters.map((s) => ({
+          role: s.role,
+          ...(s.name ? { name: s.name } : {}),
+          ...(s.email ? { email: s.email } : {}),
+          ...(s.phone ? { phone: s.phone } : {}),
+          send_email: false,
+          send_sms: false,
+        })),
+      }),
+    });
+  } catch (e) {
+    await undo();
+    throw e;
+  }
   const text = await r.text();
-  if (!r.ok) return new Response(text, { status: r.status, headers: { "content-type": "application/json" } });
+  if (!r.ok) {
+    await undo();
+    return new Response(text, { status: r.status, headers: { "content-type": "application/json" } });
+  }
 
   // The create call answers with the submission (or, on some accounts, the
   // bare submitter array) — accept both.
-  const data = JSON.parse(text);
+  let data;
+  try { data = JSON.parse(text); } catch { data = {}; }
   const list: Json[] = Array.isArray(data) ? data : (data.submitters ?? []);
   const id = Array.isArray(data) ? list[0]?.submission_id : data.id;
+  if (!id || !list.length) {
+    await undo();
+    return bad("DocuSeal answered without a submission", 502);
+  }
   return json({
     id,
     submitters: list.map((s) => ({ id: s.id, role: s.role, slug: s.slug, url: s.embed_src ?? `https://docuseal.com/s/${s.slug}` })),
+    ...(charge ? { credits: charge.credits, charged: charge.charged } : {}),
   });
 }
 
@@ -220,7 +356,10 @@ Deno.serve(async (req) => {
   try {
     switch (path) {
       case "/ai/messages":       return await aiMessages(body);
-      case "/docuseal/start":    return await docusealStart(body);
+      case "/auth/apple":        return await authApple(body);
+      case "/auth/refresh":      return await authRefresh(body);
+      case "/credits/balance":   return await creditsBalance(await caller(req));
+      case "/docuseal/start":    return await docusealStart(body, await caller(req));
       case "/docuseal/complete": return await docusealComplete(body);
       case "/docuseal/status":   return await docusealStatus(body);
       case "/signwell/start":    return await signwellStart(body);
@@ -228,6 +367,7 @@ Deno.serve(async (req) => {
       default:                   return bad(`no route ${path}`, 404);
     }
   } catch (e) {
+    if (e instanceof Refusal) return e.response;
     return json({ error: (e as Error).message }, 500);
   }
 });

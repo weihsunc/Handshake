@@ -94,13 +94,20 @@ enum BackendClient {
 
     /// POST JSON to `<backendURL>/<path>`. Returns the decoded JSON, which is
     /// an object for most routes but a top-level array for DocuSeal's
-    /// submission create — so the caller casts.
-    static func post(_ path: String, _ body: [String: Any]) async throws -> Any {
+    /// submission create — so the caller casts. Signed in (BackendSession),
+    /// the session's access token goes along unless `authorized` is false.
+    static func post(_ path: String, _ body: [String: Any], authorized: Bool = true) async throws -> Any {
         guard let base = baseURL else { throw BackendError.notConfigured }
         var req = URLRequest(url: base.appendingPathComponent(path))
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        var sentToken = false
+        if authorized, let token = await BackendSession.shared.accessToken() {
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            sentToken = true
+        }
 
         let (data, resp) = try await URLSession.shared.data(for: req)
         let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
@@ -108,6 +115,13 @@ enum BackendClient {
         guard (200..<300).contains(status) else {
             let msg = ((json as? [String: Any])?["error"] as? String)
                 ?? String(data: data, encoding: .utf8) ?? ""
+            // The access token was refused: renew the session and try once more.
+            if sentToken, status == 401, msg == "invalid_session" {
+                await BackendSession.shared.expire()
+                if await BackendSession.shared.accessToken() != nil {
+                    return try await post(path, body, authorized: authorized)
+                }
+            }
             throw BackendError.http(status, msg)
         }
         guard let json else { throw BackendError.badResponse }
@@ -158,9 +172,12 @@ enum SigningProviders {
     /// Creates the DocuSeal submission for a contract: one submitter per
     /// signature box, the PDF tagged so each box becomes that party's field.
     /// Called from the send flow before any link goes out.
+    /// Signed in, the backend takes a send credit first (402 when none are
+    /// left); sending the same contract again is free for a few sends.
     static func startDocuSeal(contract: GeneratedContract, parties: [DocuSealParty]) async throws -> ProviderRef {
         let pdf = ContractPDF.render(contract, docuSealRoles: parties.map(\.role)).base64EncodedString()
         let json = try await BackendClient.post("docuseal/start", [
+            "contractId": contract.id.uuidString,
             "title":      contract.title,
             "pdfBase64":  pdf,
             "submitters": parties.map { p -> [String: String] in
@@ -172,6 +189,7 @@ enum SigningProviders {
             },
         ])
         let obj  = json as? [String: Any] ?? [:]
+        await CreditsStore.shared.update(obj)
         let list = obj["submitters"] as? [[String: Any]] ?? []
         let ids = list.compactMap { idString($0["id"]) }
         let roles = list.compactMap { $0["role"] as? String }

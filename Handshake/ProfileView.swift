@@ -1,5 +1,4 @@
 import SwiftUI
-import StoreKit
 import AuthenticationServices
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -7,8 +6,9 @@ import AuthenticationServices
 //
 // Opened from the person button on Home. Four parts:
 //   account   Sign in with Apple (AccountStore). Name + email, or a sign-in button.
-//   plan      What the user is subscribed to. Billing is Apple's: StoreKit's own
-//             manage-subscriptions sheet and AppStore.sync() for restore.
+//   sends     Sends left (CreditsStore): 2 free, then paid per send. The
+//             balance is the backend's; buying sends (StoreKit) comes once
+//             the Apple Developer account exists.
 //   legal     Which AI model drafts the contracts and what does the signing —
 //             read from the code that actually does it, so it can't drift.
 //   log out   Forgets the account on this device; contracts stay.
@@ -26,21 +26,16 @@ enum LegalLinks {
 struct ProfileView: View {
 
     @State private var account = AccountStore.shared
-    @State private var plan: String = ProfileView.freePlan
-    private static let freePlan = String(localized: "Free")
-    @State private var showManage   = false
+    @State private var credits = CreditsStore.shared
     @State private var confirmLogout = false
-    @State private var restoring    = false
     @State private var message: String? = nil
     @Environment(\.dismiss) private var dismiss
-
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         NavigationStack {
             List {
                 accountSection
-                planSection
+                if BackendClient.isConfigured { sendsSection }
                 legalSection
                 if account.isSignedIn { logoutSection }
             }
@@ -56,8 +51,7 @@ struct ProfileView: View {
                 }
             }
         }
-        .manageSubscriptionsSheet(isPresented: $showManage)
-        .task { await loadPlan() }
+        .task { await credits.refresh() }
         .task { await account.refreshCredentialState() }
         .confirmationDialog("Log out of Handshake?", isPresented: $confirmLogout, titleVisibility: .visible) {
             Button("Log Out", role: .destructive) { account.signOut() }
@@ -103,17 +97,10 @@ struct ProfileView: View {
                 LabeledContent("Signed in with", value: "Apple")
             } else {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Sign in to keep your name and plan with you.")
+                    Text("Sign in to keep your name and your sends with you.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    SignInWithAppleButton(.signIn) { request in
-                        request.requestedScopes = [.fullName, .email]
-                    } onCompletion: { result in
-                        message = account.handle(result)
-                    }
-                    .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
-                    .frame(height: 50)
-                    .clipShape(Capsule())
+                    SignInToSendButton { message = $0 }
                 }
                 .padding(.vertical, 6)
             }
@@ -123,45 +110,32 @@ struct ProfileView: View {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // MARK: - Plan & billing (Apple)
+    // MARK: - Sends
     // ─────────────────────────────────────────────────────────────────────────
 
-    private var planSection: some View {
+    private var sendsSection: some View {
         Section {
-            LabeledContent("Current plan", value: plan)
-            Button("Manage Subscription") { showManage = true }
-            Button(restoring ? "Restoring…" : "Restore Purchases") {
-                Task { await restore() }
+            if let n = credits.credits {
+                LabeledContent("Sends left", value: n.formatted())
+            } else if account.isSignedIn && !credits.hasSession {
+                // Signed in to Apple on this phone before accounts reached the
+                // backend (or the session lapsed): sign in once more.
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Sign in again to see your sends.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    SignInToSendButton { message = $0 }
+                }
+                .padding(.vertical, 6)
+            } else if credits.hasSession {
+                LabeledContent("Sends left") { ProgressView() }
+            } else {
+                LabeledContent("Sends left", value: String(localized: "Sign in to see"))
             }
-            .disabled(restoring)
         } header: {
-            Text("Plan & Billing")
+            Text("Sends")
         } footer: {
-            Text("Billing is handled by Apple. Payments, renewals, cancellations and refunds are managed in your Apple Account.")
-        }
-        .tint(Color.accent)
-    }
-
-    /// The active auto-renewing subscription, if any. Products come from App
-    /// Store Connect; until some exist this always reads "Free".
-    private func loadPlan() async {
-        for await result in Transaction.currentEntitlements {
-            guard case .verified(let t) = result,
-                  t.productType == .autoRenewable, t.revocationDate == nil else { continue }
-            let product = try? await Product.products(for: [t.productID]).first
-            plan = product?.displayName ?? t.productID
-        }
-    }
-
-    private func restore() async {
-        restoring = true
-        defer { restoring = false }
-        do {
-            try await AppStore.sync()
-            await loadPlan()
-            message = plan == Self.freePlan ? String(localized: "No purchases to restore.") : String(localized: "Restored: \(plan).")
-        } catch {
-            message = error.localizedDescription
+            Text("Your first \(CreditsStore.freeSends) contracts are free to send. Signing is always free for the people you send to.")
         }
     }
 
